@@ -1,0 +1,544 @@
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { motion } from 'motion/react';
+import { ArrowLeft, Package, Swords, Sparkles, Image, Shirt, Bookmark, Palette } from 'lucide-react';
+import { Navbar } from '../components/Navbar';
+import { FloatingParticles } from '../components/FloatingParticles';
+import { ProductCard, Product } from '../components/ProductCard';
+import { Cart } from '../components/Cart';
+import { UserAuth } from '../components/UserAuth';
+import { CheckoutModal } from '../components/CheckoutModal';
+import { SubcategoryModal } from '../components/SubcategoryModal';
+import { CustomClothingModal } from '../components/CustomClothingModal';
+import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { supabase } from '../utils/supabase/client';
+
+interface CartItem extends Product {
+  quantity: number;
+}
+
+const categoryIcons: { [key: string]: any } = {
+  figures: Package,
+  katana: Swords,
+  accessories: Sparkles,
+  posters: Image,
+  clothing: Shirt,
+  collectibles: Bookmark,
+  custom_clothing: Palette,
+};
+
+const categoryInfo: { [key: string]: { title: string; description: string } } = {
+  figures: {
+    title: 'Anime Figures',
+    description: 'Premium anime action figures and statues from your favorite series',
+  },
+  katana: {
+    title: 'Katana Collection',
+    description: 'Authentic Japanese swords and replicas inspired by legendary anime',
+  },
+  accessories: {
+    title: 'Accessories',
+    description: 'Keychains, pins, phone cases, and more anime collectibles',
+  },
+  posters: {
+    title: 'Posters & Art',
+    description: 'High-quality anime art prints and wall decorations',
+  },
+  clothing: {
+    title: 'Anime Clothing',
+    description: 'Anime-themed apparel, cosplay costumes, and fashion accessories',
+  },
+  collectibles: {
+    title: 'Collectibles',
+    description: 'Limited edition merchandise, trading cards, and rare items',
+  },
+  custom_clothing: {
+    title: 'Custom Clothing',
+    description: 'Create your own anime-themed clothing with our custom design service',
+  },
+};
+
+const subcategoryData: { [key: string]: Array<{ name: string; value: string; description: string }> } = {
+  figures: [
+    { name: 'Demon Slayer', value: 'demon-slayer', description: 'Tanjiro, Nezuko, and more' },
+    { name: 'Naruto', value: 'naruto', description: 'Iconic ninja figures' },
+    { name: 'One Piece', value: 'one-piece', description: 'Luffy and crew collectibles' },
+    { name: 'Attack on Titan', value: 'attack-on-titan', description: 'Survey Corps figures' },
+    { name: 'My Hero Academia', value: 'my-hero-academia', description: 'Heroes and villains' },
+    { name: 'Dragon Ball', value: 'dragon-ball', description: 'Super Saiyan warriors' },
+  ],
+  katana: [
+    { name: 'Demon Slayer Swords', value: 'demon-slayer-katana', description: 'Nichirin blades collection' },
+    { name: 'Samurai Katanas', value: 'samurai-katana', description: 'Traditional Japanese swords' },
+    { name: 'Replica Katanas', value: 'replica-katana', description: 'Display-worthy replicas' },
+    { name: 'Training Katanas', value: 'training-katana', description: 'Practice swords' },
+  ],
+  accessories: [
+    { name: 'Keychains', value: 'keychains', description: 'Character keychains' },
+    { name: 'Pins & Badges', value: 'pins', description: 'Collectible pins' },
+    { name: 'Phone Cases', value: 'phone-cases', description: 'Anime-themed cases' },
+    { name: 'Jewelry', value: 'jewelry', description: 'Necklaces and rings' },
+    { name: 'Bags & Backpacks', value: 'bags', description: 'Character bags' },
+  ],
+  posters: [
+    { name: 'Wall Scrolls', value: 'wall-scrolls', description: 'Hanging art scrolls' },
+    { name: 'Framed Prints', value: 'framed-prints', description: 'Premium framed art' },
+    { name: 'Mini Posters', value: 'mini-posters', description: 'Small format prints' },
+    { name: 'Canvas Art', value: 'canvas-art', description: 'Canvas wall art' },
+  ],
+  clothing: [
+    { name: 'T-Shirts', value: 't-shirts', description: 'Character t-shirts' },
+    { name: 'Hoodies', value: 'hoodies', description: 'Anime hoodies' },
+    { name: 'Cosplay', value: 'cosplay', description: 'Cosplay costumes' },
+    { name: 'Accessories', value: 'clothing-accessories', description: 'Hats, socks, etc.' },
+  ],
+  collectibles: [
+    { name: 'Limited Editions', value: 'limited-editions', description: 'Rare collectibles' },
+    { name: 'Trading Cards', value: 'trading-cards', description: 'Collectible cards' },
+    { name: 'Plushies', value: 'plushies', description: 'Soft character plushies' },
+    { name: 'Model Kits', value: 'model-kits', description: 'Build-your-own kits' },
+  ],
+  custom_clothing: [
+    { name: 'Custom T-Shirts', value: 'custom-t-shirts', description: 'Design your own t-shirts' },
+    { name: 'Custom Hoodies', value: 'custom-hoodies', description: 'Design your own hoodies' },
+    { name: 'Custom Cosplay', value: 'custom-cosplay', description: 'Design your own cosplay costumes' },
+    { name: 'Custom Accessories', value: 'custom-accessories', description: 'Design your own accessories' },
+  ],
+};
+
+export function CategoryPage() {
+  const { category } = useParams<{ category: string }>();
+  const navigate = useNavigate();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isUserAuthOpen, setIsUserAuthOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isSubcategoryModalOpen, setIsSubcategoryModalOpen] = useState(false);
+  const [isCustomClothingModalOpen, setIsCustomClothingModalOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [pendingCheckout, setPendingCheckout] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [categoryData, setCategoryData] = useState<any>(null);
+  const [dynamicSubcategories, setDynamicSubcategories] = useState<Array<{ name: string; value: string; description: string }>>([]);
+
+  useEffect(() => {
+    fetchCategoryData();
+    fetchProducts();
+    checkUser();
+  }, [category]);
+
+  // Validate category and redirect if invalid
+  useEffect(() => {
+    if (!category || !categoryInfo[category]) {
+      // Don't redirect immediately - let it try to load from database
+      console.log('⚠️ Category not in hardcoded list, checking database...');
+    }
+  }, [category, navigate]);
+
+  const fetchCategoryData = async () => {
+    try {
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/categories`, {
+        headers: {
+          'Authorization': `Bearer ${publicAnonKey}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.categories) {
+          const currentCategory = data.categories.find((cat: any) => cat.slug === category);
+          console.log('🔵 Category data:', currentCategory);
+          
+          if (currentCategory) {
+            setCategoryData(currentCategory);
+            
+            // Convert subcategories to the format needed
+            if (currentCategory.subcategories && currentCategory.subcategories.length > 0) {
+              const formattedSubcategories = currentCategory.subcategories.map((sub: any) => ({
+                name: sub.name || sub,
+                value: sub.value || sub.toLowerCase().replace(/\s+/g, '-'),
+                description: sub.description || '',
+              }));
+              setDynamicSubcategories(formattedSubcategories);
+              console.log('✅ Dynamic subcategories loaded:', formattedSubcategories);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching category data:', error);
+    }
+  };
+
+  useEffect(() => {
+    let filtered = products;
+    
+    if (selectedSubcategory) {
+      filtered = filtered.filter(p => (p as any).subcategory === selectedSubcategory);
+    }
+    
+    setFilteredProducts(filtered);
+  }, [selectedSubcategory, products]);
+
+  const checkUser = async () => {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) {
+      setUser(data.session.user);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
+  const fetchProducts = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/products/category/${category}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${publicAnonKey}`,
+          },
+        }
+      );
+      const data = await response.json();
+      if (data.success) {
+        setProducts(data.products || []);
+        setFilteredProducts(data.products || []);
+      }
+    } catch (error) {
+      console.log('Error fetching products:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddToCart = (product: Product) => {
+    setCartItems((prev) => {
+      const existing = prev.find((item) => item.id === product.id);
+      if (existing) {
+        return prev.map((item) =>
+          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+        );
+      }
+      return [...prev, { ...product, quantity: 1 }];
+    });
+  };
+
+  const handleUpdateQuantity = (id: string, quantity: number) => {
+    setCartItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
+    );
+  };
+
+  const handleRemoveItem = (id: string) => {
+    setCartItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
+  const handleCheckout = () => {
+    if (!user) {
+      setIsCartOpen(false);
+      setPendingCheckout(true);
+      setIsUserAuthOpen(true);
+      return;
+    }
+    setIsCartOpen(false);
+    setIsCheckoutOpen(true);
+  };
+
+  const handleAuthSuccess = (authUser: any) => {
+    setUser(authUser);
+    if (pendingCheckout) {
+      setPendingCheckout(false);
+      setIsCheckoutOpen(true);
+    }
+  };
+
+  const handleCheckoutSuccess = () => {
+    setCartItems([]);
+    setIsCheckoutOpen(false);
+  };
+
+  const handleSubcategorySelect = (subcategory: string) => {
+    setSelectedSubcategory(subcategory);
+    setIsSubcategoryModalOpen(false);
+  };
+
+  // Use dynamic category data with fallbacks
+  const Icon = category ? (categoryIcons[category] || Package) : Package;
+  const info = category && categoryInfo[category] 
+    ? categoryInfo[category] 
+    : categoryData 
+      ? { title: categoryData.name, description: categoryData.description || 'Browse our products' }
+      : { title: 'Category', description: 'Browse our products' };
+  
+  const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  
+  // Use dynamic subcategories if available, otherwise fallback to hardcoded
+  const subcategoriesToUse = dynamicSubcategories.length > 0 ? dynamicSubcategories : (subcategoryData[category || ''] || []);
+  const hasSubcategories = subcategoriesToUse.length > 0;
+
+  return (
+    <div className="min-h-screen bg-black">
+      <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+      <FloatingParticles />
+
+      <Navbar
+        cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
+        onCartClick={() => setIsCartOpen(true)}
+        onLoginClick={() => setIsUserAuthOpen(true)}
+        user={user}
+        onLogout={handleLogout}
+      />
+
+      <main className="relative z-10">
+        {/* Back Button */}
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <motion.button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
+            whileHover={{ x: -5 }}
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </motion.button>
+        </div>
+
+        {/* Category Header */}
+        <section className="max-w-7xl mx-auto px-4 py-8">
+          <motion.div
+            className="text-center mb-12"
+            initial={{ opacity: 0, y: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <motion.div
+              className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl mb-6"
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ duration: 0.6, type: "spring" }}
+              whileHover={{ scale: 1.1, rotate: 5 }}
+            >
+              <Icon className="w-12 h-12 text-white" />
+            </motion.div>
+
+            <motion.h1
+              className="mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              {info.title}
+            </motion.h1>
+
+            <motion.p
+              className="text-gray-300 text-lg max-w-2xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              {info.description}
+            </motion.p>
+
+            {/* Subcategory Filter Button */}
+            {hasSubcategories && (
+              <motion.div
+                className="mt-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+              >
+                <motion.button
+                  onClick={() => setIsSubcategoryModalOpen(true)}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-lg transition-all shadow-lg shadow-purple-900/50"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Browse by Subcategory
+                </motion.button>
+                {selectedSubcategory && (
+                  <motion.button
+                    onClick={() => setSelectedSubcategory(null)}
+                    className="ml-4 text-purple-400 hover:text-purple-300 underline transition-colors"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                  >
+                    Clear filter
+                  </motion.button>
+                )}
+              </motion.div>
+            )}
+          </motion.div>
+
+          {/* Custom Clothing Banner (Only for clothing category) */}
+          {category === 'clothing' && (
+            <motion.div
+              className="mb-12 bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-2 border-purple-500/50 rounded-2xl p-8 shadow-2xl shadow-purple-900/50"
+              initial={{ opacity: 0, y: 30, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+              whileHover={{ scale: 1.02 }}
+            >
+              <div className="flex items-center gap-6">
+                <motion.div
+                  className="flex-shrink-0 w-20 h-20 bg-gradient-to-br from-pink-600 to-purple-600 rounded-xl flex items-center justify-center"
+                  whileHover={{ rotate: 10 }}
+                  transition={{ type: "spring" }}
+                >
+                  <Palette className="w-10 h-10 text-white" />
+                </motion.div>
+                
+                <div className="flex-1">
+                  <h3 className="text-white text-2xl mb-2">🎨 Design Your Own Custom Clothing</h3>
+                  <p className="text-gray-300 mb-4">
+                    Want something unique? Upload your design and we'll create custom anime-themed clothing just for you!
+                  </p>
+                  <ul className="text-gray-400 text-sm space-y-1 mb-4">
+                    <li>✅ Upload your own designs or photos</li>
+                    <li>✅ Choose clothing type, size, and color</li>
+                    <li>✅ Get a quote within 24-48 hours</li>
+                    <li>✅ Professional quality printing</li>
+                  </ul>
+                  <motion.button
+                    onClick={() => setIsCustomClothingModalOpen(true)}
+                    className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 px-8 py-4 rounded-lg text-lg shadow-lg shadow-pink-900/50 flex items-center gap-2"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Palette className="w-5 h-5" />
+                    Start Custom Design
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Products Grid */}
+          {loading ? (
+            <motion.div
+              className="text-center py-20"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+            >
+              <div className="inline-block w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-gray-400 mt-4">Loading products...</p>
+            </motion.div>
+          ) : filteredProducts.length === 0 ? (
+            <motion.div
+              className="text-center py-20"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <div className="bg-purple-900/20 border border-purple-500/30 rounded-2xl p-12 max-w-md mx-auto">
+                <Icon className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+                <h3 className="text-white text-2xl mb-2">No Products Found</h3>
+                <p className="text-gray-400">
+                  {selectedSubcategory 
+                    ? 'No products available in this subcategory. Try selecting a different filter.'
+                    : 'No products available in this category yet. Check back soon!'}
+                </p>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
+              {filteredProducts.map((product, index) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.05 * index }}
+                >
+                  <ProductCard
+                    product={product}
+                    onAddToCart={handleAddToCart}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+
+          {/* Product Count */}
+          {!loading && filteredProducts.length > 0 && (
+            <motion.div
+              className="text-center mt-12"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+            >
+              <p className="text-gray-400">
+                Showing {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
+                {selectedSubcategory && ' in selected subcategory'}
+              </p>
+            </motion.div>
+          )}
+        </section>
+      </main>
+
+      <Cart
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        items={cartItems}
+        onUpdateQuantity={handleUpdateQuantity}
+        onRemoveItem={handleRemoveItem}
+        onCheckout={handleCheckout}
+      />
+
+      <UserAuth
+        isOpen={isUserAuthOpen}
+        onClose={() => setIsUserAuthOpen(false)}
+        onAuthSuccess={handleAuthSuccess}
+        showCheckoutMessage={pendingCheckout}
+      />
+
+      <CheckoutModal
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        items={cartItems}
+        total={total}
+        onSuccess={handleCheckoutSuccess}
+        user={user}
+      />
+
+      {hasSubcategories && (
+        <SubcategoryModal
+          isOpen={isSubcategoryModalOpen}
+          onClose={() => setIsSubcategoryModalOpen(false)}
+          category={category}
+          subcategories={subcategoriesToUse}
+          onSelectSubcategory={handleSubcategorySelect}
+        />
+      )}
+
+      {category === 'custom_clothing' && (
+        <CustomClothingModal
+          isOpen={isCustomClothingModalOpen}
+          onClose={() => setIsCustomClothingModalOpen(false)}
+          onSuccess={() => {
+            alert('Custom clothing request submitted successfully!');
+            setIsCustomClothingModalOpen(false);
+          }}
+        />
+      )}
+
+      {category === 'clothing' && (
+        <CustomClothingModal
+          isOpen={isCustomClothingModalOpen}
+          onClose={() => setIsCustomClothingModalOpen(false)}
+          onSuccess={() => {
+            alert('Custom clothing request submitted successfully!');
+            setIsCustomClothingModalOpen(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}

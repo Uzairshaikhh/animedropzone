@@ -1,0 +1,16 @@
+# Netlify configuration for React SPA
+[build]
+  # Build command (adjust if needed)
+  command = "npm run build"
+  # Directory that contains the build output
+  publish = "dist"
+
+# The _redirects file will be copied from /public to /dist during build
+# Vite automatically copies files from /public to /dist
+
+# Redirect all routes to index.html for client-side routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = false

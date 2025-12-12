@@ -1,0 +1,167 @@
+// NEW WELCOME EMAIL CODE TO REPLACE OLD ONE IN SIGNUP ENDPOINT
+
+// Send welcome email
+    try {
+      const emailSubject = '🎉 Welcome to Our Family - AnimeDropZone';
+      const emailBody = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #1a0033 0%, #000000 100%); color: #ffffff; border: 2px solid #9333ea; border-radius: 12px; overflow: hidden;">
+          <!-- Header with Animated Gradient -->
+          <div style="background: linear-gradient(90deg, #9333ea 0%, #ec4899 50%, #9333ea 100%); background-size: 200% 100%; padding: 40px; text-align: center; position: relative;">
+            <div style="font-size: 48px; margin-bottom: 10px;">🎌</div>
+            <h1 style="margin: 0; font-size: 36px; color: #ffffff; text-shadow: 0 4px 20px rgba(0,0,0,0.5);">AnimeDropZone</h1>
+            <p style="margin: 10px 0 0 0; font-size: 16px; color: #f3e8ff; letter-spacing: 1px;">Your Anime Paradise Awaits</p>
+          </div>
+
+          <!-- Welcome to Family Banner -->
+          <div style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%); padding: 40px; text-align: center; border-bottom: 2px solid rgba(147, 51, 234, 0.3);">
+            <div style="font-size: 64px; margin-bottom: 15px;">🎉</div>
+            <h2 style="margin: 0 0 15px 0; color: #ec4899; font-size: 32px; text-shadow: 0 2px 10px rgba(236, 72, 153, 0.5);">
+              Welcome to Our Family!
+            </h2>
+            <p style="margin: 0; color: #e5e7eb; font-size: 20px; line-height: 1.6;">
+              <strong style="color: #a855f7;">Hello ${name || 'Anime Fan'}!</strong>
+            </p>
+            <p style="margin: 15px 0 0 0; color: #d1d5db; font-size: 16px;">
+              We're absolutely thrilled to have you join our community! 💜
+            </p>
+          </div>
+
+          <!-- Main Content -->
+          <div style="padding: 40px 30px;">
+            <!-- Success Message -->
+            <div style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%); border-left: 4px solid #22c55e; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+              <p style="margin: 0; color: #4ade80; font-size: 16px;">
+                <strong>✓ Account Successfully Created!</strong>
+              </p>
+              <p style="margin: 10px 0 0 0; color: #d1d5db; font-size: 14px;">
+                Your email: <strong style="color: #a855f7;">${email}</strong>
+              </p>
+            </div>
+
+            <!-- Welcome Message -->
+            <p style="color: #e5e7eb; font-size: 16px; line-height: 1.8; margin: 0 0 25px 0;">
+              Welcome to the ultimate destination for premium anime merchandise! You're now part of an amazing community of passionate anime fans who share your love for incredible figures, accessories, and collectibles.
+            </p>
+
+            <!-- What You Can Do -->
+            <div style="background: rgba(147, 51, 234, 0.1); border: 1px solid rgba(147, 51, 234, 0.3); border-radius: 10px; padding: 25px; margin: 30px 0;">
+              <h3 style="margin: 0 0 20px 0; color: #a855f7; font-size: 20px;">🎯 What You Can Do Now:</h3>
+              
+              <!-- Feature 1 -->
+              <div style="background: rgba(236, 72, 153, 0.1); border-left: 4px solid #ec4899; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+                <p style="margin: 0; color: #ffffff; font-size: 15px;">
+                  <strong style="color: #f9a8d4;">⚔️ Browse Premium Figures & Katanas</strong>
+                </p>
+                <p style="margin: 5px 0 0 0; color: #d1d5db; font-size: 14px; line-height: 1.6;">
+                  Discover authentic collectibles from your favorite anime series
+                </p>
+              </div>
+
+              <!-- Feature 2 -->
+              <div style="background: rgba(147, 51, 234, 0.1); border-left: 4px solid #9333ea; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+                <p style="margin: 0; color: #ffffff; font-size: 15px;">
+                  <strong style="color: #a855f7;">🎨 Exclusive Merchandise</strong>
+                </p>
+                <p style="margin: 5px 0 0 0; color: #d1d5db; font-size: 14px; line-height: 1.6;">
+                  Limited edition items, custom clothing, and rare collectibles
+                </p>
+              </div>
+
+              <!-- Feature 3 -->
+              <div style="background: rgba(236, 72, 153, 0.1); border-left: 4px solid #ec4899; border-radius: 6px; padding: 15px; margin-bottom: 15px;">
+                <p style="margin: 0; color: #ffffff; font-size: 15px;">
+                  <strong style="color: #f9a8d4;">📦 Track Your Orders</strong>
+                </p>
+                <p style="margin: 5px 0 0 0; color: #d1d5db; font-size: 14px; line-height: 1.6;">
+                  Real-time order tracking and delivery updates
+                </p>
+              </div>
+
+              <!-- Feature 4 -->
+              <div style="background: rgba(147, 51, 234, 0.1); border-left: 4px solid #9333ea; border-radius: 6px; padding: 15px;">
+                <p style="margin: 0; color: #ffffff; font-size: 15px;">
+                  <strong style="color: #a855f7;">💜 Save Your Favorites</strong>
+                </p>
+                <p style="margin: 5px 0 0 0; color: #d1d5db; font-size: 14px; line-height: 1.6;">
+                  Create wishlists and never miss out on your dream items
+                </p>
+              </div>
+            </div>
+
+            <!-- Special Offer (Optional) -->
+            <div style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.15) 0%, rgba(147, 51, 234, 0.15) 100%); border: 2px solid rgba(236, 72, 153, 0.4); border-radius: 10px; padding: 25px; margin: 30px 0; text-align: center;">
+              <div style="font-size: 32px; margin-bottom: 10px;">🎁</div>
+              <h3 style="margin: 0 0 10px 0; color: #ec4899; font-size: 22px;">Special Welcome Gift!</h3>
+              <p style="margin: 0 0 15px 0; color: #e5e7eb; font-size: 16px; line-height: 1.6;">
+                As a new family member, you're now part of something special. Keep an eye on your inbox for exclusive deals and early access to new arrivals!
+              </p>
+              <p style="margin: 0; color: #a855f7; font-size: 14px;">
+                🌟 First-time customers get priority support 🌟
+              </p>
+            </div>
+
+            <!-- CTA Button -->
+            <div style="text-align: center; margin: 40px 0 30px 0;">
+              <a href="https://animedropzone.com" style="display: inline-block; background: linear-gradient(90deg, #9333ea 0%, #ec4899 100%); color: #ffffff; text-decoration: none; padding: 18px 50px; border-radius: 50px; font-size: 18px; font-weight: bold; box-shadow: 0 10px 30px rgba(236, 72, 153, 0.4); transition: all 0.3s;">
+                🛍️ Start Shopping Now
+              </a>
+            </div>
+
+            <!-- Account Details -->
+            <div style="background: rgba(147, 51, 234, 0.05); border: 1px solid rgba(147, 51, 234, 0.2); border-radius: 8px; padding: 20px; margin: 30px 0;">
+              <p style="margin: 0 0 10px 0; color: #e5e7eb; font-size: 14px;"><strong>Your Account Details:</strong></p>
+              <p style="margin: 5px 0; color: #9ca3af; font-size: 13px;">Email: ${email}</p>
+              <p style="margin: 5px 0; color: #9ca3af; font-size: 13px;">Name: ${name || 'Anime Fan'}</p>
+              <p style="margin: 5px 0; color: #9ca3af; font-size: 13px;">Member Since: ${new Date().toLocaleDateString()}</p>
+            </div>
+
+            <!-- Support -->
+            <div style="text-align: center; margin: 30px 0 20px 0;">
+              <p style="margin: 0 0 10px 0; color: #e5e7eb; font-size: 15px;">
+                Need help? We're here for you! 💬
+              </p>
+              <p style="margin: 0; color: #9ca3af; font-size: 14px;">
+                <a href="https://animedropzone.com/track-order" style="color: #a855f7; text-decoration: none;">Track Orders</a> | 
+                <a href="https://animedropzone.com" style="color: #a855f7; text-decoration: none;">Browse Store</a>
+              </p>
+            </div>
+
+            <!-- Thank You -->
+            <div style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%); border-radius: 8px; padding: 25px; text-align: center; margin-top: 30px;">
+              <p style="margin: 0 0 10px 0; color: #ec4899; font-size: 18px; font-weight: bold;">
+                Thank You for Joining Us! 💜
+              </p>
+              <p style="margin: 0; color: #d1d5db; font-size: 14px; line-height: 1.6;">
+                We can't wait to help you find your next favorite anime treasure. Welcome to the family!
+              </p>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div style="background: rgba(0, 0, 0, 0.4); padding: 30px; text-align: center; border-top: 1px solid rgba(147, 51, 234, 0.3);">
+            <p style="margin: 0 0 10px 0; color: #a855f7; font-size: 20px; font-weight: bold;">
+              AnimeDropZone
+            </p>
+            <p style="margin: 0 0 15px 0; color: #9ca3af; font-size: 14px;">
+              Your Trusted Source for Premium Anime Merchandise
+            </p>
+            <div style="margin: 15px 0;">
+              <a href="https://animedropzone.com" style="color: #a855f7; text-decoration: none; margin: 0 10px; font-size: 13px;">Home</a>
+              <a href="https://animedropzone.com/track-order" style="color: #a855f7; text-decoration: none; margin: 0 10px; font-size: 13px;">Track Order</a>
+              <a href="https://animedropzone.com/my-orders" style="color: #a855f7; text-decoration: none; margin: 0 10px; font-size: 13px;">My Orders</a>
+            </div>
+            <p style="margin: 15px 0 0 0; color: #6b7280; font-size: 12px; line-height: 1.6;">
+              © 2025 AnimeDropZone. All rights reserved.<br>
+              This email was sent to ${email}<br>
+              You're receiving this because you created an account with us.
+            </p>
+          </div>
+        </div>
+      `;
+
+      await sendEmail(email, emailSubject, emailBody);
+      console.log(`✅ Welcome email sent to ${email}`);
+    } catch (emailError) {
+      // Log error but don't fail signup if email fails
+      console.error('Error sending welcome email:', emailError);
+    }
