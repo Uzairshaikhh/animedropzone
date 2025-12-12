@@ -1,5 +1,4 @@
 # Netlify configuration for React SPA
-[build]
   # Build command (adjust if needed)
   command = "npm run build"
   # Directory that contains the build output
