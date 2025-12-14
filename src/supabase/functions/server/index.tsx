@@ -1,100 +1,97 @@
-import { Hono } from 'npm:hono';
-import { cors } from 'npm:hono/cors';
-import { logger } from 'npm:hono/logger';
-import { createClient } from 'npm:@supabase/supabase-js@2';
-import * as kv from './kv_store.tsx';
-import { recordPaymentHandler, markPaidHandler } from './payments.tsx';
-import { sendEmail, isValidEmail } from './email-service.tsx';
+import { Hono } from "npm:hono";
+import { cors } from "npm:hono/cors";
+import { logger } from "npm:hono/logger";
+import { createClient } from "npm:@supabase/supabase-js@2";
+import * as kv from "./kv_store.tsx";
+import { recordPaymentHandler, markPaidHandler } from "./payments.tsx";
+import { sendEmail, isValidEmail } from "./email-service.tsx";
 
 const app = new Hono();
 
-app.use('*', cors());
-app.use('*', logger(console.log));
+app.use("*", cors());
+app.use("*", logger(console.log));
 
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL')!,
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-);
+const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false,
+  },
+});
 
 // Admin contact information - HARDCODED TO BYPASS CORRUPTED ENV VARS
-const ADMIN_EMAIL = 'anime.drop.zone.00@gmail.com'; // FORCED - Ignores Deno.env.get('ADMIN_EMAIL')
+const ADMIN_EMAIL = "anime.drop.zone.00@gmail.com"; // FORCED - Ignores Deno.env.get('ADMIN_EMAIL')
 
 // Validate ADMIN_EMAIL is not accidentally set to an API key or invalid value
-if (!ADMIN_EMAIL || 
-    ADMIN_EMAIL.startsWith('re_') || 
-    ADMIN_EMAIL.startsWith('sk_') || 
-    ADMIN_EMAIL.startsWith('mlsn.') ||
-    ADMIN_EMAIL.length < 5 ||
-    !ADMIN_EMAIL.includes('@') || 
-    !ADMIN_EMAIL.includes('.')) {
+if (
+  !ADMIN_EMAIL ||
+  ADMIN_EMAIL.startsWith("re_") ||
+  ADMIN_EMAIL.startsWith("sk_") ||
+  ADMIN_EMAIL.startsWith("mlsn.") ||
+  ADMIN_EMAIL.length < 5 ||
+  !ADMIN_EMAIL.includes("@") ||
+  !ADMIN_EMAIL.includes(".")
+) {
   console.warn(`⚠️ ADMIN_EMAIL is invalid: "${ADMIN_EMAIL}"`);
-  console.warn('   Using fallback: anime.drop.zone.00@gmail.com');
-  console.warn('   Please update ADMIN_EMAIL environment variable to a valid email');
-  ADMIN_EMAIL = 'anime.drop.zone.00@gmail.com';
+  console.warn("   Using fallback: anime.drop.zone.00@gmail.com");
+  console.warn("   Please update ADMIN_EMAIL environment variable to a valid email");
+  ADMIN_EMAIL = "anime.drop.zone.00@gmail.com";
 }
 
-const ADMIN_PHONE = Deno.env.get('ADMIN_WHATSAPP_NUMBER'); // Format: +91XXXXXXXXXX
+const ADMIN_PHONE = Deno.env.get("ADMIN_WHATSAPP_NUMBER"); // Format: +91XXXXXXXXXX
 
 // Create product-images bucket on startup
 (async () => {
   try {
-    console.log('🔧 Setting up product-images bucket...');
+    console.log("🔧 Setting up product-images bucket...");
     const { data: buckets } = await supabase.storage.listBuckets();
-    const bucketExists = buckets?.some(bucket => bucket.name === 'product-images');
-    
+    const bucketExists = buckets?.some((bucket) => bucket.name === "product-images");
+
     if (!bucketExists) {
-      console.log('Creating product-images bucket...');
-      const { data, error } = await supabase.storage.createBucket('product-images', {
+      console.log("Creating product-images bucket...");
+      const { data, error } = await supabase.storage.createBucket("product-images", {
         public: true,
         fileSizeLimit: 5242880, // 5MB
-        allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']
+        allowedMimeTypes: ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"],
       });
-      
+
       if (error) {
-        console.error('❌ Error creating bucket:', error);
+        console.error("❌ Error creating bucket:", error);
       } else {
-        console.log('✅ Created product-images bucket successfully');
+        console.log("✅ Created product-images bucket successfully");
       }
     } else {
-      console.log('✅ product-images bucket already exists');
+      console.log("✅ product-images bucket already exists");
     }
-    
+
     // Critical RLS fix information
-    console.log('');
+    console.log("");
     console.log('⚠️  IMPORTANT: If you see "RLS policy" errors when uploading images:');
-    console.log('🔧 Fix: Go to Supabase Dashboard → Storage → product-images bucket');
+    console.log("🔧 Fix: Go to Supabase Dashboard → Storage → product-images bucket");
     console.log('    → Click "Policies" → Click "New Policy" → Choose "For full customization"');
     console.log('    → Policy name: "Allow all operations"');
     console.log('    → Target roles: "public"');
     console.log('    → Policy command: "All (SELECT, INSERT, UPDATE, DELETE)"');
-    console.log('    → USING expression: true');
-    console.log('    → WITH CHECK expression: true');
+    console.log("    → USING expression: true");
+    console.log("    → WITH CHECK expression: true");
     console.log('    → Click "Review" then "Save policy"');
-    console.log('');
-    console.log('📝 Or run this SQL in Supabase SQL Editor:');
+    console.log("");
+    console.log("📝 Or run this SQL in Supabase SQL Editor:");
     console.log(`
 CREATE POLICY "Allow all operations on product-images"
 ON storage.objects FOR ALL
 USING (bucket_id = 'product-images')
 WITH CHECK (bucket_id = 'product-images');
     `);
-    console.log('');
-    
+    console.log("");
   } catch (error) {
-    console.error('Error setting up bucket:', error);
+    console.error("Error setting up bucket:", error);
   }
 })();
 
 // Admin credentials (in production, use proper authentication)
 const ADMIN_CREDENTIALS = {
-  userId: 'admin',
-  password: 'admin123',
+  userId: "admin",
+  password: "admin123",
 };
 
 // Email service is now handled by email-service.tsx which supports multiple providers
@@ -179,74 +176,74 @@ async function sendEmail_OLD(to: string, subject: string, html: string) {
 
 // Helper function to send WhatsApp message via Twilio
 async function sendWhatsApp(to: string, message: string) {
-  const twilioAccountSid = Deno.env.get('TWILIO_ACCOUNT_SID');
-  const twilioAuthToken = Deno.env.get('TWILIO_AUTH_TOKEN');
-  const twilioWhatsAppFrom = Deno.env.get('TWILIO_WHATSAPP_FROM'); // Format: whatsapp:+14155238886
-  
+  const twilioAccountSid = Deno.env.get("TWILIO_ACCOUNT_SID");
+  const twilioAuthToken = Deno.env.get("TWILIO_AUTH_TOKEN");
+  const twilioWhatsAppFrom = Deno.env.get("TWILIO_WHATSAPP_FROM"); // Format: whatsapp:+14155238886
+
   if (!twilioAccountSid || !twilioAuthToken || !twilioWhatsAppFrom) {
-    console.log('Twilio WhatsApp not configured, skipping WhatsApp notification');
-    return { success: false, error: 'WhatsApp service not configured' };
+    console.log("Twilio WhatsApp not configured, skipping WhatsApp notification");
+    return { success: false, error: "WhatsApp service not configured" };
   }
 
   try {
     const auth = btoa(`${twilioAccountSid}:${twilioAuthToken}`);
-    const response = await fetch(
-      `https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${auth}`,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: new URLSearchParams({
-          From: twilioWhatsAppFrom,
-          To: `whatsapp:${to}`,
-          Body: message,
-        }),
-      }
-    );
+    const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${twilioAccountSid}/Messages.json`, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${auth}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        From: twilioWhatsAppFrom,
+        To: `whatsapp:${to}`,
+        Body: message,
+      }),
+    });
 
     const data = await response.json();
     return { success: response.ok, data };
   } catch (error) {
-    console.log('Error sending WhatsApp message:', error);
+    console.log("Error sending WhatsApp message:", error);
     return { success: false, error: String(error) };
   }
 }
 
 // Email configuration check endpoint
-app.get('/make-server-95a96d8e/email-config', async (c) => {
-  const mailersendApiKey = Deno.env.get('MAILERSEND_API_KEY');
-  const mailersendFromEmail = Deno.env.get('MAILERSEND_FROM_EMAIL');
-  const emailProvider = Deno.env.get('EMAIL_PROVIDER') || 'mailersend';
+app.get("/make-server-95a96d8e/email-config", async (c) => {
+  const mailersendApiKey = Deno.env.get("MAILERSEND_API_KEY");
+  const mailersendFromEmail = Deno.env.get("MAILERSEND_FROM_EMAIL");
+  const emailProvider = Deno.env.get("EMAIL_PROVIDER") || "mailersend";
   const adminEmail = ADMIN_EMAIL;
-  
+
   // Debug all environment variables related to email
-  console.log('🔍 Email Config Debug:');
-  console.log('  MAILERSEND_API_KEY exists:', !!mailersendApiKey);
-  console.log('  MAILERSEND_API_KEY value (first 20 chars):', mailersendApiKey ? JSON.stringify(mailersendApiKey.substring(0, 20)) : 'NOT SET');
-  console.log('  MAILERSEND_API_KEY length:', mailersendApiKey?.length || 0);
-  console.log('  MAILERSEND_API_KEY has newlines:', mailersendApiKey?.includes('\n') || false);
-  console.log('  MAILERSEND_API_KEY trimmed length:', mailersendApiKey?.trim().length || 0);
-  
+  console.log("🔍 Email Config Debug:");
+  console.log("  MAILERSEND_API_KEY exists:", !!mailersendApiKey);
+  console.log(
+    "  MAILERSEND_API_KEY value (first 20 chars):",
+    mailersendApiKey ? JSON.stringify(mailersendApiKey.substring(0, 20)) : "NOT SET"
+  );
+  console.log("  MAILERSEND_API_KEY length:", mailersendApiKey?.length || 0);
+  console.log("  MAILERSEND_API_KEY has newlines:", mailersendApiKey?.includes("\n") || false);
+  console.log("  MAILERSEND_API_KEY trimmed length:", mailersendApiKey?.trim().length || 0);
+
   // Fetch verified senders from MailerSend if API key exists
   let verifiedSenders = [];
   if (mailersendApiKey) {
     try {
-      const trimmedKey = mailersendApiKey.trim().replace(/^["']|["']$/g, '');
-      console.log('  Fetching verified senders from MailerSend...');
-      
-      const response = await fetch('https://api.mailersend.com/v1/email/domains', {
+      const trimmedKey = mailersendApiKey.trim().replace(/^["']|["']$/g, "");
+      console.log("  Fetching verified senders from MailerSend...");
+
+      const response = await fetch("https://api.mailersend.com/v1/email/domains", {
         headers: {
-          'Authorization': `Bearer ${trimmedKey}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${trimmedKey}`,
+          "Content-Type": "application/json",
         },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
-        console.log('  MailerSend domains response:', JSON.stringify(data, null, 2));
-        
+        console.log("  MailerSend domains response:", JSON.stringify(data, null, 2));
+
         // Extract domains and their settings
         if (data.data && Array.isArray(data.data)) {
           for (const domain of data.data) {
@@ -254,79 +251,94 @@ app.get('/make-server-95a96d8e/email-config', async (c) => {
               verifiedSenders.push({
                 domain: domain.name,
                 isActive: !domain.domain_settings?.send_paused,
-                defaultEmail: `noreply@${domain.name}`
+                defaultEmail: `noreply@${domain.name}`,
               });
             }
           }
         }
       } else {
-        console.log('  Failed to fetch domains:', response.status, await response.text());
+        console.log("  Failed to fetch domains:", response.status, await response.text());
       }
     } catch (error) {
-      console.log('  Error fetching verified senders:', error);
+      console.log("  Error fetching verified senders:", error);
     }
   }
-  
+
   return c.json({
     configured: !!mailersendApiKey,
     provider: emailProvider,
     adminEmail: adminEmail,
     mailersendApiKeySet: !!mailersendApiKey,
-    mailersendApiKeyPrefix: mailersendApiKey ? mailersendApiKey.trim().substring(0, 15) + '...' : 'NOT SET',
+    mailersendApiKeyPrefix: mailersendApiKey ? mailersendApiKey.trim().substring(0, 15) + "..." : "NOT SET",
     mailersendApiKeyLength: mailersendApiKey?.length || 0,
     mailersendApiKeyTrimmedLength: mailersendApiKey?.trim().length || 0,
-    mailersendApiKeyHasNewlines: mailersendApiKey?.includes('\n') || false,
-    mailersendFromEmail: mailersendFromEmail || adminEmail || 'NOT SET',
+    mailersendApiKeyHasNewlines: mailersendApiKey?.includes("\n") || false,
+    mailersendFromEmail: mailersendFromEmail || adminEmail || "NOT SET",
     verifiedSenders: verifiedSenders,
-    message: mailersendApiKey 
-      ? '✅ MailerSend API key is configured (12,000 emails/month FREE)' 
-      : '❌ MailerSend API key is NOT configured. Please add MAILERSEND_API_KEY environment variable.',
-    instructions: !mailersendApiKey ? 'Go to https://app.mailersend.com/api-tokens to get your API key' : null
+    message: mailersendApiKey
+      ? "✅ MailerSend API key is configured (12,000 emails/month FREE)"
+      : "❌ MailerSend API key is NOT configured. Please add MAILERSEND_API_KEY environment variable.",
+    instructions: !mailersendApiKey ? "Go to https://app.mailersend.com/api-tokens to get your API key" : null,
   });
 });
 
 // Test email endpoint
-app.post('/make-server-95a96d8e/test-email', async (c) => {
+app.post("/make-server-95a96d8e/test-email", async (c) => {
   try {
     const body = await c.req.json();
     const { to } = body;
-    
+
     // Use admin email if no recipient specified
     const recipient = to || ADMIN_EMAIL;
-    
+
     if (!recipient) {
-      return c.json({ 
-        success: false, 
-        error: 'No recipient email specified and ADMIN_EMAIL not configured' 
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          error: "No recipient email specified and ADMIN_EMAIL not configured",
+        },
+        400
+      );
     }
 
     // DIAGNOSTIC: Check environment variables
-    console.log('🔍 === EMAIL CONFIGURATION DIAGNOSTIC ===');
-    console.log('EMAIL_PROVIDER:', Deno.env.get('EMAIL_PROVIDER') || 'mailersend (default)');
-    console.log('ADMIN_EMAIL:', Deno.env.get('ADMIN_EMAIL'));
-    console.log('');
-    console.log('Checking all possible MailerSend API key env vars:');
-    const mailersendKey1 = Deno.env.get('MAILERSEND_API_KEY');
-    const mailersendKey2 = Deno.env.get('mailsender_api');
-    const mailersendKey3 = Deno.env.get('mail_api');
-    
-    console.log('MAILERSEND_API_KEY:', mailersendKey1 ? `SET (${mailersendKey1.length} chars, starts: ${mailersendKey1.substring(0, 15)}...)` : 'NOT SET');
-    console.log('mailsender_api:', mailersendKey2 ? `SET (${mailersendKey2.length} chars, starts: ${mailersendKey2.substring(0, 15)}...)` : 'NOT SET');
-    console.log('mail_api:', mailersendKey3 ? `SET (${mailersendKey3.length} chars, starts: ${mailersendKey3.substring(0, 15)}...)` : 'NOT SET');
-    
+    console.log("🔍 === EMAIL CONFIGURATION DIAGNOSTIC ===");
+    console.log("EMAIL_PROVIDER:", Deno.env.get("EMAIL_PROVIDER") || "mailersend (default)");
+    console.log("ADMIN_EMAIL:", Deno.env.get("ADMIN_EMAIL"));
+    console.log("");
+    console.log("Checking all possible MailerSend API key env vars:");
+    const mailersendKey1 = Deno.env.get("MAILERSEND_API_KEY");
+    const mailersendKey2 = Deno.env.get("mailsender_api");
+    const mailersendKey3 = Deno.env.get("mail_api");
+
+    console.log(
+      "MAILERSEND_API_KEY:",
+      mailersendKey1 ? `SET (${mailersendKey1.length} chars, starts: ${mailersendKey1.substring(0, 15)}...)` : "NOT SET"
+    );
+    console.log(
+      "mailsender_api:",
+      mailersendKey2 ? `SET (${mailersendKey2.length} chars, starts: ${mailersendKey2.substring(0, 15)}...)` : "NOT SET"
+    );
+    console.log(
+      "mail_api:",
+      mailersendKey3 ? `SET (${mailersendKey3.length} chars, starts: ${mailersendKey3.substring(0, 15)}...)` : "NOT SET"
+    );
+
     const selectedKey = mailersendKey1 || mailersendKey2 || mailersendKey3;
     if (selectedKey) {
-      const trimmedKey = selectedKey.trim().replace(/^["']|["']$/g, '');
-      console.log('');
-      console.log('Selected key after trimming:', trimmedKey.substring(0, 15) + '...');
-      console.log('Key length after trim:', trimmedKey.length);
-      console.log('Starts with mlsn.:', trimmedKey.startsWith('mlsn.'));
-      console.log('Expected key should be: mlsn.277293f1ad16750e756c7302303d27e44b88da74cf420158f3819471906966a6');
-      console.log('Keys match:', trimmedKey === 'mlsn.277293f1ad16750e756c7302303d27e44b88da74cf420158f3819471906966a6');
+      const trimmedKey = selectedKey.trim().replace(/^["']|["']$/g, "");
+      console.log("");
+      console.log("Selected key after trimming:", trimmedKey.substring(0, 15) + "...");
+      console.log("Key length after trim:", trimmedKey.length);
+      console.log("Starts with mlsn.:", trimmedKey.startsWith("mlsn."));
+      console.log("Expected key should be: mlsn.277293f1ad16750e756c7302303d27e44b88da74cf420158f3819471906966a6");
+      console.log(
+        "Keys match:",
+        trimmedKey === "mlsn.277293f1ad16750e756c7302303d27e44b88da74cf420158f3819471906966a6"
+      );
     }
-    console.log('=== END DIAGNOSTIC ===');
-    console.log('');
+    console.log("=== END DIAGNOSTIC ===");
+    console.log("");
 
     // Send test email
     const testEmailHtml = `
@@ -363,167 +375,168 @@ app.post('/make-server-95a96d8e/test-email', async (c) => {
       </div>
     `;
 
-    const result = await sendEmail(
-      recipient,
-      '✅ AnimeDrop Zone - Email Test Successful',
-      testEmailHtml
-    );
+    const result = await sendEmail(recipient, "✅ AnimeDrop Zone - Email Test Successful", testEmailHtml);
 
     if (result.success) {
-      return c.json({ 
-        success: true, 
+      return c.json({
+        success: true,
         message: `Test email sent successfully to ${recipient}`,
         recipient: recipient,
-        provider: 'MailerSend',
-        timestamp: new Date().toISOString()
+        provider: "MailerSend",
+        timestamp: new Date().toISOString(),
       });
     } else {
-      return c.json({ 
-        success: false, 
-        error: result.error,
-        details: 'Failed to send test email. Check server logs for details.'
-      }, 500);
+      return c.json(
+        {
+          success: false,
+          error: result.error,
+          details: "Failed to send test email. Check server logs for details.",
+        },
+        500
+      );
     }
   } catch (error) {
-    console.error('Error sending test email:', error);
-    return c.json({ 
-      success: false, 
-      error: String(error) 
-    }, 500);
+    console.error("Error sending test email:", error);
+    return c.json(
+      {
+        success: false,
+        error: String(error),
+      },
+      500
+    );
   }
 });
 
 // Get all products
-app.get('/make-server-95a96d8e/products', async (c) => {
+app.get("/make-server-95a96d8e/products", async (c) => {
   try {
-    const products = await kv.getByPrefix('product:');
+    const products = await kv.getByPrefix("product:");
     return c.json({ success: true, products });
   } catch (error) {
-    console.log('Error fetching products:', error);
+    console.log("Error fetching products:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Get products by category
-app.get('/make-server-95a96d8e/products/category/:category', async (c) => {
+app.get("/make-server-95a96d8e/products/category/:category", async (c) => {
   try {
-    const category = c.req.param('category');
-    const allProducts = await kv.getByPrefix('product:');
+    const category = c.req.param("category");
+    const allProducts = await kv.getByPrefix("product:");
     const filteredProducts = allProducts.filter((p: any) => p.category === category);
     return c.json({ success: true, products: filteredProducts });
   } catch (error) {
-    console.log('Error fetching products by category:', error);
+    console.log("Error fetching products by category:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Get single product
-app.get('/make-server-95a96d8e/products/:id', async (c) => {
+app.get("/make-server-95a96d8e/products/:id", async (c) => {
   try {
-    const id = c.req.param('id');
+    const id = c.req.param("id");
     const product = await kv.get(`product:${id}`);
     if (!product) {
-      return c.json({ success: false, error: 'Product not found' }, 404);
+      return c.json({ success: false, error: "Product not found" }, 404);
     }
     return c.json({ success: true, product });
   } catch (error) {
-    console.log('Error fetching product:', error);
+    console.log("Error fetching product:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Admin login
-app.post('/make-server-95a96d8e/admin/login', async (c) => {
+app.post("/make-server-95a96d8e/admin/login", async (c) => {
   try {
     const body = await c.req.json();
     const { userId, password } = body;
 
     if (userId === ADMIN_CREDENTIALS.userId && password === ADMIN_CREDENTIALS.password) {
-      return c.json({ success: true, message: 'Login successful' });
+      return c.json({ success: true, message: "Login successful" });
     }
 
-    return c.json({ success: false, error: 'Invalid credentials' }, 401);
+    return c.json({ success: false, error: "Invalid credentials" }, 401);
   } catch (error) {
-    console.log('Error during admin login:', error);
+    console.log("Error during admin login:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Fix storage bucket RLS issues (admin only)
-app.post('/make-server-95a96d8e/admin/fix-storage', async (c) => {
+app.post("/make-server-95a96d8e/admin/fix-storage", async (c) => {
   try {
-    console.log('🔧 Attempting to fix storage bucket...');
-    
+    console.log("🔧 Attempting to fix storage bucket...");
+
     // Try to empty and delete the bucket, then recreate it
-    const bucketName = 'product-images';
-    
+    const bucketName = "product-images";
+
     // List all files in the bucket
-    const { data: files, error: listError } = await supabase.storage
-      .from(bucketName)
-      .list();
-    
+    const { data: files, error: listError } = await supabase.storage.from(bucketName).list();
+
     if (listError) {
-      console.log('Could not list files:', listError);
+      console.log("Could not list files:", listError);
     } else if (files && files.length > 0) {
       console.log(`Found ${files.length} files in bucket`);
       // Delete all files
-      const filePaths = files.map(f => f.name);
-      const { error: deleteError } = await supabase.storage
-        .from(bucketName)
-        .remove(filePaths);
-      
+      const filePaths = files.map((f) => f.name);
+      const { error: deleteError } = await supabase.storage.from(bucketName).remove(filePaths);
+
       if (deleteError) {
-        console.log('Error deleting files:', deleteError);
+        console.log("Error deleting files:", deleteError);
       } else {
-        console.log('✅ Deleted all files from bucket');
+        console.log("✅ Deleted all files from bucket");
       }
     }
-    
+
     // Try to delete the bucket
     const { error: deleteBucketError } = await supabase.storage.deleteBucket(bucketName);
     if (deleteBucketError) {
-      console.log('Could not delete bucket (it may not exist or have files):', deleteBucketError);
+      console.log("Could not delete bucket (it may not exist or have files):", deleteBucketError);
     } else {
-      console.log('✅ Deleted old bucket');
+      console.log("✅ Deleted old bucket");
     }
-    
+
     // Recreate the bucket
     const { data, error: createError } = await supabase.storage.createBucket(bucketName, {
       public: true,
       fileSizeLimit: 5242880, // 5MB
-      allowedMimeTypes: ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']
+      allowedMimeTypes: ["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"],
     });
-    
+
     if (createError) {
-      console.error('Error recreating bucket:', createError);
-      return c.json({ 
-        success: false, 
-        error: createError.message,
-        message: 'Could not recreate bucket. Please manually create RLS policy in Supabase dashboard.'
-      }, 500);
+      console.error("Error recreating bucket:", createError);
+      return c.json(
+        {
+          success: false,
+          error: createError.message,
+          message: "Could not recreate bucket. Please manually create RLS policy in Supabase dashboard.",
+        },
+        500
+      );
     }
-    
-    console.log('✅ Recreated bucket successfully');
-    return c.json({ 
-      success: true, 
-      message: 'Bucket recreated. If RLS errors persist, manually add a policy in Supabase dashboard.',
-      instructions: 'Go to Storage → product-images → Policies → New Policy → Allow all operations with "true" for both expressions'
+
+    console.log("✅ Recreated bucket successfully");
+    return c.json({
+      success: true,
+      message: "Bucket recreated. If RLS errors persist, manually add a policy in Supabase dashboard.",
+      instructions:
+        'Go to Storage → product-images → Policies → New Policy → Allow all operations with "true" for both expressions',
     });
-    
   } catch (error) {
-    console.error('Error fixing storage:', error);
+    console.error("Error fixing storage:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Create product (admin only)
-app.post('/make-server-95a96d8e/products', async (c) => {
+app.post("/make-server-95a96d8e/products", async (c) => {
   try {
     const body = await c.req.json();
     const { name, description, price, category, subcategory, image, stock } = body;
 
     if (!name || !price || !category) {
-      return c.json({ success: false, error: 'Missing required fields' }, 400);
+      return c.json({ success: false, error: "Missing required fields" }, 400);
     }
 
     const id = crypto.randomUUID();
@@ -533,8 +546,8 @@ app.post('/make-server-95a96d8e/products', async (c) => {
       description,
       price: parseFloat(price),
       category,
-      subcategory: subcategory || '',
-      image: image || '',
+      subcategory: subcategory || "",
+      image: image || "",
       stock: parseInt(stock) || 0,
       createdAt: new Date().toISOString(),
     };
@@ -542,20 +555,20 @@ app.post('/make-server-95a96d8e/products', async (c) => {
     await kv.set(`product:${id}`, product);
     return c.json({ success: true, product });
   } catch (error) {
-    console.log('Error creating product:', error);
+    console.log("Error creating product:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Update product
-app.put('/make-server-95a96d8e/products/:id', async (c) => {
+app.put("/make-server-95a96d8e/products/:id", async (c) => {
   try {
-    const id = c.req.param('id');
+    const id = c.req.param("id");
     const body = await c.req.json();
     const existingProduct = await kv.get(`product:${id}`);
 
     if (!existingProduct) {
-      return c.json({ success: false, error: 'Product not found' }, 404);
+      return c.json({ success: false, error: "Product not found" }, 404);
     }
 
     const updatedProduct = {
@@ -569,48 +582,49 @@ app.put('/make-server-95a96d8e/products/:id', async (c) => {
     await kv.set(`product:${id}`, updatedProduct);
     return c.json({ success: true, product: updatedProduct });
   } catch (error) {
-    console.log('Error updating product:', error);
+    console.log("Error updating product:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Delete product
-app.delete('/make-server-95a96d8e/products/:id', async (c) => {
+app.delete("/make-server-95a96d8e/products/:id", async (c) => {
   try {
-    const id = c.req.param('id');
+    const id = c.req.param("id");
     await kv.del(`product:${id}`);
     return c.json({ success: true });
   } catch (error) {
-    console.log('Error deleting product:', error);
+    console.log("Error deleting product:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Create order
-app.post('/make-server-95a96d8e/orders', async (c) => {
+app.post("/make-server-95a96d8e/orders", async (c) => {
   try {
     const body = await c.req.json();
-    const { items, subtotal, shippingCharges, discount, couponCode, total, customerInfo, paymentId, paymentMethod } = body;
+    const { items, subtotal, shippingCharges, discount, couponCode, total, customerInfo, paymentId, paymentMethod } =
+      body;
 
     const orderId = crypto.randomUUID();
     const trackingId = `AV${Date.now()}${Math.floor(Math.random() * 1000)}`;
-    
+
     // Determine if order is prepaid or COD
-    const isPrepaid = paymentMethod !== 'cod';
-    const paymentType = isPrepaid ? 'Prepaid' : 'COD';
-    
+    const isPrepaid = paymentMethod !== "cod";
+    const paymentType = isPrepaid ? "Prepaid" : "COD";
+
     // Mark prepaid orders as "Paid" since payment is received upfront
-    const paymentStatus = isPrepaid ? 'Paid' : 'Pending';
-    
+    const paymentStatus = isPrepaid ? "Paid" : "Pending";
+
     // For COD orders, status is 'Order Pending', otherwise 'Order Pending' (all orders start as Order Pending)
-    const orderStatus = 'Order Pending';
-    
+    const orderStatus = "Order Pending";
+
     // Format customer name from firstName and lastName
     const fullName = `${customerInfo.firstName} ${customerInfo.lastName}`.trim();
-    
+
     // Format full address with all details
     const fullAddress = `${customerInfo.address}, ${customerInfo.city}, ${customerInfo.state} - ${customerInfo.pincode}`;
-    
+
     const order = {
       id: orderId,
       trackingId,
@@ -626,7 +640,7 @@ app.post('/make-server-95a96d8e/orders', async (c) => {
         fullAddress: fullAddress,
       },
       paymentId,
-      paymentMethod: paymentMethod || 'razorpay',
+      paymentMethod: paymentMethod || "razorpay",
       paymentType, // Add payment type (Prepaid/COD)
       paymentStatus, // Add payment status (Paid/Pending)
       status: orderStatus,
@@ -636,7 +650,7 @@ app.post('/make-server-95a96d8e/orders', async (c) => {
     await kv.set(`order:${orderId}`, order);
 
     // Deduct product quantities from inventory
-    console.log('🔄 Updating product inventory for order:', orderId);
+    console.log("🔄 Updating product inventory for order:", orderId);
     for (const item of items) {
       try {
         const product = await kv.get(`product:${item.id}`);
@@ -644,7 +658,7 @@ app.post('/make-server-95a96d8e/orders', async (c) => {
           const newStock = (product.stock || 0) - item.quantity;
           const updatedProduct = {
             ...product,
-            stock: Math.max(0, newStock) // Ensure stock doesn't go negative
+            stock: Math.max(0, newStock), // Ensure stock doesn't go negative
           };
           await kv.set(`product:${item.id}`, updatedProduct);
           console.log(`✅ Updated ${item.name}: ${product.stock} → ${updatedProduct.stock} (sold: ${item.quantity})`);
@@ -658,8 +672,10 @@ app.post('/make-server-95a96d8e/orders', async (c) => {
     }
 
     // Send order confirmation email
-    const itemsList = items.map((item: any) => 
-      `<li style="padding: 15px; margin: 10px 0; background: #f9fafb; border-radius: 8px; border-left: 3px solid #9333ea;">
+    const itemsList = items
+      .map(
+        (item: any) =>
+          `<li style="padding: 15px; margin: 10px 0; background: #f9fafb; border-radius: 8px; border-left: 3px solid #9333ea;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <div>
             <strong style="color: #333; font-size: 16px;">${item.name}</strong>
@@ -671,7 +687,8 @@ app.post('/make-server-95a96d8e/orders', async (c) => {
           </div>
         </div>
       </li>`
-    ).join('');
+      )
+      .join("");
 
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -738,22 +755,18 @@ app.post('/make-server-95a96d8e/orders', async (c) => {
 
     // Send order confirmation email to customer
     // MailerSend allows sending to any email address
-    console.log('📧 ATTEMPTING TO SEND CUSTOMER ORDER CONFIRMATION EMAIL');
-    console.log('   Customer Email:', customerInfo.email);
-    console.log('   Subject:', `Order Confirmation - ${trackingId}`);
-    
-    const emailResult = await sendEmail(
-      customerInfo.email,
-      `Order Confirmation - ${trackingId}`,
-      emailHtml
-    );
-    
+    console.log("📧 ATTEMPTING TO SEND CUSTOMER ORDER CONFIRMATION EMAIL");
+    console.log("   Customer Email:", customerInfo.email);
+    console.log("   Subject:", `Order Confirmation - ${trackingId}`);
+
+    const emailResult = await sendEmail(customerInfo.email, `Order Confirmation - ${trackingId}`, emailHtml);
+
     if (!emailResult.success) {
-      console.error('❌ FAILED to send customer order confirmation email');
-      console.error('   Customer Email:', customerInfo.email);
-      console.error('   Error:', JSON.stringify(emailResult.error, null, 2));
+      console.error("❌ FAILED to send customer order confirmation email");
+      console.error("   Customer Email:", customerInfo.email);
+      console.error("   Error:", JSON.stringify(emailResult.error, null, 2));
     } else {
-      console.log('✅ SUCCESSFULLY sent customer order confirmation email to:', customerInfo.email);
+      console.log("✅ SUCCESSFULLY sent customer order confirmation email to:", customerInfo.email);
     }
 
     // Send WhatsApp confirmation to customer
@@ -780,12 +793,12 @@ Thank you for choosing AnimeDropZone! 💜
 - AnimeDropZone Team`;
 
     const customerWhatsAppResult = await sendWhatsApp(customerInfo.phone, customerWhatsAppMessage);
-    
+
     if (!customerWhatsAppResult.success) {
-      console.log('⚠️ Failed to send customer order confirmation WhatsApp');
+      console.log("⚠️ Failed to send customer order confirmation WhatsApp");
       console.log(`   Error: ${JSON.stringify(customerWhatsAppResult.error)}`);
     } else {
-      console.log('✅ Customer order confirmation WhatsApp sent successfully!');
+      console.log("✅ Customer order confirmation WhatsApp sent successfully!");
     }
 
     // Send admin email notification
@@ -805,7 +818,9 @@ Thank you for choosing AnimeDropZone! 💜
             <p><strong>Payment ID:</strong> ${paymentId}</p>
             <p><strong>Payment Method:</strong> ${paymentMethod}</p>
             <p><strong>Order Date:</strong> ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
-            <p><strong>Status:</strong> <span style="color: ${orderStatus === 'pending' ? '#f59e0b' : '#10b981'};">${orderStatus.charAt(0).toUpperCase() + orderStatus.slice(1)}</span></p>
+            <p><strong>Status:</strong> <span style="color: ${orderStatus === "pending" ? "#f59e0b" : "#10b981"};">${
+      orderStatus.charAt(0).toUpperCase() + orderStatus.slice(1)
+    }</span></p>
           </div>
 
           <div style="background: white; padding: 20px; margin: 20px 0; border-radius: 8px;">
@@ -839,16 +854,12 @@ Thank you for choosing AnimeDropZone! 💜
       </div>
     `;
 
-    await sendEmail(
-      ADMIN_EMAIL,
-      `🔔 New Order #${trackingId} - ₹${total.toLocaleString()}`,
-      adminEmailHtml
-    );
+    await sendEmail(ADMIN_EMAIL, `🔔 New Order #${trackingId} - ₹${total.toLocaleString()}`, adminEmailHtml);
 
     // Send WhatsApp notification to admin
-    const itemsText = items.map((item: any) => 
-      `${item.name} x${item.quantity} - ₹${(item.price * item.quantity).toLocaleString()}`
-    ).join('\n');
+    const itemsText = items
+      .map((item: any) => `${item.name} x${item.quantity} - ₹${(item.price * item.quantity).toLocaleString()}`)
+      .join("\n");
 
     const whatsappMessage = `🔔 *NEW ORDER ALERT*
 
@@ -878,39 +889,42 @@ ${fullAddress}
 
     return c.json({ success: true, order });
   } catch (error) {
-    console.log('Error creating order:', error);
+    console.log("Error creating order:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Get all orders
-app.get('/make-server-95a96d8e/orders', async (c) => {
+app.get("/make-server-95a96d8e/orders", async (c) => {
   try {
-    const orders = await kv.getByPrefix('order:');
+    const orders = await kv.getByPrefix("order:");
     return c.json({ success: true, orders });
   } catch (error) {
-    console.log('Error fetching orders:', error);
+    console.log("Error fetching orders:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // User signup
-app.post('/make-server-95a96d8e/signup', async (c) => {
+app.post("/make-server-95a96d8e/signup", async (c) => {
   try {
     const body = await c.req.json();
     const { email, password, name } = body;
 
     // Check if user already exists
     const { data: existingUsers } = await supabase.auth.admin.listUsers();
-    const userExists = existingUsers?.users?.some(user => user.email === email);
-    
+    const userExists = existingUsers?.users?.some((user) => user.email === email);
+
     if (userExists) {
-      console.log('User already exists:', email);
-      return c.json({ 
-        success: false, 
-        message: 'This email is already registered. Please sign in instead or use a different email.',
-        error: 'User already exists'
-      }, 400);
+      console.log("User already exists:", email);
+      return c.json(
+        {
+          success: false,
+          message: "This email is already registered. Please sign in instead or use a different email.",
+          error: "User already exists",
+        },
+        400
+      );
     }
 
     const { data, error } = await supabase.auth.admin.createUser({
@@ -922,40 +936,41 @@ app.post('/make-server-95a96d8e/signup', async (c) => {
     });
 
     if (error) {
-      console.log('Error creating user:', error);
-      
+      console.log("Error creating user:", error);
+
       // Check for common error messages and provide user-friendly responses
       let userMessage = error.message;
-      if (error.message.includes('already registered') || error.message.includes('already exists')) {
-        userMessage = 'This email is already registered. Please sign in instead or use a different email.';
-      } else if (error.message.includes('password')) {
-        userMessage = 'Password is too weak. Please use a stronger password (at least 6 characters).';
+      if (error.message.includes("already registered") || error.message.includes("already exists")) {
+        userMessage = "This email is already registered. Please sign in instead or use a different email.";
+      } else if (error.message.includes("password")) {
+        userMessage = "Password is too weak. Please use a stronger password (at least 6 characters).";
       }
-      
-      return c.json({ 
-        success: false, 
-        message: userMessage,
-        error: error.message 
-      }, 400);
+
+      return c.json(
+        {
+          success: false,
+          message: userMessage,
+          error: error.message,
+        },
+        400
+      );
     }
 
     // Send welcome email
     try {
-
-      
       // Removed adminEmail references - using MailerSend directly
-      if (false) { // adminEmail code disabled
+      if (false) {
+        // adminEmail code disabled
         // adminEmail = adminEmail.trim().replace(/['"]/g, '');
         // console.log('Admin email for welcome message:', adminEmail);
       }
-      
 
-        // OLD EMAIL TEMPLATE REMOVED - USING NEW MAILERSEND TEMPLATE BELOW
-        if (false) {
+      // OLD EMAIL TEMPLATE REMOVED - USING NEW MAILERSEND TEMPLATE BELOW
+      if (false) {
         const emailPayload: any = {
-          from: 'AnimeDropZone <onboarding@resend.dev>',
+          from: "AnimeDropZone <onboarding@resend.dev>",
           to: email,
-          subject: '🎉 Welcome to AnimeDropZone - Your Anime Paradise!',
+          subject: "🎉 Welcome to AnimeDropZone - Your Anime Paradise!",
           html: `
               <!DOCTYPE html>
               <html>
@@ -987,7 +1002,7 @@ app.post('/make-server-95a96d8e/signup', async (c) => {
                             <td style="padding: 50px 40px; text-align: center;">
                               <div style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%); border-radius: 15px; padding: 30px; margin-bottom: 30px; border: 1px solid rgba(168, 85, 247, 0.2);">
                                 <h2 style="margin: 0 0 20px 0; color: #ec4899; font-size: 28px;">
-                                  🎉 Congratulations, ${name || 'Anime Fan'}!
+                                  🎉 Congratulations, ${name || "Anime Fan"}!
                                 </h2>
                                 <p style="margin: 0; color: #e5e5e5; font-size: 18px; line-height: 1.6;">
                                   Your account has been successfully created!
@@ -1033,7 +1048,10 @@ app.post('/make-server-95a96d8e/signup', async (c) => {
                               <table width="100%" cellpadding="0" cellspacing="0" style="margin: 40px 0 20px 0;">
                                 <tr>
                                   <td align="center">
-                                    <a href="${Deno.env.get('SUPABASE_URL')?.replace('https://', 'https://') || 'https://animedropzone.com'}" 
+                                    <a href="${
+                                      Deno.env.get("SUPABASE_URL")?.replace("https://", "https://") ||
+                                      "https://animedropzone.com"
+                                    }" 
                                        style="display: inline-block; background: linear-gradient(90deg, #7c3aed 0%, #ec4899 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 50px; font-size: 16px; font-weight: bold; box-shadow: 0 10px 30px rgba(236, 72, 153, 0.3); transition: all 0.3s;">
                                       🛍�� Start Shopping Now
                                     </a>
@@ -1077,22 +1095,22 @@ app.post('/make-server-95a96d8e/signup', async (c) => {
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (emailRegex.test(adminEmail)) {
             emailPayload.reply_to = adminEmail;
-            console.log('Added reply_to:', adminEmail);
+            console.log("Added reply_to:", adminEmail);
           } else {
-            console.log('Skipping reply_to - invalid email format:', adminEmail);
+            console.log("Skipping reply_to - invalid email format:", adminEmail);
           }
         }
 
-        console.log('Sending welcome email with from:', emailPayload.from, 'to:', emailPayload.to);
-        console.log('Full payload:', JSON.stringify(emailPayload, null, 2));
-        } // end if (false)
+        console.log("Sending welcome email with from:", emailPayload.from, "to:", emailPayload.to);
+        console.log("Full payload:", JSON.stringify(emailPayload, null, 2));
+      } // end if (false)
 
-      console.log('🎯 STARTING WELCOME EMAIL PROCESS');
-      console.log('   Recipient Email:', email);
-      console.log('   Recipient Name:', name);
-      console.log('   Email is valid:', isValidEmail(email));
-      
-      const emailSubject = '🎉 Welcome to Our Family - AnimeDropZone';
+      console.log("🎯 STARTING WELCOME EMAIL PROCESS");
+      console.log("   Recipient Email:", email);
+      console.log("   Recipient Name:", name);
+      console.log("   Email is valid:", isValidEmail(email));
+
+      const emailSubject = "🎉 Welcome to Our Family - AnimeDropZone";
       const emailBody = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #1a0033 0%, #000000 100%); color: #ffffff; border: 2px solid #9333ea; border-radius: 12px; overflow: hidden;">
           <div style="background: linear-gradient(90deg, #9333ea 0%, #ec4899 50%, #9333ea 100%); padding: 40px; text-align: center;">
@@ -1103,7 +1121,9 @@ app.post('/make-server-95a96d8e/signup', async (c) => {
           <div style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(147, 51, 234, 0.2) 100%); padding: 40px; text-align: center; border-bottom: 2px solid rgba(147, 51, 234, 0.3);">
             <div style="font-size: 64px; margin-bottom: 15px;">🎉</div>
             <h2 style="margin: 0 0 15px 0; color: #ec4899; font-size: 32px;">Welcome to Our Family!</h2>
-            <p style="margin: 0; color: #e5e7eb; font-size: 20px;"><strong style="color: #a855f7;">Hello ${name || 'Anime Fan'}!</strong></p>
+            <p style="margin: 0; color: #e5e7eb; font-size: 20px;"><strong style="color: #a855f7;">Hello ${
+              name || "Anime Fan"
+            }!</strong></p>
             <p style="margin: 15px 0 0 0; color: #d1d5db; font-size: 16px;">We're absolutely thrilled to have you join us! 💜</p>
           </div>
           <div style="padding: 40px 30px;">
@@ -1143,7 +1163,7 @@ app.post('/make-server-95a96d8e/signup', async (c) => {
             <div style="background: rgba(147, 51, 234, 0.05); border: 1px solid rgba(147, 51, 234, 0.2); border-radius: 8px; padding: 20px; margin: 30px 0;">
               <p style="margin: 0 0 10px 0; color: #e5e7eb; font-size: 14px;"><strong>Your Account Details:</strong></p>
               <p style="margin: 5px 0; color: #9ca3af; font-size: 13px;">Email: ${email}</p>
-              <p style="margin: 5px 0; color: #9ca3af; font-size: 13px;">Name: ${name || 'Anime Fan'}</p>
+              <p style="margin: 5px 0; color: #9ca3af; font-size: 13px;">Name: ${name || "Anime Fan"}</p>
               <p style="margin: 5px 0; color: #9ca3af; font-size: 13px;">Member Since: ${new Date().toLocaleDateString()}</p>
             </div>
             <div style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%); border-radius: 8px; padding: 25px; text-align: center; margin-top: 30px;">
@@ -1159,28 +1179,28 @@ app.post('/make-server-95a96d8e/signup', async (c) => {
         </div>
       `;
 
-      console.log('🎯 CALLING sendEmail function...');
+      console.log("🎯 CALLING sendEmail function...");
       const emailResult = await sendEmail(email, emailSubject, emailBody);
-      
+
       if (emailResult.success) {
         console.log(`✅ SIGNUP WELCOME EMAIL SENT SUCCESSFULLY to ${email}`);
       } else {
         console.error(`❌ FAILED TO SEND SIGNUP WELCOME EMAIL to ${email}`);
-        console.error('Error details:', JSON.stringify(emailResult.error));
+        console.error("Error details:", JSON.stringify(emailResult.error));
       }
     } catch (emailError) {
-      console.error('❌ CRITICAL ERROR sending welcome email:', emailError);
-      console.error('Email error stack:', emailError instanceof Error ? emailError.stack : 'No stack trace');
+      console.error("❌ CRITICAL ERROR sending welcome email:", emailError);
+      console.error("Email error stack:", emailError instanceof Error ? emailError.stack : "No stack trace");
     }
 
     // Send admin notification about new signup
     try {
-      console.log('🎯 STARTING ADMIN NOTIFICATION EMAIL...');
+      console.log("🎯 STARTING ADMIN NOTIFICATION EMAIL...");
       // ✅ Use hardcoded ADMIN_EMAIL constant (defined at top of file)
       const adminEmail = ADMIN_EMAIL; // NOT Deno.env.get - uses hardcoded value
-      console.log('Admin email address:', adminEmail);
-      
-      const adminSubject = '👤 New Customer Signup - AnimeDropZone';
+      console.log("Admin email address:", adminEmail);
+
+      const adminSubject = "👤 New Customer Signup - AnimeDropZone";
       const adminBody = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #1a0033 0%, #000000 100%); color: #ffffff; border: 2px solid #9333ea; border-radius: 12px; overflow: hidden;">
           <div style="background: linear-gradient(90deg, #9333ea 0%, #ec4899 50%, #9333ea 100%); padding: 30px; text-align: center;">
@@ -1204,7 +1224,7 @@ app.post('/make-server-95a96d8e/signup', async (c) => {
                     <strong style="color: #ec4899;">Name:</strong>
                   </td>
                   <td style="padding: 12px 0; border-bottom: 1px solid rgba(147, 51, 234, 0.2); text-align: right; color: #e5e7eb;">
-                    ${name || 'Not provided'}
+                    ${name || "Not provided"}
                   </td>
                 </tr>
                 <tr>
@@ -1228,7 +1248,11 @@ app.post('/make-server-95a96d8e/signup', async (c) => {
                     <strong style="color: #ec4899;">Signup Date:</strong>
                   </td>
                   <td style="padding: 12px 0; text-align: right; color: #e5e7eb;">
-                    ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'full', timeStyle: 'medium' })}
+                    ${new Date().toLocaleString("en-IN", {
+                      timeZone: "Asia/Kolkata",
+                      dateStyle: "full",
+                      timeStyle: "medium",
+                    })}
                   </td>
                 </tr>
               </table>
@@ -1254,55 +1278,58 @@ app.post('/make-server-95a96d8e/signup', async (c) => {
         </div>
       `;
 
-      console.log('🎯 CALLING sendEmail for admin notification...');
+      console.log("🎯 CALLING sendEmail for admin notification...");
       const adminEmailResult = await sendEmail(adminEmail, adminSubject, adminBody);
-      
+
       if (adminEmailResult.success) {
         console.log(`✅ ADMIN NOTIFICATION EMAIL SENT SUCCESSFULLY to ${adminEmail}`);
       } else {
         console.error(`❌ FAILED TO SEND ADMIN NOTIFICATION EMAIL to ${adminEmail}`);
-        console.error('Admin email error details:', JSON.stringify(adminEmailResult.error));
+        console.error("Admin email error details:", JSON.stringify(adminEmailResult.error));
       }
     } catch (adminEmailError) {
-      console.error('❌ CRITICAL ERROR sending admin notification:', adminEmailError);
-      console.error('Admin email error stack:', adminEmailError instanceof Error ? adminEmailError.stack : 'No stack trace');
+      console.error("❌ CRITICAL ERROR sending admin notification:", adminEmailError);
+      console.error(
+        "Admin email error stack:",
+        adminEmailError instanceof Error ? adminEmailError.stack : "No stack trace"
+      );
     }
 
     return c.json({ success: true, user: data.user });
   } catch (error) {
-    console.log('Error during signup:', error);
+    console.log("Error during signup:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Get reviews for a product
-app.get('/make-server-95a96d8e/reviews/:productId', async (c) => {
+app.get("/make-server-95a96d8e/reviews/:productId", async (c) => {
   try {
-    const productId = c.req.param('productId');
+    const productId = c.req.param("productId");
     const reviews = await kv.getByPrefix(`review:${productId}:`);
     return c.json({ success: true, reviews: reviews || [] });
   } catch (error) {
-    console.log('Error fetching reviews:', error);
+    console.log("Error fetching reviews:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Add a review for a product
-app.post('/make-server-95a96d8e/reviews', async (c) => {
+app.post("/make-server-95a96d8e/reviews", async (c) => {
   try {
     const body = await c.req.json();
     const { productId, userName, userEmail, rating, comment } = body;
 
     if (!productId || !userName || !rating || !comment) {
-      return c.json({ success: false, error: 'Missing required fields' }, 400);
+      return c.json({ success: false, error: "Missing required fields" }, 400);
     }
 
     // Check if user already reviewed this product
     const existingReviews = await kv.getByPrefix(`review:${productId}:`);
     const userAlreadyReviewed = existingReviews.some((review: any) => review.userEmail === userEmail);
-    
+
     if (userAlreadyReviewed) {
-      return c.json({ success: false, error: 'You have already reviewed this product' }, 400);
+      return c.json({ success: false, error: "You have already reviewed this product" }, 400);
     }
 
     const reviewId = `review:${productId}:${crypto.randomUUID()}`;
@@ -1320,25 +1347,25 @@ app.post('/make-server-95a96d8e/reviews', async (c) => {
 
     return c.json({ success: true, review });
   } catch (error) {
-    console.log('Error adding review:', error);
+    console.log("Error adding review:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Track order by tracking ID
-app.get('/make-server-95a96d8e/track/:trackingId', async (c) => {
+app.get("/make-server-95a96d8e/track/:trackingId", async (c) => {
   try {
-    const trackingId = c.req.param('trackingId');
-    const orders = await kv.getByPrefix('order:');
+    const trackingId = c.req.param("trackingId");
+    const orders = await kv.getByPrefix("order:");
     const order = orders.find((o: any) => o.trackingId === trackingId);
-    
+
     if (!order) {
-      return c.json({ success: false, error: 'Order not found' }, 404);
+      return c.json({ success: false, error: "Order not found" }, 404);
     }
-    
+
     return c.json({ success: true, order });
   } catch (error) {
-    console.log('Error tracking order:', error);
+    console.log("Error tracking order:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -1346,58 +1373,62 @@ app.get('/make-server-95a96d8e/track/:trackingId', async (c) => {
 // Coupon Management Endpoints
 
 // Get all coupons
-app.get('/make-server-95a96d8e/coupons', async (c) => {
+app.get("/make-server-95a96d8e/coupons", async (c) => {
   try {
-    const coupons = await kv.getByPrefix('coupon:');
+    const coupons = await kv.getByPrefix("coupon:");
     return c.json({ success: true, coupons });
   } catch (error) {
-    console.log('Error fetching coupons:', error);
+    console.log("Error fetching coupons:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Create a new coupon OR validate/apply a coupon
-app.post('/make-server-95a96d8e/coupons', async (c) => {
+app.post("/make-server-95a96d8e/coupons", async (c) => {
   try {
     const body = await c.req.json();
-    const { code, discountType, discountValue, minPurchase, maxDiscount, expiryDate, usageLimit, isActive, cartTotal } = body;
-    
+    const { code, discountType, discountValue, minPurchase, maxDiscount, expiryDate, usageLimit, isActive, cartTotal } =
+      body;
+
     // Validate coupon code
-    if (!code || code.trim() === '') {
-      return c.json({ success: false, error: 'Coupon code is required' }, 400);
+    if (!code || code.trim() === "") {
+      return c.json({ success: false, error: "Coupon code is required" }, 400);
     }
 
     // If only 'code' is provided (and optionally cartTotal), this is a validation/apply request
     if (!discountType && !discountValue) {
       // VALIDATE AND APPLY COUPON
-      const coupons = await kv.getByPrefix('coupon:');
+      const coupons = await kv.getByPrefix("coupon:");
       const coupon = coupons.find((c: any) => c.code.toUpperCase() === code.toUpperCase() && c.isActive);
 
       if (!coupon) {
-        return c.json({ success: false, message: 'Invalid or expired coupon code' }, 400);
+        return c.json({ success: false, message: "Invalid or expired coupon code" }, 400);
       }
 
       // Check if coupon has expired
       if (coupon.expiryDate && new Date(coupon.expiryDate) < new Date()) {
-        return c.json({ success: false, message: 'This coupon has expired' }, 400);
+        return c.json({ success: false, message: "This coupon has expired" }, 400);
       }
 
       // Check usage limit
       if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) {
-        return c.json({ success: false, message: 'This coupon has reached its usage limit' }, 400);
+        return c.json({ success: false, message: "This coupon has reached its usage limit" }, 400);
       }
 
       // Check minimum purchase if cartTotal provided
       if (cartTotal && coupon.minPurchase && cartTotal < coupon.minPurchase) {
-        return c.json({ 
-          success: false, 
-          message: `Minimum purchase of ₹${coupon.minPurchase} required to use this coupon` 
-        }, 400);
+        return c.json(
+          {
+            success: false,
+            message: `Minimum purchase of ₹${coupon.minPurchase} required to use this coupon`,
+          },
+          400
+        );
       }
 
       // Calculate the actual discount amount
       let discountAmount = coupon.discountValue;
-      if (coupon.discountType === 'percentage' && cartTotal) {
+      if (coupon.discountType === "percentage" && cartTotal) {
         discountAmount = (cartTotal * coupon.discountValue) / 100;
         // Apply max discount cap if specified
         if (coupon.maxDiscount && discountAmount > coupon.maxDiscount) {
@@ -1417,11 +1448,11 @@ app.post('/make-server-95a96d8e/coupons', async (c) => {
 
     // CREATE NEW COUPON (admin function)
     // Check if coupon already exists
-    const existingCoupons = await kv.getByPrefix('coupon:');
+    const existingCoupons = await kv.getByPrefix("coupon:");
     const exists = existingCoupons.some((coupon: any) => coupon.code.toLowerCase() === code.toLowerCase());
-    
+
     if (exists) {
-      return c.json({ success: false, error: 'Coupon code already exists' }, 400);
+      return c.json({ success: false, error: "Coupon code already exists" }, 400);
     }
 
     const couponId = `coupon:${Date.now()}`;
@@ -1442,20 +1473,20 @@ app.post('/make-server-95a96d8e/coupons', async (c) => {
     await kv.set(couponId, coupon);
     return c.json({ success: true, coupon });
   } catch (error) {
-    console.log('Error processing coupon request:', error);
+    console.log("Error processing coupon request:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Update a coupon
-app.put('/make-server-95a96d8e/coupons/:id', async (c) => {
+app.put("/make-server-95a96d8e/coupons/:id", async (c) => {
   try {
-    const id = c.req.param('id');
+    const id = c.req.param("id");
     const updates = await c.req.json();
-    
+
     const coupon = await kv.get(id);
     if (!coupon) {
-      return c.json({ success: false, error: 'Coupon not found' }, 404);
+      return c.json({ success: false, error: "Coupon not found" }, 404);
     }
 
     const updatedCoupon = {
@@ -1472,72 +1503,75 @@ app.put('/make-server-95a96d8e/coupons/:id', async (c) => {
     await kv.set(id, updatedCoupon);
     return c.json({ success: true, coupon: updatedCoupon });
   } catch (error) {
-    console.log('Error updating coupon:', error);
+    console.log("Error updating coupon:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Delete a coupon
-app.delete('/make-server-95a96d8e/coupons/:id', async (c) => {
+app.delete("/make-server-95a96d8e/coupons/:id", async (c) => {
   try {
-    const id = c.req.param('id');
+    const id = c.req.param("id");
     await kv.del(id);
     return c.json({ success: true });
   } catch (error) {
-    console.log('Error deleting coupon:', error);
+    console.log("Error deleting coupon:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Validate and apply a coupon
-app.post('/make-server-95a96d8e/coupons/validate', async (c) => {
+app.post("/make-server-95a96d8e/coupons/validate", async (c) => {
   try {
     const { code, cartTotal } = await c.req.json();
-    
+
     if (!code) {
-      return c.json({ success: false, error: 'Coupon code is required' }, 400);
+      return c.json({ success: false, error: "Coupon code is required" }, 400);
     }
 
     // Find coupon by code
-    const coupons = await kv.getByPrefix('coupon:');
+    const coupons = await kv.getByPrefix("coupon:");
     const coupon = coupons.find((c: any) => c.code.toLowerCase() === code.toLowerCase());
 
     if (!coupon) {
-      return c.json({ success: false, error: 'Invalid coupon code' }, 400);
+      return c.json({ success: false, error: "Invalid coupon code" }, 400);
     }
 
     // Check if coupon is active
     if (!coupon.isActive) {
-      return c.json({ success: false, error: 'This coupon is no longer active' }, 400);
+      return c.json({ success: false, error: "This coupon is no longer active" }, 400);
     }
 
     // Check expiry date
     if (coupon.expiryDate && new Date(coupon.expiryDate) < new Date()) {
-      return c.json({ success: false, error: 'This coupon has expired' }, 400);
+      return c.json({ success: false, error: "This coupon has expired" }, 400);
     }
 
     // Check usage limit
     if (coupon.usageLimit && coupon.usageCount >= coupon.usageLimit) {
-      return c.json({ success: false, error: 'This coupon has reached its usage limit' }, 400);
+      return c.json({ success: false, error: "This coupon has reached its usage limit" }, 400);
     }
 
     // Check minimum purchase
     if (coupon.minPurchase && cartTotal < coupon.minPurchase) {
-      return c.json({ 
-        success: false, 
-        error: `Minimum purchase of ₹${coupon.minPurchase} required to use this coupon` 
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          error: `Minimum purchase of ₹${coupon.minPurchase} required to use this coupon`,
+        },
+        400
+      );
     }
 
     // Calculate discount
     let discountAmount = 0;
-    if (coupon.discountType === 'percentage') {
+    if (coupon.discountType === "percentage") {
       discountAmount = (cartTotal * coupon.discountValue) / 100;
       // Apply max discount if specified
       if (coupon.maxDiscount && discountAmount > coupon.maxDiscount) {
         discountAmount = coupon.maxDiscount;
       }
-    } else if (coupon.discountType === 'fixed') {
+    } else if (coupon.discountType === "fixed") {
       discountAmount = coupon.discountValue;
       // Ensure discount doesn't exceed cart total
       if (discountAmount > cartTotal) {
@@ -1545,31 +1579,31 @@ app.post('/make-server-95a96d8e/coupons/validate', async (c) => {
       }
     }
 
-    return c.json({ 
-      success: true, 
+    return c.json({
+      success: true,
       coupon,
-      discountAmount: Math.round(discountAmount * 100) / 100 
+      discountAmount: Math.round(discountAmount * 100) / 100,
     });
   } catch (error) {
-    console.log('Error validating coupon:', error);
+    console.log("Error validating coupon:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Increment coupon usage (called after successful order)
-app.post('/make-server-95a96d8e/coupons/use/:id', async (c) => {
+app.post("/make-server-95a96d8e/coupons/use/:id", async (c) => {
   try {
-    const id = c.req.param('id');
+    const id = c.req.param("id");
     const coupon = await kv.get(id);
-    
+
     if (coupon) {
       coupon.usageCount = (coupon.usageCount || 0) + 1;
       await kv.set(id, coupon);
     }
-    
+
     return c.json({ success: true });
   } catch (error) {
-    console.log('Error updating coupon usage:', error);
+    console.log("Error updating coupon usage:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -1577,24 +1611,25 @@ app.post('/make-server-95a96d8e/coupons/use/:id', async (c) => {
 // Custom Clothing Endpoints
 
 // Get all custom clothing requests
-app.get('/make-server-95a96d8e/custom-clothing', async (c) => {
+app.get("/make-server-95a96d8e/custom-clothing", async (c) => {
   try {
-    const requests = await kv.getByPrefix('custom-clothing:');
+    const requests = await kv.getByPrefix("custom-clothing:");
     return c.json({ success: true, requests });
   } catch (error) {
-    console.log('Error fetching custom clothing requests:', error);
+    console.log("Error fetching custom clothing requests:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Create a new custom clothing request
-app.post('/make-server-95a96d8e/custom-clothing', async (c) => {
+app.post("/make-server-95a96d8e/custom-clothing", async (c) => {
   try {
-    const { name, email, phone, clothingType, size, color, quantity, instructions, address, designImages } = await c.req.json();
-    
+    const { name, email, phone, clothingType, size, color, quantity, instructions, address, designImages } =
+      await c.req.json();
+
     const requestId = `CCR-${Date.now()}`;
     const customClothingId = `custom-clothing:${Date.now()}`;
-    
+
     const customRequest = {
       id: customClothingId,
       requestId,
@@ -1607,12 +1642,12 @@ app.post('/make-server-95a96d8e/custom-clothing', async (c) => {
       clothingDetails: {
         type: clothingType,
         size,
-        color: color || 'Not specified',
+        color: color || "Not specified",
         quantity,
       },
       designImages,
-      instructions: instructions || 'None',
-      status: 'pending', // pending, quoted, approved, in-production, completed, cancelled
+      instructions: instructions || "None",
+      status: "pending", // pending, quoted, approved, in-production, completed, cancelled
       quotedPrice: null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -1654,14 +1689,18 @@ app.post('/make-server-95a96d8e/custom-clothing', async (c) => {
               <h3 style="color: #e91e63; margin-top: 20px;">Clothing Details</h3>
               <p><span class="label">Type:</span><span class="value">${clothingType}</span></p>
               <p><span class="label">Size:</span><span class="value">${size}</span></p>
-              <p><span class="label">Color:</span><span class="value">${color || 'Not specified'}</span></p>
+              <p><span class="label">Color:</span><span class="value">${color || "Not specified"}</span></p>
               <p><span class="label">Quantity:</span><span class="value">${quantity}</span></p>
               
-              ${instructions ? `<p><span class="label">Special Instructions:</span><span class="value">${instructions}</span></p>` : ''}
+              ${
+                instructions
+                  ? `<p><span class="label">Special Instructions:</span><span class="value">${instructions}</span></p>`
+                  : ""
+              }
               
               <h3 style="color: #e91e63; margin-top: 20px;">Design Images (${designImages.length})</h3>
               <div class="images">
-                ${designImages.map((url: string) => `<img src="${url}" alt="Design" />`).join('')}
+                ${designImages.map((url: string) => `<img src="${url}" alt="Design" />`).join("")}
               </div>
               
               <p style="margin-top: 20px; padding: 15px; background: rgba(123,44,191,0.2); border-left: 4px solid #7b2cbf; border-radius: 8px;">
@@ -1676,11 +1715,7 @@ app.post('/make-server-95a96d8e/custom-clothing', async (c) => {
       </html>
     `;
 
-    await sendEmail(
-      ADMIN_EMAIL,
-      `🎨 New Custom Clothing Request - ${requestId}`,
-      adminEmailHtml
-    );
+    await sendEmail(ADMIN_EMAIL, `🎨 New Custom Clothing Request - ${requestId}`, adminEmailHtml);
 
     // Send WhatsApp notification to admin
     const whatsappMessage = `🎨 *NEW CUSTOM CLOTHING REQUEST*
@@ -1695,13 +1730,13 @@ Email: ${email}
 *Clothing Details:*
 Type: ${clothingType}
 Size: ${size}
-Color: ${color || 'Not specified'}
+Color: ${color || "Not specified"}
 Quantity: ${quantity}
 
 *Design Images:* ${designImages.length} image(s) uploaded
 
 *Special Instructions:*
-${instructions || 'None'}
+${instructions || "None"}
 
 *Delivery Address:*
 ${address}
@@ -1767,28 +1802,24 @@ ${address}
       </html>
     `;
 
-    await sendEmail(
-      email,
-      `Custom Clothing Request Received - ${requestId}`,
-      customerEmailHtml
-    );
+    await sendEmail(email, `Custom Clothing Request Received - ${requestId}`, customerEmailHtml);
 
     return c.json({ success: true, requestId, request: customRequest });
   } catch (error) {
-    console.log('Error creating custom clothing request:', error);
+    console.log("Error creating custom clothing request:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Update custom clothing request status
-app.put('/make-server-95a96d8e/custom-clothing/:id', async (c) => {
+app.put("/make-server-95a96d8e/custom-clothing/:id", async (c) => {
   try {
-    const id = c.req.param('id');
+    const id = c.req.param("id");
     const updates = await c.req.json();
-    
+
     const request = await kv.get(id);
     if (!request) {
-      return c.json({ success: false, error: 'Request not found' }, 404);
+      return c.json({ success: false, error: "Request not found" }, 404);
     }
 
     const updatedRequest = {
@@ -1801,38 +1832,38 @@ app.put('/make-server-95a96d8e/custom-clothing/:id', async (c) => {
     await kv.set(id, updatedRequest);
     return c.json({ success: true, request: updatedRequest });
   } catch (error) {
-    console.log('Error updating custom clothing request:', error);
+    console.log("Error updating custom clothing request:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Delete custom clothing request
-app.delete('/make-server-95a96d8e/custom-clothing/:id', async (c) => {
+app.delete("/make-server-95a96d8e/custom-clothing/:id", async (c) => {
   try {
-    const id = c.req.param('id');
+    const id = c.req.param("id");
     await kv.del(id);
     return c.json({ success: true });
   } catch (error) {
-    console.log('Error deleting custom clothing request:', error);
+    console.log("Error deleting custom clothing request:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Cancel custom clothing request with notifications
-app.post('/make-server-95a96d8e/custom-clothing/:id/cancel', async (c) => {
+app.post("/make-server-95a96d8e/custom-clothing/:id/cancel", async (c) => {
   try {
-    const id = c.req.param('id');
+    const id = c.req.param("id");
     const { reason } = await c.req.json();
 
     const request = await kv.get(id);
     if (!request) {
-      return c.json({ success: false, error: 'Request not found' }, 404);
+      return c.json({ success: false, error: "Request not found" }, 404);
     }
 
     // Update request status
     const updatedRequest = {
       ...request,
-      status: 'cancelled',
+      status: "cancelled",
       cancellationReason: reason,
       updatedAt: new Date().toISOString(),
     };
@@ -1891,11 +1922,7 @@ app.post('/make-server-95a96d8e/custom-clothing/:id/cancel', async (c) => {
       </html>
     `;
 
-    await sendEmail(
-      request.customerInfo.email,
-      `Order Cancelled - ${request.requestId}`,
-      cancellationEmailHtml
-    );
+    await sendEmail(request.customerInfo.email, `Order Cancelled - ${request.requestId}`, cancellationEmailHtml);
 
     // Send WhatsApp notification to customer
     const whatsappMessage = `❌ *ORDER CANCELLED*
@@ -1922,26 +1949,26 @@ We apologize for any inconvenience. If you have any questions or would like to p
 
     return c.json({ success: true, request: updatedRequest });
   } catch (error) {
-    console.log('Error cancelling custom clothing request:', error);
+    console.log("Error cancelling custom clothing request:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Send quote for custom clothing request
-app.post('/make-server-95a96d8e/custom-clothing/:id/quote', async (c) => {
+app.post("/make-server-95a96d8e/custom-clothing/:id/quote", async (c) => {
   try {
-    const id = c.req.param('id');
+    const id = c.req.param("id");
     const { quotedPrice } = await c.req.json();
 
     const request = await kv.get(id);
     if (!request) {
-      return c.json({ success: false, error: 'Request not found' }, 404);
+      return c.json({ success: false, error: "Request not found" }, 404);
     }
 
     // Update request with quote
     const updatedRequest = {
       ...request,
-      status: 'quoted',
+      status: "quoted",
       quotedPrice,
       updatedAt: new Date().toISOString(),
     };
@@ -1949,7 +1976,7 @@ app.post('/make-server-95a96d8e/custom-clothing/:id/quote', async (c) => {
     await kv.set(id, updatedRequest);
 
     // Get base URL for approval links
-    const baseUrl = Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.netlify.app') || 'http://localhost:5173';
+    const baseUrl = Deno.env.get("SUPABASE_URL")?.replace(".supabase.co", ".netlify.app") || "http://localhost:5173";
     const approveUrl = `${baseUrl}/approve-quote/${encodeURIComponent(id)}?action=approve`;
     const rejectUrl = `${baseUrl}/approve-quote/${encodeURIComponent(id)}?action=reject`;
 
@@ -1996,7 +2023,9 @@ app.post('/make-server-95a96d8e/custom-clothing/:id/quote', async (c) => {
               </div>
               
               <h3 style="color: #e91e63;">Your Order Details</h3>
-              <p><span class="label">Clothing Type:</span> <span class="value">${request.clothingDetails.type}</span></p>
+              <p><span class="label">Clothing Type:</span> <span class="value">${
+                request.clothingDetails.type
+              }</span></p>
               <p><span class="label">Size:</span> <span class="value">${request.clothingDetails.size}</span></p>
               <p><span class="label">Color:</span> <span class="value">${request.clothingDetails.color}</span></p>
               <p><span class="label">Quantity:</span> <span class="value">${request.clothingDetails.quantity}</span></p>
@@ -2041,10 +2070,10 @@ app.post('/make-server-95a96d8e/custom-clothing/:id/quote', async (c) => {
 
     if (!emailResult.success) {
       console.error(`❌ Failed to send quote email: ${emailResult.error}`);
-      console.log('⚠️ NOTE: With Resend free plan, emails only work if sent to your verified email address');
+      console.log("⚠️ NOTE: With Resend free plan, emails only work if sent to your verified email address");
       console.log(`⚠️ Customer email attempted: ${request.customerInfo.email}`);
     } else {
-      console.log('✅ Quote email sent successfully!');
+      console.log("✅ Quote email sent successfully!");
     }
 
     // Send WhatsApp notification to customer
@@ -2080,11 +2109,11 @@ Check your email for the quote with easy approval buttons!
 - AnimeDropZone Team`;
 
     const whatsappResult = await sendWhatsApp(request.customerInfo.phone, whatsappMessage);
-    
+
     if (!whatsappResult.success) {
       console.error(`❌ Failed to send quote WhatsApp: ${whatsappResult.error}`);
     } else {
-      console.log('✅ Quote WhatsApp sent successfully!');
+      console.log("✅ Quote WhatsApp sent successfully!");
     }
 
     // Send notification to admin
@@ -2110,63 +2139,66 @@ Check your email for the quote with easy approval buttons!
               <p style="margin: 0;">✅ Quote email and WhatsApp sent to customer with approval buttons!</p>
               <p style="margin: 10px 0 0 0;">Customer can now approve or decline the quote with one click.</p>
             </div>
-            ${!emailResult.success ? `
+            ${
+              !emailResult.success
+                ? `
               <div style="margin-top: 20px; padding: 15px; background: rgba(220,38,38,0.2); border-left: 4px solid #dc2626; border-radius: 8px;">
                 <p style="margin: 0; color: #fca5a5;">⚠️ <strong>Email Failed:</strong> ${emailResult.error}</p>
                 <p style="margin: 10px 0 0 0; color: #fca5a5;">Resend free plan only sends to verified email. Customer's email: ${request.customerInfo.email}</p>
               </div>
-            ` : ''}
+            `
+                : ""
+            }
           </div>
         </body>
       </html>
     `;
 
-    await sendEmail(
-      ADMIN_EMAIL,
-      `[QUOTE SENT] Custom Clothing Quote - ${request.requestId}`,
-      adminNotificationHtml
-    );
+    await sendEmail(ADMIN_EMAIL, `[QUOTE SENT] Custom Clothing Quote - ${request.requestId}`, adminNotificationHtml);
 
     // Return response with notification status
-    return c.json({ 
-      success: true, 
+    return c.json({
+      success: true,
       request: updatedRequest,
       notifications: {
         email: emailResult.success,
         whatsapp: whatsappResult.success,
         emailError: !emailResult.success ? emailResult.error : null,
-        whatsappError: !whatsappResult.success ? whatsappResult.error : null
-      }
+        whatsappError: !whatsappResult.success ? whatsappResult.error : null,
+      },
     });
   } catch (error) {
-    console.log('Error sending quote:', error);
+    console.log("Error sending quote:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Approve or reject custom clothing quote
-app.post('/make-server-95a96d8e/custom-clothing/:id/approve', async (c) => {
+app.post("/make-server-95a96d8e/custom-clothing/:id/approve", async (c) => {
   try {
-    const id = c.req.param('id');
+    const id = c.req.param("id");
     const { action } = await c.req.json();
 
-    if (!action || (action !== 'approve' && action !== 'reject')) {
+    if (!action || (action !== "approve" && action !== "reject")) {
       return c.json({ success: false, error: 'Invalid action. Use "approve" or "reject"' }, 400);
     }
 
     const request = await kv.get(id);
     if (!request) {
-      return c.json({ success: false, error: 'Request not found' }, 404);
+      return c.json({ success: false, error: "Request not found" }, 404);
     }
 
-    if (request.status !== 'quoted') {
-      return c.json({ success: false, error: 'This request has already been processed or is not in quoted status' }, 400);
+    if (request.status !== "quoted") {
+      return c.json(
+        { success: false, error: "This request has already been processed or is not in quoted status" },
+        400
+      );
     }
 
     // Update request status
     const updatedRequest = {
       ...request,
-      status: action === 'approve' ? 'approved' : 'rejected',
+      status: action === "approve" ? "approved" : "rejected",
       approvalDate: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -2174,7 +2206,7 @@ app.post('/make-server-95a96d8e/custom-clothing/:id/approve', async (c) => {
     await kv.set(id, updatedRequest);
 
     // Send confirmation to customer
-    if (action === 'approve') {
+    if (action === "approve") {
       // Send approval confirmation email
       const approvalEmailHtml = `
         <!DOCTYPE html>
@@ -2201,7 +2233,9 @@ app.post('/make-server-95a96d8e/custom-clothing/:id/approve', async (c) => {
                 
                 <div style="margin: 20px 0; padding: 15px; background: rgba(5,150,105,0.2); border-left: 4px solid #10b981; border-radius: 8px;">
                   <p style="margin: 0;"><strong>Request ID:</strong> ${request.requestId}</p>
-                  <p style="margin: 10px 0 0 0;"><strong>Approved Amount:</strong> ₹${request.quotedPrice.toFixed(2)}</p>
+                  <p style="margin: 10px 0 0 0;"><strong>Approved Amount:</strong> ₹${request.quotedPrice.toFixed(
+                    2
+                  )}</p>
                 </div>
                 
                 <h3 style="color: #10b981;">What's Next?</h3>
@@ -2226,11 +2260,7 @@ app.post('/make-server-95a96d8e/custom-clothing/:id/approve', async (c) => {
         </html>
       `;
 
-      await sendEmail(
-        request.customerInfo.email,
-        `Quote Approved - ${request.requestId}`,
-        approvalEmailHtml
-      );
+      await sendEmail(request.customerInfo.email, `Quote Approved - ${request.requestId}`, approvalEmailHtml);
 
       // Send WhatsApp confirmation
       const approvalWhatsApp = `✅ *QUOTE APPROVED*
@@ -2281,12 +2311,7 @@ We're excited to create your custom clothing!
         </html>
       `;
 
-      await sendEmail(
-        ADMIN_EMAIL,
-        `[APPROVED] Custom Clothing Quote - ${request.requestId}`,
-        adminNotificationHtml
-      );
-
+      await sendEmail(ADMIN_EMAIL, `[APPROVED] Custom Clothing Quote - ${request.requestId}`, adminNotificationHtml);
     } else {
       // Send rejection confirmation email
       const rejectionEmailHtml = `
@@ -2327,50 +2352,49 @@ We're excited to create your custom clothing!
         </html>
       `;
 
-      await sendEmail(
-        request.customerInfo.email,
-        `Quote Declined - ${request.requestId}`,
-        rejectionEmailHtml
-      );
+      await sendEmail(request.customerInfo.email, `Quote Declined - ${request.requestId}`, rejectionEmailHtml);
     }
 
     return c.json({ success: true, request: updatedRequest });
   } catch (error) {
-    console.log('Error processing quote approval:', error);
+    console.log("Error processing quote approval:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Customer cancel order
-app.post('/make-server-95a96d8e/orders/cancel', async (c) => {
+app.post("/make-server-95a96d8e/orders/cancel", async (c) => {
   try {
     const { orderId, reason } = await c.req.json();
 
     if (!orderId) {
-      return c.json({ success: false, message: 'Order ID is required' }, 400);
+      return c.json({ success: false, message: "Order ID is required" }, 400);
     }
 
     // Get the order
     const order = await kv.get(`order:${orderId}`);
     if (!order) {
-      return c.json({ success: false, message: 'Order not found' }, 404);
+      return c.json({ success: false, message: "Order not found" }, 404);
     }
 
     // Check if order can be cancelled (only pending orders)
-    if (order.status !== 'Order Pending' && order.status.toLowerCase() !== 'pending') {
-      return c.json({ 
-        success: false, 
-        message: `Cannot cancel order with status: ${order.status}. Only pending orders can be cancelled.` 
-      }, 400);
+    if (order.status !== "Order Pending" && order.status.toLowerCase() !== "pending") {
+      return c.json(
+        {
+          success: false,
+          message: `Cannot cancel order with status: ${order.status}. Only pending orders can be cancelled.`,
+        },
+        400
+      );
     }
 
     // Update order status to cancelled
     const updatedOrder = {
       ...order,
-      status: 'Cancelled',
-      cancellationReason: reason || 'Customer requested cancellation',
+      status: "Cancelled",
+      cancellationReason: reason || "Customer requested cancellation",
       cancelledAt: new Date().toISOString(),
-      cancelledBy: 'customer',
+      cancelledBy: "customer",
     };
 
     await kv.set(`order:${orderId}`, updatedOrder);
@@ -2417,32 +2441,46 @@ app.post('/make-server-95a96d8e/orders/cancel', async (c) => {
                 <p style="margin: 0;"><strong>Tracking ID:</strong> ${order.trackingId}</p>
               </div>
               
-              ${reason ? `
+              ${
+                reason
+                  ? `
               <div style="margin: 20px 0; padding: 15px; background: rgba(123,44,191,0.2); border-left: 4px solid #7b2cbf; border-radius: 8px;">
                 <h3 style="color: #a855f7; margin-top: 0;">Cancellation Reason:</h3>
                 <p style="color: white; margin: 0;">${reason}</p>
               </div>
-              ` : ''}
+              `
+                  : ""
+              }
               
               <h3 style="color: #e91e63;">Cancelled Order Details</h3>
-              <p><span class="label">Order Date:</span> <span class="value">${new Date(order.createdAt).toLocaleDateString()}</span></p>
+              <p><span class="label">Order Date:</span> <span class="value">${new Date(
+                order.createdAt
+              ).toLocaleDateString()}</span></p>
               <p><span class="label">Payment Method:</span> <span class="value">${order.paymentMethod}</span></p>
               <p><span class="label">Total Amount:</span> <span class="value">₹${order.total.toFixed(2)}</span></p>
               
               <h3 style="color: #e91e63; margin-top: 20px;">Items in Order:</h3>
-              ${order.items.map((item: any) => `
+              ${order.items
+                .map(
+                  (item: any) => `
                 <div class="item">
                   <p style="margin: 5px 0; color: white;">${item.name}</p>
-                  <p style="margin: 5px 0; color: #9ca3af; font-size: 14px;">Quantity: ${item.quantity} × ₹${item.price.toFixed(2)} = ₹${(item.quantity * item.price).toFixed(2)}</p>
+                  <p style="margin: 5px 0; color: #9ca3af; font-size: 14px;">Quantity: ${
+                    item.quantity
+                  } × ₹${item.price.toFixed(2)} = ₹${(item.quantity * item.price).toFixed(2)}</p>
                 </div>
-              `).join('')}
+              `
+                )
+                .join("")}
               
               <div style="margin-top: 20px; padding: 15px; background: rgba(123,44,191,0.2); border-left: 4px solid #7b2cbf; border-radius: 8px;">
                 <h3 style="color: #a855f7; margin-top: 0;">Refund Information:</h3>
                 <p style="margin: 0;">
-                  ${order.paymentMethod === 'cod' 
-                    ? 'Since this was a Cash on Delivery order, no refund is necessary.' 
-                    : 'Your refund will be processed within 5-7 business days to your original payment method.'}
+                  ${
+                    order.paymentMethod === "cod"
+                      ? "Since this was a Cash on Delivery order, no refund is necessary."
+                      : "Your refund will be processed within 5-7 business days to your original payment method."
+                  }
                 </p>
               </div>
               
@@ -2459,11 +2497,7 @@ app.post('/make-server-95a96d8e/orders/cancel', async (c) => {
       </html>
     `;
 
-    await sendEmail(
-      order.customerInfo.email,
-      `Order Cancelled - ${order.trackingId}`,
-      customerEmailHtml
-    );
+    await sendEmail(order.customerInfo.email, `Order Cancelled - ${order.trackingId}`, customerEmailHtml);
 
     // Send WhatsApp notification to customer
     const customerWhatsAppMessage = `❌ *ORDER CANCELLED*
@@ -2475,19 +2509,23 @@ Your order has been successfully cancelled.
 *Order ID:* ${order.id}
 *Tracking ID:* ${order.trackingId}
 
-${reason ? `*Reason:* ${reason}\n` : ''}
+${reason ? `*Reason:* ${reason}\n` : ""}
 *Order Details:*
 - Order Date: ${new Date(order.createdAt).toLocaleDateString()}
 - Payment Method: ${order.paymentMethod}
 - Total Amount: ₹${order.total.toFixed(2)}
 
 *Items:*
-${order.items.map((item: any) => `- ${item.name} (${item.quantity}x) - ₹${(item.quantity * item.price).toFixed(2)}`).join('\n')}
+${order.items
+  .map((item: any) => `- ${item.name} (${item.quantity}x) - ₹${(item.quantity * item.price).toFixed(2)}`)
+  .join("\n")}
 
 *Refund Status:*
-${order.paymentMethod === 'cod' 
-  ? 'No refund necessary (COD order)' 
-  : 'Refund will be processed within 5-7 business days'}
+${
+  order.paymentMethod === "cod"
+    ? "No refund necessary (COD order)"
+    : "Refund will be processed within 5-7 business days"
+}
 
 We're sorry to see this order cancelled. Feel free to place a new order anytime!
 
@@ -2507,19 +2545,21 @@ A customer has cancelled their order.
 *Email:* ${order.customerInfo.email}
 *Phone:* ${order.customerInfo.phone}
 
-${reason ? `*Reason:* ${reason}\n` : ''}
+${reason ? `*Reason:* ${reason}\n` : ""}
 *Order Total:* ₹${order.total.toFixed(2)}
 *Payment Method:* ${order.paymentMethod}
 
 *Items:*
-${order.items.map((item: any) => `- ${item.name} (${item.quantity}x) - ₹${(item.quantity * item.price).toFixed(2)}`).join('\n')}
+${order.items
+  .map((item: any) => `- ${item.name} (${item.quantity}x) - ₹${(item.quantity * item.price).toFixed(2)}`)
+  .join("\n")}
 
 ✅ Inventory has been automatically restored.
 
 - AnimeDropZone Admin Panel`;
 
     // Send to admin phone number (you should replace with actual admin number)
-    const adminPhone = Deno.env.get('ADMIN_PHONE') || '+1234567890';
+    const adminPhone = Deno.env.get("ADMIN_PHONE") || "+1234567890";
     await sendWhatsApp(adminPhone, adminWhatsAppMessage);
 
     // Send email notification to admin
@@ -2547,8 +2587,12 @@ ${order.items.map((item: any) => `- ${item.name} (${item.quantity}x) - ₹${(ite
               <p style="font-size: 16px; margin-bottom: 20px;">Admin Alert: A customer has cancelled their order.</p>
               
               <div class="info-box">
-                <p style="margin: 5px 0;"><span class="label">Order ID:</span> <span class="value">${order.id}</span></p>
-                <p style="margin: 5px 0;"><span class="label">Tracking ID:</span> <span class="value">${order.trackingId}</span></p>
+                <p style="margin: 5px 0;"><span class="label">Order ID:</span> <span class="value">${
+                  order.id
+                }</span></p>
+                <p style="margin: 5px 0;"><span class="label">Tracking ID:</span> <span class="value">${
+                  order.trackingId
+                }</span></p>
                 <p style="margin: 5px 0;"><span class="label">Cancelled At:</span> <span class="value">${new Date().toLocaleString()}</span></p>
               </div>
               
@@ -2557,25 +2601,37 @@ ${order.items.map((item: any) => `- ${item.name} (${item.quantity}x) - ₹${(ite
               <p><span class="label">Email:</span> <span class="value">${order.customerInfo.email}</span></p>
               <p><span class="label">Phone:</span> <span class="value">${order.customerInfo.phone}</span></p>
               
-              ${reason ? `
+              ${
+                reason
+                  ? `
               <div class="info-box">
                 <h3 style="color: #a855f7; margin-top: 0;">Cancellation Reason:</h3>
                 <p style="color: white; margin: 0;">${reason}</p>
               </div>
-              ` : ''}
+              `
+                  : ""
+              }
               
               <h3 style="color: #e91e63; margin-top: 20px;">Order Details</h3>
-              <p><span class="label">Order Date:</span> <span class="value">${new Date(order.createdAt).toLocaleDateString()}</span></p>
+              <p><span class="label">Order Date:</span> <span class="value">${new Date(
+                order.createdAt
+              ).toLocaleDateString()}</span></p>
               <p><span class="label">Payment Method:</span> <span class="value">${order.paymentMethod}</span></p>
               <p><span class="label">Total Amount:</span> <span class="value">₹${order.total.toFixed(2)}</span></p>
               
               <h3 style="color: #e91e63; margin-top: 20px;">Items in Order:</h3>
-              ${order.items.map((item: any) => `
+              ${order.items
+                .map(
+                  (item: any) => `
                 <div class="item">
                   <p style="margin: 5px 0; color: white;">${item.name}</p>
-                  <p style="margin: 5px 0; color: #9ca3af; font-size: 14px;">Quantity: ${item.quantity} × ₹${item.price.toFixed(2)} = ₹${(item.quantity * item.price).toFixed(2)}</p>
+                  <p style="margin: 5px 0; color: #9ca3af; font-size: 14px;">Quantity: ${
+                    item.quantity
+                  } × ₹${item.price.toFixed(2)} = ₹${(item.quantity * item.price).toFixed(2)}</p>
                 </div>
-              `).join('')}
+              `
+                )
+                .join("")}
               
               <div style="margin-top: 20px; padding: 15px; background: rgba(5,150,105,0.2); border-left: 4px solid #10b981; border-radius: 8px;">
                 <p style="margin: 0; color: #10b981;">✅ Inventory has been automatically restored for all items.</p>
@@ -2598,58 +2654,60 @@ ${order.items.map((item: any) => `- ${item.name} (${item.quantity}x) - ₹${(ite
       </html>
     `;
 
-    await sendEmail(
-      ADMIN_EMAIL,
-      `⚠️ Order Cancelled by Customer - ${order.trackingId}`,
-      adminEmailHtml
-    );
+    await sendEmail(ADMIN_EMAIL, `⚠️ Order Cancelled by Customer - ${order.trackingId}`, adminEmailHtml);
 
-    return c.json({ 
-      success: true, 
-      message: 'Order cancelled successfully. You will receive confirmation via email and WhatsApp.',
-      order: updatedOrder 
+    return c.json({
+      success: true,
+      message: "Order cancelled successfully. You will receive confirmation via email and WhatsApp.",
+      order: updatedOrder,
     });
   } catch (error) {
-    console.log('Error cancelling order:', error);
+    console.log("Error cancelling order:", error);
     return c.json({ success: false, message: String(error) }, 500);
   }
 });
 
 // Admin update order status
-app.put('/make-server-95a96d8e/orders/:orderId/status', async (c) => {
+app.put("/make-server-95a96d8e/orders/:orderId/status", async (c) => {
   try {
-    const orderId = c.req.param('orderId');
+    const orderId = c.req.param("orderId");
     const { status } = await c.req.json();
 
     if (!orderId) {
-      return c.json({ success: false, message: 'Order ID is required' }, 400);
+      return c.json({ success: false, message: "Order ID is required" }, 400);
     }
 
     if (!status) {
-      return c.json({ success: false, message: 'Status is required' }, 400);
+      return c.json({ success: false, message: "Status is required" }, 400);
     }
 
     // Validate status
-    const validStatuses = ['Order Pending', 'In Transit', 'Out for Delivery', 'Order Delivered'];
+    const validStatuses = ["Order Pending", "In Transit", "Out for Delivery", "Order Delivered"];
     if (!validStatuses.includes(status)) {
-      return c.json({ 
-        success: false, 
-        message: 'Invalid status. Must be one of: Order Pending, In Transit, Out for Delivery, Order Delivered' 
-      }, 400);
+      return c.json(
+        {
+          success: false,
+          message: "Invalid status. Must be one of: Order Pending, In Transit, Out for Delivery, Order Delivered",
+        },
+        400
+      );
     }
 
     // Get the order
     const order = await kv.get(`order:${orderId}`);
     if (!order) {
-      return c.json({ success: false, message: 'Order not found' }, 404);
+      return c.json({ success: false, message: "Order not found" }, 404);
     }
 
     // Don't allow updating cancelled orders
-    if (order.status === 'Cancelled') {
-      return c.json({ 
-        success: false, 
-        message: 'Cannot update status of cancelled orders' 
-      }, 400);
+    if (order.status === "Cancelled") {
+      return c.json(
+        {
+          success: false,
+          message: "Cannot update status of cancelled orders",
+        },
+        400
+      );
     }
 
     // Update order status
@@ -2663,10 +2721,10 @@ app.put('/make-server-95a96d8e/orders/:orderId/status', async (c) => {
 
     // Send status update email to customer
     const statusEmojis: Record<string, string> = {
-      'Order Pending': '⏳',
-      'In Transit': '🚚',
-      'Out for Delivery': '📦',
-      'Order Delivered': '✅'
+      "Order Pending": "⏳",
+      "In Transit": "🚚",
+      "Out for Delivery": "📦",
+      "Order Delivered": "✅",
     };
 
     const customerEmailHtml = `
@@ -2703,7 +2761,9 @@ app.put('/make-server-95a96d8e/orders/:orderId/status', async (c) => {
               </div>
               
               <h3 style="color: #e91e63;">Order Details</h3>
-              <p><span class="label">Order Date:</span> <span class="value">${new Date(order.createdAt).toLocaleDateString()}</span></p>
+              <p><span class="label">Order Date:</span> <span class="value">${new Date(
+                order.createdAt
+              ).toLocaleDateString()}</span></p>
               <p><span class="label">Total Amount:</span> <span class="value">₹${order.total.toLocaleString()}</span></p>
               
               <div style="margin-top: 20px; padding: 15px; background: rgba(16,185,129,0.2); border-left: 4px solid #10b981; border-radius: 8px;">
@@ -2720,11 +2780,7 @@ app.put('/make-server-95a96d8e/orders/:orderId/status', async (c) => {
       </html>
     `;
 
-    await sendEmail(
-      order.customerInfo.email,
-      `Order Status Update - ${status}`,
-      customerEmailHtml
-    );
+    await sendEmail(order.customerInfo.email, `Order Status Update - ${status}`, customerEmailHtml);
 
     // Send WhatsApp notification to customer
     const customerWhatsAppMessage = `🎊 *AnimeDropZone - Order Status Update*
@@ -2744,39 +2800,42 @@ Thank you for shopping with AnimeDropZone! 🎌`;
 
     await sendWhatsApp(order.customerInfo.phone, customerWhatsAppMessage);
 
-    return c.json({ 
-      success: true, 
-      message: 'Order status updated successfully',
-      order: updatedOrder 
+    return c.json({
+      success: true,
+      message: "Order status updated successfully",
+      order: updatedOrder,
     });
   } catch (error) {
-    console.log('Error updating order status:', error);
+    console.log("Error updating order status:", error);
     return c.json({ success: false, message: String(error) }, 500);
   }
 });
 
 // Verify payment received (Admin only)
-app.post('/make-server-95a96d8e/orders/:orderId/verify-payment', async (c) => {
+app.post("/make-server-95a96d8e/orders/:orderId/verify-payment", async (c) => {
   try {
-    const orderId = c.req.param('orderId');
+    const orderId = c.req.param("orderId");
     const { verified, verifiedBy } = await c.req.json();
 
     if (!orderId) {
-      return c.json({ success: false, message: 'Order ID is required' }, 400);
+      return c.json({ success: false, message: "Order ID is required" }, 400);
     }
 
     // Get the order
     const order = await kv.get(`order:${orderId}`);
     if (!order) {
-      return c.json({ success: false, message: 'Order not found' }, 404);
+      return c.json({ success: false, message: "Order not found" }, 404);
     }
 
     // Don't allow verifying cancelled orders
-    if (order.status === 'Cancelled') {
-      return c.json({ 
-        success: false, 
-        message: 'Cannot verify payment for cancelled orders' 
-      }, 400);
+    if (order.status === "Cancelled") {
+      return c.json(
+        {
+          success: false,
+          message: "Cannot verify payment for cancelled orders",
+        },
+        400
+      );
     }
 
     // Update order with payment verification
@@ -2784,59 +2843,62 @@ app.post('/make-server-95a96d8e/orders/:orderId/verify-payment', async (c) => {
       ...order,
       paymentVerified: verified,
       paymentVerifiedAt: new Date().toISOString(),
-      verifiedBy: verifiedBy || 'Admin',
+      verifiedBy: verifiedBy || "Admin",
     };
 
     await kv.set(`order:${orderId}`, updatedOrder);
 
     console.log(`✅ Payment verified for order ${orderId} by ${verifiedBy}`);
 
-    return c.json({ 
-      success: true, 
-      message: 'Payment verification status updated successfully',
-      order: updatedOrder 
+    return c.json({
+      success: true,
+      message: "Payment verification status updated successfully",
+      order: updatedOrder,
     });
   } catch (error) {
-    console.log('Error verifying payment:', error);
+    console.log("Error verifying payment:", error);
     return c.json({ success: false, message: String(error) }, 500);
   }
 });
 
 // Cancel order due to payment failure (Admin only)
-app.post('/make-server-95a96d8e/orders/:orderId/cancel-payment-failed', async (c) => {
+app.post("/make-server-95a96d8e/orders/:orderId/cancel-payment-failed", async (c) => {
   try {
-    const orderId = c.req.param('orderId');
+    const orderId = c.req.param("orderId");
     const { reason, cancelledBy } = await c.req.json();
 
     if (!orderId) {
-      return c.json({ success: false, message: 'Order ID is required' }, 400);
+      return c.json({ success: false, message: "Order ID is required" }, 400);
     }
 
     if (!reason) {
-      return c.json({ success: false, message: 'Cancellation reason is required' }, 400);
+      return c.json({ success: false, message: "Cancellation reason is required" }, 400);
     }
 
     // Get the order
     const order = await kv.get(`order:${orderId}`);
     if (!order) {
-      return c.json({ success: false, message: 'Order not found' }, 404);
+      return c.json({ success: false, message: "Order not found" }, 404);
     }
 
     // Don't allow cancelling already cancelled orders
-    if (order.status === 'Cancelled') {
-      return c.json({ 
-        success: false, 
-        message: 'Order is already cancelled' 
-      }, 400);
+    if (order.status === "Cancelled") {
+      return c.json(
+        {
+          success: false,
+          message: "Order is already cancelled",
+        },
+        400
+      );
     }
 
     // Update order status to cancelled
     const updatedOrder = {
       ...order,
-      status: 'Cancelled',
+      status: "Cancelled",
       cancellationReason: reason,
       cancelledAt: new Date().toISOString(),
-      cancelledBy: cancelledBy || 'Admin',
+      cancelledBy: cancelledBy || "Admin",
       paymentVerificationFailed: true,
     };
 
@@ -2884,7 +2946,9 @@ app.post('/make-server-95a96d8e/orders/:orderId/cancel-payment-failed', async (c
               </div>
               
               <h3 style="color: #9333ea;">Order Details</h3>
-              <p><span class="label">Order Date:</span> <span class="value">${new Date(order.createdAt).toLocaleDateString()}</span></p>
+              <p><span class="label">Order Date:</span> <span class="value">${new Date(
+                order.createdAt
+              ).toLocaleDateString()}</span></p>
               <p><span class="label">Total Amount:</span> <span class="value">₹${order.total.toLocaleString()}</span></p>
               
               <div style="margin-top: 20px; padding: 15px; background: rgba(59,130,246,0.2); border-left: 4px solid #3b82f6; border-radius: 8px;">
@@ -2916,7 +2980,7 @@ app.post('/make-server-95a96d8e/orders/:orderId/cancel-payment-failed', async (c
       });
       console.log(`✅ Cancellation email sent to customer: ${order.customerInfo.email}`);
     } catch (emailError) {
-      console.error('❌ Failed to send cancellation email to customer:', emailError);
+      console.error("❌ Failed to send cancellation email to customer:", emailError);
     }
 
     // Send WhatsApp notification to customer
@@ -2986,41 +3050,41 @@ AnimeDropZone 🎌`;
       });
       console.log(`✅ Admin notification sent for cancelled order ${orderId}`);
     } catch (emailError) {
-      console.error('❌ Failed to send admin notification:', emailError);
+      console.error("❌ Failed to send admin notification:", emailError);
     }
 
     console.log(`✅ Order ${orderId} cancelled due to payment verification failure by ${cancelledBy}`);
 
-    return c.json({ 
-      success: true, 
-      message: 'Order cancelled successfully. Customer has been notified.',
-      order: updatedOrder 
+    return c.json({
+      success: true,
+      message: "Order cancelled successfully. Customer has been notified.",
+      order: updatedOrder,
     });
   } catch (error) {
-    console.log('Error cancelling order:', error);
+    console.log("Error cancelling order:", error);
     return c.json({ success: false, message: String(error) }, 500);
   }
 });
 
 // Record payment
-app.post('/make-server-95a96d8e/payments/record', async (c) => {
+app.post("/make-server-95a96d8e/payments/record", async (c) => {
   return await recordPaymentHandler(c, kv, sendEmail, sendWhatsApp);
 });
 
 // Mark order as paid
-app.post('/make-server-95a96d8e/payments/mark-paid', async (c) => {
+app.post("/make-server-95a96d8e/payments/mark-paid", async (c) => {
   return await markPaidHandler(c, kv, sendEmail, sendWhatsApp);
 });
 
 // Support Ticket Endpoints
 
 // Submit a support ticket
-app.post('/make-server-95a96d8e/support/submit', async (c) => {
+app.post("/make-server-95a96d8e/support/submit", async (c) => {
   try {
     const { name, email, subject, question } = await c.req.json();
 
     if (!name || !email || !subject || !question) {
-      return c.json({ success: false, error: 'All fields are required' }, 400);
+      return c.json({ success: false, error: "All fields are required" }, 400);
     }
 
     const ticketId = `support:${Date.now()}:${Math.random().toString(36).substring(7)}`;
@@ -3030,86 +3094,86 @@ app.post('/make-server-95a96d8e/support/submit', async (c) => {
       email,
       subject,
       question,
-      status: 'pending',
+      status: "pending",
       reply: null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
 
     await kv.set(ticketId, ticket);
-    console.log('Support ticket created:', ticketId);
+    console.log("Support ticket created:", ticketId);
 
     return c.json({ success: true, ticket });
   } catch (error) {
-    console.error('Error submitting support ticket:', error);
+    console.error("Error submitting support ticket:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Get customer's tickets by email
-app.get('/make-server-95a96d8e/support/my-tickets', async (c) => {
+app.get("/make-server-95a96d8e/support/my-tickets", async (c) => {
   try {
-    const email = c.req.query('email');
+    const email = c.req.query("email");
 
     if (!email) {
-      return c.json({ success: false, error: 'Email is required' }, 400);
+      return c.json({ success: false, error: "Email is required" }, 400);
     }
 
-    const allTickets = await kv.getByPrefix('support:');
+    const allTickets = await kv.getByPrefix("support:");
     const customerTickets = allTickets
       .filter((ticket: any) => ticket.email === email)
       .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return c.json({ success: true, tickets: customerTickets });
   } catch (error) {
-    console.error('Error fetching customer tickets:', error);
+    console.error("Error fetching customer tickets:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Get all support tickets (admin only)
-app.get('/make-server-95a96d8e/support/all', async (c) => {
+app.get("/make-server-95a96d8e/support/all", async (c) => {
   try {
-    const allTickets = await kv.getByPrefix('support:');
-    const sortedTickets = allTickets.sort((a: any, b: any) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    const allTickets = await kv.getByPrefix("support:");
+    const sortedTickets = allTickets.sort(
+      (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     );
 
     return c.json({ success: true, tickets: sortedTickets });
   } catch (error) {
-    console.error('Error fetching all tickets:', error);
+    console.error("Error fetching all tickets:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Reply to a support ticket (admin only)
-app.post('/make-server-95a96d8e/support/reply', async (c) => {
+app.post("/make-server-95a96d8e/support/reply", async (c) => {
   try {
     const { ticketId, reply } = await c.req.json();
 
     if (!ticketId || !reply) {
-      return c.json({ success: false, error: 'Ticket ID and reply are required' }, 400);
+      return c.json({ success: false, error: "Ticket ID and reply are required" }, 400);
     }
 
     const ticket = await kv.get(ticketId);
 
     if (!ticket) {
-      return c.json({ success: false, error: 'Ticket not found' }, 404);
+      return c.json({ success: false, error: "Ticket not found" }, 404);
     }
 
     const updatedTicket = {
       ...ticket,
       reply,
-      status: 'answered',
+      status: "answered",
       updatedAt: new Date().toISOString(),
     };
 
     await kv.set(ticketId, updatedTicket);
-    console.log('Support ticket updated:', ticketId);
+    console.log("Support ticket updated:", ticketId);
 
     // Send email notification to customer
     try {
-      const emailSubject = `Re: ${ticket.subject} - Support Ticket #${ticketId.split(':')[1]?.substring(0, 8)}`;
+      const emailSubject = `Re: ${ticket.subject} - Support Ticket #${ticketId.split(":")[1]?.substring(0, 8)}`;
       const emailBody = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #1a0033 0%, #000000 100%); color: #ffffff; border: 1px solid #9333ea; border-radius: 12px; overflow: hidden;">
           <!-- Header -->
@@ -3140,7 +3204,7 @@ app.post('/make-server-95a96d8e/support/reply', async (c) => {
 
             <div style="background: rgba(147, 51, 234, 0.1); border: 1px solid rgba(147, 51, 234, 0.3); border-radius: 8px; padding: 20px; margin: 25px 0;">
               <p style="margin: 0 0 10px 0; color: #e5e7eb;"><strong>Ticket Details:</strong></p>
-              <p style="margin: 5px 0; color: #9ca3af;">Ticket ID: ${ticketId.split(':')[1]?.substring(0, 8)}</p>
+              <p style="margin: 5px 0; color: #9ca3af;">Ticket ID: ${ticketId.split(":")[1]?.substring(0, 8)}</p>
               <p style="margin: 5px 0; color: #9ca3af;">Subject: ${ticket.subject}</p>
               <p style="margin: 5px 0; color: #9ca3af;">Status: Answered ✓</p>
             </div>
@@ -3167,27 +3231,27 @@ app.post('/make-server-95a96d8e/support/reply', async (c) => {
       await sendEmail(ticket.email, emailSubject, emailBody);
       console.log(`✅ Support reply email sent to ${ticket.email} for ticket ${ticketId}`);
     } catch (emailError) {
-      console.error('Error sending support reply email:', emailError);
+      console.error("Error sending support reply email:", emailError);
       // Continue even if email fails - the reply is still saved
     }
 
     return c.json({ success: true, ticket: updatedTicket });
   } catch (error) {
-    console.error('Error replying to ticket:', error);
+    console.error("Error replying to ticket:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Delete a support ticket (admin only)
-app.delete('/make-server-95a96d8e/support/:ticketId', async (c) => {
+app.delete("/make-server-95a96d8e/support/:ticketId", async (c) => {
   try {
-    const ticketId = c.req.param('ticketId');
+    const ticketId = c.req.param("ticketId");
     await kv.del(ticketId);
-    console.log('Support ticket deleted:', ticketId);
+    console.log("Support ticket deleted:", ticketId);
 
     return c.json({ success: true });
   } catch (error) {
-    console.error('Error deleting ticket:', error);
+    console.error("Error deleting ticket:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -3195,38 +3259,41 @@ app.delete('/make-server-95a96d8e/support/:ticketId', async (c) => {
 // Category Management Endpoints
 
 // Get all categories
-app.get('/make-server-95a96d8e/categories', async (c) => {
+app.get("/make-server-95a96d8e/categories", async (c) => {
   try {
-    const allCategories = await kv.getByPrefix('category:');
-    const sortedCategories = allCategories.sort((a: any, b: any) => 
-      (a.order || 0) - (b.order || 0)
-    );
+    const allCategories = await kv.getByPrefix("category:");
+    const sortedCategories = allCategories.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
 
     return c.json({ success: true, categories: sortedCategories });
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    console.error("Error fetching categories:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Create a new category
-app.post('/make-server-95a96d8e/categories', async (c) => {
+app.post("/make-server-95a96d8e/categories", async (c) => {
   try {
     const { name, slug, subcategories } = await c.req.json();
 
     if (!name || !name.trim()) {
-      return c.json({ success: false, error: 'Category name is required' }, 400);
+      return c.json({ success: false, error: "Category name is required" }, 400);
     }
 
     // Generate slug if not provided
-    const categorySlug = slug || name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const categorySlug =
+      slug ||
+      name
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "");
 
     // Check if slug already exists
-    const existingCategories = await kv.getByPrefix('category:');
+    const existingCategories = await kv.getByPrefix("category:");
     const slugExists = existingCategories.some((cat: any) => cat.slug === categorySlug);
 
     if (slugExists) {
-      return c.json({ success: false, error: 'Category slug already exists' }, 400);
+      return c.json({ success: false, error: "Category slug already exists" }, 400);
     }
 
     const categoryId = `category:${Date.now()}:${Math.random().toString(36).substring(7)}`;
@@ -3240,38 +3307,41 @@ app.post('/make-server-95a96d8e/categories', async (c) => {
     };
 
     await kv.set(categoryId, category);
-    console.log('Category created:', categoryId);
+    console.log("Category created:", categoryId);
 
     return c.json({ success: true, category });
   } catch (error) {
-    console.error('Error creating category:', error);
+    console.error("Error creating category:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Update a category
-app.put('/make-server-95a96d8e/categories/:categoryId', async (c) => {
+app.put("/make-server-95a96d8e/categories/:categoryId", async (c) => {
   try {
-    const categoryId = c.req.param('categoryId');
+    const categoryId = c.req.param("categoryId");
     const { name, slug, subcategories } = await c.req.json();
 
     const existingCategory = await kv.get(categoryId);
 
     if (!existingCategory) {
-      return c.json({ success: false, error: 'Category not found' }, 404);
+      return c.json({ success: false, error: "Category not found" }, 404);
     }
 
     // Generate slug if not provided
-    const categorySlug = slug || name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const categorySlug =
+      slug ||
+      name
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9-]/g, "");
 
     // Check if slug is taken by another category
-    const allCategories = await kv.getByPrefix('category:');
-    const slugTaken = allCategories.some((cat: any) => 
-      cat.slug === categorySlug && cat.id !== categoryId
-    );
+    const allCategories = await kv.getByPrefix("category:");
+    const slugTaken = allCategories.some((cat: any) => cat.slug === categorySlug && cat.id !== categoryId);
 
     if (slugTaken) {
-      return c.json({ success: false, error: 'Category slug already exists' }, 400);
+      return c.json({ success: false, error: "Category slug already exists" }, 400);
     }
 
     const updatedCategory = {
@@ -3283,25 +3353,25 @@ app.put('/make-server-95a96d8e/categories/:categoryId', async (c) => {
     };
 
     await kv.set(categoryId, updatedCategory);
-    console.log('Category updated:', categoryId);
+    console.log("Category updated:", categoryId);
 
     return c.json({ success: true, category: updatedCategory });
   } catch (error) {
-    console.error('Error updating category:', error);
+    console.error("Error updating category:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Delete a category
-app.delete('/make-server-95a96d8e/categories/:categoryId', async (c) => {
+app.delete("/make-server-95a96d8e/categories/:categoryId", async (c) => {
   try {
-    const categoryId = c.req.param('categoryId');
+    const categoryId = c.req.param("categoryId");
     await kv.del(categoryId);
-    console.log('Category deleted:', categoryId);
+    console.log("Category deleted:", categoryId);
 
     return c.json({ success: true });
   } catch (error) {
-    console.error('Error deleting category:', error);
+    console.error("Error deleting category:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -3309,32 +3379,40 @@ app.delete('/make-server-95a96d8e/categories/:categoryId', async (c) => {
 // ==================== WALLPAPER ROUTES ====================
 
 // Get all wallpapers
-app.get('/make-server-95a96d8e/wallpapers', async (c) => {
+app.get("/make-server-95a96d8e/wallpapers", async (c) => {
   try {
-    const wallpaperKeys = await kv.getByPrefix('wallpaper:');
+    console.log("🔵 GET /wallpapers - Fetching wallpapers...");
+    const wallpaperKeys = await kv.getByPrefix("wallpaper:");
+    console.log('📦 Found keys with prefix "wallpaper:":', wallpaperKeys.length);
+    console.log(
+      "📋 Keys:",
+      wallpaperKeys.map((k) => ({ key: k.key, hasValue: !!k.value }))
+    );
+
     const wallpapers = wallpaperKeys
-      .map(item => item.value)
-      .filter(item => item !== null && item !== undefined)
+      .map((item) => item.value)
+      .filter((item) => item !== null && item !== undefined)
       .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
 
+    console.log("✅ Processed wallpapers:", wallpapers.length);
     return c.json({ success: true, wallpapers });
   } catch (error) {
-    console.error('Error fetching wallpapers:', error);
+    console.error("Error fetching wallpapers:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Add a new wallpaper
-app.post('/make-server-95a96d8e/wallpapers', async (c) => {
+app.post("/make-server-95a96d8e/wallpapers", async (c) => {
   try {
     const { imageUrl, title, subtitle } = await c.req.json();
 
     if (!imageUrl || !title || !subtitle) {
-      return c.json({ success: false, error: 'Missing required fields' }, 400);
+      return c.json({ success: false, error: "Missing required fields" }, 400);
     }
 
     // Get all existing wallpapers to determine the next order
-    const wallpaperKeys = await kv.getByPrefix('wallpaper:');
+    const wallpaperKeys = await kv.getByPrefix("wallpaper:");
     const maxOrder = wallpaperKeys.reduce((max: number, item: any) => {
       if (!item || !item.value) return max;
       return Math.max(max, item.value.order || 0);
@@ -3351,24 +3429,24 @@ app.post('/make-server-95a96d8e/wallpapers', async (c) => {
     };
 
     await kv.set(wallpaperId, wallpaper);
-    console.log('Wallpaper added:', wallpaperId);
+    console.log("Wallpaper added:", wallpaperId);
 
     return c.json({ success: true, wallpaper });
   } catch (error) {
-    console.error('Error adding wallpaper:', error);
+    console.error("Error adding wallpaper:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Update a wallpaper
-app.put('/make-server-95a96d8e/wallpapers/:wallpaperId', async (c) => {
+app.put("/make-server-95a96d8e/wallpapers/:wallpaperId", async (c) => {
   try {
-    const wallpaperId = c.req.param('wallpaperId');
+    const wallpaperId = c.req.param("wallpaperId");
     const { imageUrl, title, subtitle } = await c.req.json();
 
     const existingWallpaper = await kv.get(wallpaperId);
     if (!existingWallpaper) {
-      return c.json({ success: false, error: 'Wallpaper not found' }, 404);
+      return c.json({ success: false, error: "Wallpaper not found" }, 404);
     }
 
     const updatedWallpaper = {
@@ -3380,33 +3458,31 @@ app.put('/make-server-95a96d8e/wallpapers/:wallpaperId', async (c) => {
     };
 
     await kv.set(wallpaperId, updatedWallpaper);
-    console.log('Wallpaper updated:', wallpaperId);
+    console.log("Wallpaper updated:", wallpaperId);
 
     return c.json({ success: true, wallpaper: updatedWallpaper });
   } catch (error) {
-    console.error('Error updating wallpaper:', error);
+    console.error("Error updating wallpaper:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Delete a wallpaper
-app.delete('/make-server-95a96d8e/wallpapers/:wallpaperId', async (c) => {
+app.delete("/make-server-95a96d8e/wallpapers/:wallpaperId", async (c) => {
   try {
-    const wallpaperId = c.req.param('wallpaperId');
+    const wallpaperId = c.req.param("wallpaperId");
     const wallpaper = await kv.get(wallpaperId);
-    
+
     if (!wallpaper) {
-      return c.json({ success: false, error: 'Wallpaper not found' }, 404);
+      return c.json({ success: false, error: "Wallpaper not found" }, 404);
     }
 
     await kv.del(wallpaperId);
-    console.log('Wallpaper deleted:', wallpaperId);
+    console.log("Wallpaper deleted:", wallpaperId);
 
     // Reorder remaining wallpapers
-    const wallpaperKeys = await kv.getByPrefix('wallpaper:');
-    const sortedWallpapers = wallpaperKeys
-      .map(item => item.value)
-      .sort((a: any, b: any) => a.order - b.order);
+    const wallpaperKeys = await kv.getByPrefix("wallpaper:");
+    const sortedWallpapers = wallpaperKeys.map((item) => item.value).sort((a: any, b: any) => a.order - b.order);
 
     for (let i = 0; i < sortedWallpapers.length; i++) {
       const wp = sortedWallpapers[i];
@@ -3417,35 +3493,33 @@ app.delete('/make-server-95a96d8e/wallpapers/:wallpaperId', async (c) => {
 
     return c.json({ success: true });
   } catch (error) {
-    console.error('Error deleting wallpaper:', error);
+    console.error("Error deleting wallpaper:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Reorder wallpapers
-app.put('/make-server-95a96d8e/wallpapers/:wallpaperId/reorder', async (c) => {
+app.put("/make-server-95a96d8e/wallpapers/:wallpaperId/reorder", async (c) => {
   try {
-    const wallpaperId = c.req.param('wallpaperId');
+    const wallpaperId = c.req.param("wallpaperId");
     const { direction } = await c.req.json();
 
     const wallpaper = await kv.get(wallpaperId);
     if (!wallpaper) {
-      return c.json({ success: false, error: 'Wallpaper not found' }, 404);
+      return c.json({ success: false, error: "Wallpaper not found" }, 404);
     }
 
-    const wallpaperKeys = await kv.getByPrefix('wallpaper:');
-    const sortedWallpapers = wallpaperKeys
-      .map(item => item.value)
-      .sort((a: any, b: any) => a.order - b.order);
+    const wallpaperKeys = await kv.getByPrefix("wallpaper:");
+    const sortedWallpapers = wallpaperKeys.map((item) => item.value).sort((a: any, b: any) => a.order - b.order);
 
     const currentIndex = sortedWallpapers.findIndex((wp: any) => wp.id === wallpaperId);
-    
-    if (direction === 'up' && currentIndex > 0) {
+
+    if (direction === "up" && currentIndex > 0) {
       // Swap with previous wallpaper
       const prevWallpaper = sortedWallpapers[currentIndex - 1];
       await kv.set(wallpaperId, { ...wallpaper, order: wallpaper.order - 1 });
       await kv.set(prevWallpaper.id, { ...prevWallpaper, order: prevWallpaper.order + 1 });
-    } else if (direction === 'down' && currentIndex < sortedWallpapers.length - 1) {
+    } else if (direction === "down" && currentIndex < sortedWallpapers.length - 1) {
       // Swap with next wallpaper
       const nextWallpaper = sortedWallpapers[currentIndex + 1];
       await kv.set(wallpaperId, { ...wallpaper, order: wallpaper.order + 1 });
@@ -3454,23 +3528,23 @@ app.put('/make-server-95a96d8e/wallpapers/:wallpaperId/reorder', async (c) => {
 
     return c.json({ success: true });
   } catch (error) {
-    console.error('Error reordering wallpaper:', error);
+    console.error("Error reordering wallpaper:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Upload wallpaper image
-app.post('/make-server-95a96d8e/upload-wallpaper', async (c) => {
+app.post("/make-server-95a96d8e/upload-wallpaper", async (c) => {
   try {
     const formData = await c.req.formData();
-    const file = formData.get('file') as File;
+    const file = formData.get("file") as File;
 
     if (!file) {
-      return c.json({ success: false, error: 'No file provided' }, 400);
+      return c.json({ success: false, error: "No file provided" }, 400);
     }
 
     // Create a unique filename
-    const fileExt = file.name.split('.').pop();
+    const fileExt = file.name.split(".").pop();
     const fileName = `wallpaper_${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
 
     // Convert File to ArrayBuffer
@@ -3478,48 +3552,44 @@ app.post('/make-server-95a96d8e/upload-wallpaper', async (c) => {
     const uint8Array = new Uint8Array(arrayBuffer);
 
     // Upload to Supabase Storage using service role (bypasses RLS)
-    console.log('Uploading file:', fileName, 'Type:', file.type, 'Size:', uint8Array.length);
-    const { data, error } = await supabase.storage
-      .from('product-images')
-      .upload(fileName, uint8Array, {
-        contentType: file.type,
-        cacheControl: '3600',
-        upsert: false,
-      });
+    console.log("Uploading file:", fileName, "Type:", file.type, "Size:", uint8Array.length);
+    const { data, error } = await supabase.storage.from("product-images").upload(fileName, uint8Array, {
+      contentType: file.type,
+      cacheControl: "3600",
+      upsert: false,
+    });
 
     if (error) {
-      console.error('Error uploading wallpaper image:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
+      console.error("Error uploading wallpaper image:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
       return c.json({ success: false, error: error.message }, 500);
     }
 
     // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('product-images')
-      .getPublicUrl(data.path);
+    const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(data.path);
 
-    console.log('Wallpaper image uploaded:', fileName);
+    console.log("Wallpaper image uploaded:", fileName);
     return c.json({ success: true, imageUrl: urlData.publicUrl });
   } catch (error) {
-    console.error('Error uploading wallpaper image:', error);
+    console.error("Error uploading wallpaper image:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Upload image (general purpose - for custom clothing, products, etc.)
-app.post('/make-server-95a96d8e/upload-image', async (c) => {
+app.post("/make-server-95a96d8e/upload-image", async (c) => {
   try {
     const formData = await c.req.formData();
-    const file = formData.get('file') as File;
-    const folder = formData.get('folder') as string || '';
+    const file = formData.get("file") as File;
+    const folder = (formData.get("folder") as string) || "";
 
     if (!file) {
-      return c.json({ success: false, error: 'No file provided' }, 400);
+      return c.json({ success: false, error: "No file provided" }, 400);
     }
 
     // Create a unique filename
-    const fileExt = file.name.split('.').pop();
-    const folderPath = folder ? `${folder}/` : '';
+    const fileExt = file.name.split(".").pop();
+    const folderPath = folder ? `${folder}/` : "";
     const fileName = `${folderPath}${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
 
     // Convert File to ArrayBuffer
@@ -3527,67 +3597,66 @@ app.post('/make-server-95a96d8e/upload-image', async (c) => {
     const uint8Array = new Uint8Array(arrayBuffer);
 
     // Upload to Supabase Storage using service role (bypasses RLS)
-    console.log('Uploading file:', fileName, 'Type:', file.type, 'Size:', uint8Array.length);
-    const { data, error } = await supabase.storage
-      .from('product-images')
-      .upload(fileName, uint8Array, {
-        contentType: file.type,
-        cacheControl: '3600',
-        upsert: false,
-      });
+    console.log("Uploading file:", fileName, "Type:", file.type, "Size:", uint8Array.length);
+    const { data, error } = await supabase.storage.from("product-images").upload(fileName, uint8Array, {
+      contentType: file.type,
+      cacheControl: "3600",
+      upsert: false,
+    });
 
     if (error) {
-      console.error('Error uploading image:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
+      console.error("Error uploading image:", error);
+      console.error("Error details:", JSON.stringify(error, null, 2));
       return c.json({ success: false, error: error.message }, 500);
     }
 
     // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('product-images')
-      .getPublicUrl(data.path);
+    const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(data.path);
 
-    console.log('Image uploaded successfully:', fileName);
+    console.log("Image uploaded successfully:", fileName);
     return c.json({ success: true, imageUrl: urlData.publicUrl });
   } catch (error) {
-    console.error('Error in upload-image endpoint:', error);
+    console.error("Error in upload-image endpoint:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Fix storage RLS policies
-app.post('/make-server-95a96d8e/fix-storage-rls', async (c) => {
+app.post("/make-server-95a96d8e/fix-storage-rls", async (c) => {
   try {
-    console.log('🔧 Attempting to fix storage RLS policies...');
-    
+    console.log("🔧 Attempting to fix storage RLS policies...");
+
     // Since we're using service role, we can bypass RLS by using a different approach
     // The issue is that RLS policies need to be created in the Supabase dashboard
-    
-    return c.json({ 
-      success: false, 
-      error: 'RLS policies must be configured manually',
-      instructions: {
-        step1: 'Go to your Supabase Dashboard',
-        step2: 'Navigate to Storage → product-images bucket',
-        step3: 'Click on "Policies" tab',
-        step4: 'Click "New Policy" → "For full customization"',
-        step5: 'Set Policy name: "Allow all operations"',
-        step6: 'Set Target roles: "public"',
-        step7: 'Set Policy command: "All (SELECT, INSERT, UPDATE, DELETE)"',
-        step8: 'Set USING expression: bucket_id = \'product-images\'',
-        step9: 'Set WITH CHECK expression: bucket_id = \'product-images\'',
-        step10: 'Click "Review" then "Save policy"',
-        sql: `
+
+    return c.json(
+      {
+        success: false,
+        error: "RLS policies must be configured manually",
+        instructions: {
+          step1: "Go to your Supabase Dashboard",
+          step2: "Navigate to Storage → product-images bucket",
+          step3: 'Click on "Policies" tab',
+          step4: 'Click "New Policy" → "For full customization"',
+          step5: 'Set Policy name: "Allow all operations"',
+          step6: 'Set Target roles: "public"',
+          step7: 'Set Policy command: "All (SELECT, INSERT, UPDATE, DELETE)"',
+          step8: "Set USING expression: bucket_id = 'product-images'",
+          step9: "Set WITH CHECK expression: bucket_id = 'product-images'",
+          step10: 'Click "Review" then "Save policy"',
+          sql: `
 -- Or run this SQL in Supabase SQL Editor:
 CREATE POLICY "Allow all operations on product-images"
 ON storage.objects FOR ALL
 USING (bucket_id = 'product-images')
 WITH CHECK (bucket_id = 'product-images');
-        `
-      }
-    }, 200);
+        `,
+        },
+      },
+      200
+    );
   } catch (error) {
-    console.error('Error in fix-storage-rls endpoint:', error);
+    console.error("Error in fix-storage-rls endpoint:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -3595,86 +3664,91 @@ WITH CHECK (bucket_id = 'product-images');
 // ==================== SEED DEFAULT DATA ====================
 
 // Seed default categories and wallpapers
-app.post('/make-server-95a96d8e/seed-defaults', async (c) => {
+app.post("/make-server-95a96d8e/seed-defaults", async (c) => {
   try {
     // Default categories with subcategories
     const defaultCategories = [
       {
-        name: 'Figures',
-        slug: 'figures',
-        description: 'Premium anime action figures and statues',
-        icon: 'Package',
-        subcategories: ['Demon Slayer', 'Naruto', 'One Piece', 'Attack on Titan', 'My Hero Academia', 'Dragon Ball'],
+        name: "Figures",
+        slug: "figures",
+        description: "Premium anime action figures and statues",
+        icon: "Package",
+        subcategories: ["Demon Slayer", "Naruto", "One Piece", "Attack on Titan", "My Hero Academia", "Dragon Ball"],
       },
       {
-        name: 'Katana',
-        slug: 'katana',
-        description: 'Authentic Japanese swords and replicas',
-        icon: 'Swords',
-        subcategories: ['Demon Slayer Swords', 'Samurai Katanas', 'Replica Katanas', 'Training Katanas'],
+        name: "Katana",
+        slug: "katana",
+        description: "Authentic Japanese swords and replicas",
+        icon: "Swords",
+        subcategories: ["Demon Slayer Swords", "Samurai Katanas", "Replica Katanas", "Training Katanas"],
       },
       {
-        name: 'Accessories',
-        slug: 'accessories',
-        description: 'Keychains, pins, and more collectibles',
-        icon: 'Sparkles',
-        subcategories: ['Keychains', 'Pins & Badges', 'Phone Cases', 'Jewelry', 'Bags & Backpacks'],
+        name: "Accessories",
+        slug: "accessories",
+        description: "Keychains, pins, and more collectibles",
+        icon: "Sparkles",
+        subcategories: ["Keychains", "Pins & Badges", "Phone Cases", "Jewelry", "Bags & Backpacks"],
       },
       {
-        name: 'Posters',
-        slug: 'posters',
-        description: 'High-quality anime art prints',
-        icon: 'Image',
-        subcategories: ['Wall Scrolls', 'Framed Prints', 'Mini Posters', 'Canvas Art'],
+        name: "Posters",
+        slug: "posters",
+        description: "High-quality anime art prints",
+        icon: "Image",
+        subcategories: ["Wall Scrolls", "Framed Prints", "Mini Posters", "Canvas Art"],
       },
       {
-        name: 'Clothing',
-        slug: 'clothing',
-        description: 'Anime-themed apparel and cosplay',
-        icon: 'Shirt',
-        subcategories: ['T-Shirts', 'Hoodies', 'Cosplay', 'Accessories'],
+        name: "Clothing",
+        slug: "clothing",
+        description: "Anime-themed apparel and cosplay",
+        icon: "Shirt",
+        subcategories: ["T-Shirts", "Hoodies", "Cosplay", "Accessories"],
       },
       {
-        name: 'Collectibles',
-        slug: 'collectibles',
-        description: 'Limited edition merchandise',
-        icon: 'Bookmark',
-        subcategories: ['Limited Editions', 'Trading Cards', 'Plushies', 'Model Kits'],
+        name: "Collectibles",
+        slug: "collectibles",
+        description: "Limited edition merchandise",
+        icon: "Bookmark",
+        subcategories: ["Limited Editions", "Trading Cards", "Plushies", "Model Kits"],
       },
     ];
 
     // Default wallpapers
     const defaultWallpapers = [
       {
-        imageUrl: 'https://images.unsplash.com/photo-1668293750324-bd77c1f08ca9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZW1vbiUyMHNsYXllciUyMGFuaW1lfGVufDF8fHx8MTc2NTMwODI3OHww&ixlib=rb-4.1.0&q=80&w=1080',
-        title: 'Demon Slayer Collection',
-        subtitle: 'Limited Edition Figures & Katanas',
+        imageUrl:
+          "https://images.unsplash.com/photo-1668293750324-bd77c1f08ca9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZW1vbiUyMHNsYXllciUyMGFuaW1lfGVufDF8fHx8MTc2NTMwODI3OHww&ixlib=rb-4.1.0&q=80&w=1080",
+        title: "Demon Slayer Collection",
+        subtitle: "Limited Edition Figures & Katanas",
       },
       {
-        imageUrl: 'https://images.unsplash.com/photo-1740644545217-892da8cce224?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXJ1dG8lMjBhbmltZSUyMGNoYXJhY3RlcnxlbnwxfHx8fDE3NjUzMDgyNzl8MA&ixlib=rb-4.1.0&q=80&w=1080',
-        title: 'Naruto Legends',
-        subtitle: 'Iconic Ninja Collection',
+        imageUrl:
+          "https://images.unsplash.com/photo-1740644545217-892da8cce224?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXJ1dG8lMjBhbmltZSUyMGNoYXJhY3RlcnxlbnwxfHx8fDE3NjUzMDgyNzl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+        title: "Naruto Legends",
+        subtitle: "Iconic Ninja Collection",
       },
       {
-        imageUrl: 'https://images.unsplash.com/photo-1667419674822-1a9195436f1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvbmUlMjBwaWVjZSUyMGFuaW1lfGVufDF8fHx8MTc2NTMwODI3OXww&ixlib=rb-4.1.0&q=80&w=1080',
-        title: 'One Piece Adventure',
-        subtitle: 'Grand Line Treasures',
+        imageUrl:
+          "https://images.unsplash.com/photo-1667419674822-1a9195436f1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvbmUlMjBwaWVjZSUyMGFuaW1lfGVufDF8fHx8MTc2NTMwODI3OXww&ixlib=rb-4.1.0&q=80&w=1080",
+        title: "One Piece Adventure",
+        subtitle: "Grand Line Treasures",
       },
       {
-        imageUrl: 'https://images.unsplash.com/photo-1709675577960-0b1e7ba55347?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhdHRhY2slMjB0aXRhbiUyMGFuaW1lfGVufDF8fHx8MTc2NTMwODI3OXww&ixlib=rb-4.1.0&q=80&w=1080',
-        title: 'Attack on Titan',
-        subtitle: 'Survey Corps Collection',
+        imageUrl:
+          "https://images.unsplash.com/photo-1709675577960-0b1e7ba55347?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhdHRhY2slMjB0aXRhbiUyMGFuaW1lfGVufDF8fHx8MTc2NTMwODI3OXww&ixlib=rb-4.1.0&q=80&w=1080",
+        title: "Attack on Titan",
+        subtitle: "Survey Corps Collection",
       },
       {
-        imageUrl: 'https://images.unsplash.com/photo-1575540325855-4b5d285a3845?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkcmFnb24lMjBiYWxsJTIwYW5pbWV8ZW58MXx8fHwxNzY1MjE3NDA5fDA&ixlib=rb-4.1.0&q=80&w=1080',
-        title: 'Dragon Ball Z',
-        subtitle: 'Super Saiyan Warriors',
+        imageUrl:
+          "https://images.unsplash.com/photo-1575540325855-4b5d285a3845?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkcmFnb24lMjBiYWxsJTIwYW5pbWV8ZW58MXx8fHwxNzY1MjE3NDA5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+        title: "Dragon Ball Z",
+        subtitle: "Super Saiyan Warriors",
       },
     ];
 
     // Check if categories already exist
-    const existingCategories = await kv.getByPrefix('category:');
-    
+    const existingCategories = await kv.getByPrefix("category:");
+
     if (existingCategories.length === 0) {
       // Seed categories
       for (let i = 0; i < defaultCategories.length; i++) {
@@ -3691,12 +3765,12 @@ app.post('/make-server-95a96d8e/seed-defaults', async (c) => {
           createdAt: new Date().toISOString(),
         });
       }
-      console.log('Default categories seeded');
+      console.log("Default categories seeded");
     }
 
     // Check if wallpapers already exist
-    const existingWallpapers = await kv.getByPrefix('wallpaper:');
-    
+    const existingWallpapers = await kv.getByPrefix("wallpaper:");
+
     if (existingWallpapers.length === 0) {
       // Seed wallpapers
       for (let i = 0; i < defaultWallpapers.length; i++) {
@@ -3711,34 +3785,34 @@ app.post('/make-server-95a96d8e/seed-defaults', async (c) => {
           createdAt: new Date().toISOString(),
         });
       }
-      console.log('Default wallpapers seeded');
+      console.log("Default wallpapers seeded");
     }
 
-    return c.json({ 
-      success: true, 
-      message: 'Default data seeded successfully',
+    return c.json({
+      success: true,
+      message: "Default data seeded successfully",
       categoriesSeeded: existingCategories.length === 0,
       wallpapersSeeded: existingWallpapers.length === 0,
     });
   } catch (error) {
-    console.error('Error seeding defaults:', error);
+    console.error("Error seeding defaults:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Get customer orders by email or phone
-app.get('/make-server-95a96d8e/my-orders', async (c) => {
+app.get("/make-server-95a96d8e/my-orders", async (c) => {
   try {
-    const email = c.req.query('email');
-    const phone = c.req.query('phone');
+    const email = c.req.query("email");
+    const phone = c.req.query("phone");
 
     if (!email && !phone) {
-      return c.json({ success: false, message: 'Email or phone number is required' }, 400);
+      return c.json({ success: false, message: "Email or phone number is required" }, 400);
     }
 
     // Get all orders
-    const allOrders = await kv.getByPrefix('order:');
-    
+    const allOrders = await kv.getByPrefix("order:");
+
     // Filter orders by email or phone
     const customerOrders = allOrders.filter((order: any) => {
       if (email && order.customerInfo?.email?.toLowerCase() === email.toLowerCase()) {
@@ -3751,47 +3825,45 @@ app.get('/make-server-95a96d8e/my-orders', async (c) => {
     });
 
     // Sort by creation date (newest first)
-    customerOrders.sort((a: any, b: any) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    customerOrders.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return c.json({
       success: true,
       orders: customerOrders,
     });
   } catch (error) {
-    console.error('Error fetching customer orders:', error);
+    console.error("Error fetching customer orders:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Admin: Get all coupons
-app.get('/make-server-95a96d8e/admin/coupons', async (c) => {
+app.get("/make-server-95a96d8e/admin/coupons", async (c) => {
   try {
-    const coupons = await kv.getByPrefix('coupon:');
+    const coupons = await kv.getByPrefix("coupon:");
     return c.json({ success: true, coupons });
   } catch (error) {
-    console.error('Error fetching coupons:', error);
+    console.error("Error fetching coupons:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Admin: Create coupon
-app.post('/make-server-95a96d8e/admin/coupons', async (c) => {
+app.post("/make-server-95a96d8e/admin/coupons", async (c) => {
   try {
     const body = await c.req.json();
     const { code, discountType, discountValue, expiryDate, usageLimit, isActive } = body;
 
     if (!code || !discountType || !discountValue) {
-      return c.json({ success: false, message: 'Code, discount type, and discount value are required' }, 400);
+      return c.json({ success: false, message: "Code, discount type, and discount value are required" }, 400);
     }
 
     // Check if coupon code already exists
-    const existingCoupons = await kv.getByPrefix('coupon:');
+    const existingCoupons = await kv.getByPrefix("coupon:");
     const duplicate = existingCoupons.find((c: any) => c.code.toUpperCase() === code.toUpperCase());
-    
+
     if (duplicate) {
-      return c.json({ success: false, message: 'Coupon code already exists' }, 400);
+      return c.json({ success: false, message: "Coupon code already exists" }, 400);
     }
 
     const couponId = crypto.randomUUID();
@@ -3811,20 +3883,20 @@ app.post('/make-server-95a96d8e/admin/coupons', async (c) => {
 
     return c.json({ success: true, coupon });
   } catch (error) {
-    console.error('Error creating coupon:', error);
+    console.error("Error creating coupon:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Admin: Update coupon
-app.put('/make-server-95a96d8e/admin/coupons/:id', async (c) => {
+app.put("/make-server-95a96d8e/admin/coupons/:id", async (c) => {
   try {
-    const couponId = c.req.param('id');
+    const couponId = c.req.param("id");
     const updates = await c.req.json();
 
     const existingCoupon = await kv.get(`coupon:${couponId}`);
     if (!existingCoupon) {
-      return c.json({ success: false, message: 'Coupon not found' }, 404);
+      return c.json({ success: false, message: "Coupon not found" }, 404);
     }
 
     const updatedCoupon = {
@@ -3837,19 +3909,19 @@ app.put('/make-server-95a96d8e/admin/coupons/:id', async (c) => {
 
     return c.json({ success: true, coupon: updatedCoupon });
   } catch (error) {
-    console.error('Error updating coupon:', error);
+    console.error("Error updating coupon:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Admin: Delete coupon
-app.delete('/make-server-95a96d8e/admin/coupons/:id', async (c) => {
+app.delete("/make-server-95a96d8e/admin/coupons/:id", async (c) => {
   try {
-    const couponId = c.req.param('id');
+    const couponId = c.req.param("id");
     await kv.del(`coupon:${couponId}`);
-    return c.json({ success: true, message: 'Coupon deleted successfully' });
+    return c.json({ success: true, message: "Coupon deleted successfully" });
   } catch (error) {
-    console.error('Error deleting coupon:', error);
+    console.error("Error deleting coupon:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -3859,31 +3931,37 @@ app.delete('/make-server-95a96d8e/admin/coupons/:id', async (c) => {
 // ============================================
 
 // Get all saved addresses for a user
-app.get('/make-server-95a96d8e/addresses', async (c) => {
+app.get("/make-server-95a96d8e/addresses", async (c) => {
   try {
-    const accessToken = c.req.header('Authorization')?.split(' ')[1];
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-    
+    const accessToken = c.req.header("Authorization")?.split(" ")[1];
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(accessToken);
+
     if (!user) {
-      return c.json({ success: false, message: 'Unauthorized' }, 401);
+      return c.json({ success: false, message: "Unauthorized" }, 401);
     }
 
     const addresses = await kv.getByPrefix(`address:${user.id}:`);
     return c.json({ success: true, addresses: addresses || [] });
   } catch (error) {
-    console.error('Error fetching addresses:', error);
+    console.error("Error fetching addresses:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Save a new address
-app.post('/make-server-95a96d8e/addresses', async (c) => {
+app.post("/make-server-95a96d8e/addresses", async (c) => {
   try {
-    const accessToken = c.req.header('Authorization')?.split(' ')[1];
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-    
+    const accessToken = c.req.header("Authorization")?.split(" ")[1];
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(accessToken);
+
     if (!user) {
-      return c.json({ success: false, message: 'Unauthorized' }, 401);
+      return c.json({ success: false, message: "Unauthorized" }, 401);
     }
 
     const addressData = await c.req.json();
@@ -3898,27 +3976,30 @@ app.post('/make-server-95a96d8e/addresses', async (c) => {
     await kv.set(`address:${user.id}:${addressId}`, address);
     return c.json({ success: true, address });
   } catch (error) {
-    console.error('Error saving address:', error);
+    console.error("Error saving address:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Update an address
-app.put('/make-server-95a96d8e/addresses/:id', async (c) => {
+app.put("/make-server-95a96d8e/addresses/:id", async (c) => {
   try {
-    const accessToken = c.req.header('Authorization')?.split(' ')[1];
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-    
+    const accessToken = c.req.header("Authorization")?.split(" ")[1];
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(accessToken);
+
     if (!user) {
-      return c.json({ success: false, message: 'Unauthorized' }, 401);
+      return c.json({ success: false, message: "Unauthorized" }, 401);
     }
 
-    const addressId = c.req.param('id');
+    const addressId = c.req.param("id");
     const addressData = await c.req.json();
-    
+
     const existingAddress = await kv.get(`address:${user.id}:${addressId}`);
     if (!existingAddress) {
-      return c.json({ success: false, message: 'Address not found' }, 404);
+      return c.json({ success: false, message: "Address not found" }, 404);
     }
 
     const updatedAddress = {
@@ -3930,26 +4011,29 @@ app.put('/make-server-95a96d8e/addresses/:id', async (c) => {
     await kv.set(`address:${user.id}:${addressId}`, updatedAddress);
     return c.json({ success: true, address: updatedAddress });
   } catch (error) {
-    console.error('Error updating address:', error);
+    console.error("Error updating address:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Delete an address
-app.delete('/make-server-95a96d8e/addresses/:id', async (c) => {
+app.delete("/make-server-95a96d8e/addresses/:id", async (c) => {
   try {
-    const accessToken = c.req.header('Authorization')?.split(' ')[1];
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-    
+    const accessToken = c.req.header("Authorization")?.split(" ")[1];
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(accessToken);
+
     if (!user) {
-      return c.json({ success: false, message: 'Unauthorized' }, 401);
+      return c.json({ success: false, message: "Unauthorized" }, 401);
     }
 
-    const addressId = c.req.param('id');
+    const addressId = c.req.param("id");
     await kv.del(`address:${user.id}:${addressId}`);
     return c.json({ success: true });
   } catch (error) {
-    console.error('Error deleting address:', error);
+    console.error("Error deleting address:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -3959,34 +4043,40 @@ app.delete('/make-server-95a96d8e/addresses/:id', async (c) => {
 // ============================================
 
 // Update order address (only if status is pending)
-app.put('/make-server-95a96d8e/orders/:id/address', async (c) => {
+app.put("/make-server-95a96d8e/orders/:id/address", async (c) => {
   try {
-    const accessToken = c.req.header('Authorization')?.split(' ')[1];
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-    
+    const accessToken = c.req.header("Authorization")?.split(" ")[1];
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(accessToken);
+
     if (!user) {
-      return c.json({ success: false, message: 'Unauthorized' }, 401);
+      return c.json({ success: false, message: "Unauthorized" }, 401);
     }
 
-    const orderId = c.req.param('id');
+    const orderId = c.req.param("id");
     const newAddress = await c.req.json();
 
     const order = await kv.get(`order:${orderId}`);
     if (!order) {
-      return c.json({ success: false, message: 'Order not found' }, 404);
+      return c.json({ success: false, message: "Order not found" }, 404);
     }
 
     // Check if order belongs to user
     if (order.customerInfo?.email !== user.email) {
-      return c.json({ success: false, message: 'Unauthorized' }, 403);
+      return c.json({ success: false, message: "Unauthorized" }, 403);
     }
 
     // Only allow address change if status is pending
-    if (order.status !== 'Order Pending' && order.status.toLowerCase() !== 'pending') {
-      return c.json({ 
-        success: false, 
-        message: `Cannot change address. Order status is ${order.status}. Address can only be changed when status is pending.` 
-      }, 400);
+    if (order.status !== "Order Pending" && order.status.toLowerCase() !== "pending") {
+      return c.json(
+        {
+          success: false,
+          message: `Cannot change address. Order status is ${order.status}. Address can only be changed when status is pending.`,
+        },
+        400
+      );
     }
 
     // Update the address
@@ -4023,15 +4113,11 @@ app.put('/make-server-95a96d8e/orders/:id/address', async (c) => {
       </div>
     `;
 
-    await sendEmail(
-      ADMIN_EMAIL,
-      `🔄 Address Updated - Order ${order.trackingId}`,
-      emailHtml
-    );
+    await sendEmail(ADMIN_EMAIL, `🔄 Address Updated - Order ${order.trackingId}`, emailHtml);
 
     return c.json({ success: true, order });
   } catch (error) {
-    console.error('Error updating order address:', error);
+    console.error("Error updating order address:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -4041,13 +4127,16 @@ app.put('/make-server-95a96d8e/orders/:id/address', async (c) => {
 // ============================================
 
 // Delete user account
-app.delete('/make-server-95a96d8e/account', async (c) => {
+app.delete("/make-server-95a96d8e/account", async (c) => {
   try {
-    const accessToken = c.req.header('Authorization')?.split(' ')[1];
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-    
+    const accessToken = c.req.header("Authorization")?.split(" ")[1];
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(accessToken);
+
     if (!user) {
-      return c.json({ success: false, message: 'Unauthorized' }, 401);
+      return c.json({ success: false, message: "Unauthorized" }, 401);
     }
 
     // Send sad goodbye email
@@ -4063,11 +4152,7 @@ app.delete('/make-server-95a96d8e/account', async (c) => {
       </div>
     `;
 
-    await sendEmail(
-      user.email!,
-      '😢 Account Deleted - animedropzone',
-      emailHtml
-    );
+    await sendEmail(user.email!, "😢 Account Deleted - animedropzone", emailHtml);
 
     // Send notification to admin about account deletion
     const adminEmailHtml = `
@@ -4099,9 +4184,11 @@ app.delete('/make-server-95a96d8e/account', async (c) => {
               </div>
               
               <h3 style="color: #e91e63; margin-top: 20px;">User Metadata</h3>
-              <p><span class="label">Name:</span> <span class="value">${user.user_metadata?.name || 'N/A'}</span></p>
-              <p><span class="label">Phone:</span> <span class="value">${user.user_metadata?.phone || 'N/A'}</span></p>
-              <p><span class="label">Created At:</span> <span class="value">${new Date(user.created_at || '').toLocaleDateString()}</span></p>
+              <p><span class="label">Name:</span> <span class="value">${user.user_metadata?.name || "N/A"}</span></p>
+              <p><span class="label">Phone:</span> <span class="value">${user.user_metadata?.phone || "N/A"}</span></p>
+              <p><span class="label">Created At:</span> <span class="value">${new Date(
+                user.created_at || ""
+              ).toLocaleDateString()}</span></p>
               
               <div style="margin-top: 20px; padding: 15px; background: rgba(245,158,11,0.2); border-left: 4px solid #f59e0b; border-radius: 8px;">
                 <p style="margin: 0; color: #fbbf24;">⚠️ All user data including addresses and preferences have been permanently deleted.</p>
@@ -4120,11 +4207,7 @@ app.delete('/make-server-95a96d8e/account', async (c) => {
       </html>
     `;
 
-    await sendEmail(
-      ADMIN_EMAIL,
-      `👋 User Account Deleted - ${user.email}`,
-      adminEmailHtml
-    );
+    await sendEmail(ADMIN_EMAIL, `👋 User Account Deleted - ${user.email}`, adminEmailHtml);
 
     // Delete user's data from KV store
     const addresses = await kv.getByPrefix(`address:${user.id}:`);
@@ -4137,13 +4220,13 @@ app.delete('/make-server-95a96d8e/account', async (c) => {
     // Delete user from Supabase Auth
     const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
     if (deleteError) {
-      console.error('Error deleting user from auth:', deleteError);
-      return c.json({ success: false, error: 'Failed to delete account' }, 500);
+      console.error("Error deleting user from auth:", deleteError);
+      return c.json({ success: false, error: "Failed to delete account" }, 500);
     }
 
-    return c.json({ success: true, message: 'Account deleted successfully' });
+    return c.json({ success: true, message: "Account deleted successfully" });
   } catch (error) {
-    console.error('Error deleting account:', error);
+    console.error("Error deleting account:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -4153,35 +4236,35 @@ app.delete('/make-server-95a96d8e/account', async (c) => {
 // ============================================
 
 // Get all users (admin only)
-app.post('/make-server-95a96d8e/admin/users', async (c) => {
+app.post("/make-server-95a96d8e/admin/users", async (c) => {
   try {
     const { userId, password } = await c.req.json();
-    
+
     if (userId !== ADMIN_CREDENTIALS.userId || password !== ADMIN_CREDENTIALS.password) {
-      return c.json({ success: false, message: 'Invalid admin credentials' }, 401);
+      return c.json({ success: false, message: "Invalid admin credentials" }, 401);
     }
 
     // Get all users from Supabase Auth
     const { data, error } = await supabase.auth.admin.listUsers();
-    
+
     if (error) {
-      console.error('Error fetching users:', error);
+      console.error("Error fetching users:", error);
       return c.json({ success: false, error: String(error) }, 500);
     }
 
     // Return user info without sensitive data
-    const users = data.users.map(user => ({
+    const users = data.users.map((user) => ({
       id: user.id,
       email: user.email,
-      name: user.user_metadata?.name || 'N/A',
-      phone: user.user_metadata?.phone || 'N/A',
+      name: user.user_metadata?.name || "N/A",
+      phone: user.user_metadata?.phone || "N/A",
       createdAt: user.created_at,
       lastSignIn: user.last_sign_in_at,
     }));
 
     return c.json({ success: true, users, count: users.length });
   } catch (error) {
-    console.error('Error fetching users:', error);
+    console.error("Error fetching users:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -4191,12 +4274,12 @@ app.post('/make-server-95a96d8e/admin/users', async (c) => {
 // ============================================
 
 // Request password reset
-app.post('/make-server-95a96d8e/auth/forgot-password', async (c) => {
+app.post("/make-server-95a96d8e/auth/forgot-password", async (c) => {
   try {
     const { email } = await c.req.json();
-    
+
     if (!email) {
-      return c.json({ success: false, message: 'Email is required' }, 400);
+      return c.json({ success: false, message: "Email is required" }, 400);
     }
 
     // Generate reset token
@@ -4211,7 +4294,7 @@ app.post('/make-server-95a96d8e/auth/forgot-password', async (c) => {
     await kv.set(`password-reset:${resetToken}`, resetData);
 
     // Send reset email
-    const resetUrl = `${Deno.env.get('FRONTEND_URL') || 'http://localhost:5173'}/reset-password?token=${resetToken}`;
+    const resetUrl = `${Deno.env.get("FRONTEND_URL") || "http://localhost:5173"}/reset-password?token=${resetToken}`;
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #9333ea;">🔐 Password Reset Request</h2>
@@ -4229,61 +4312,54 @@ app.post('/make-server-95a96d8e/auth/forgot-password', async (c) => {
       </div>
     `;
 
-    await sendEmail(
-      email,
-      '🔐 Reset Your Password - animedropzone',
-      emailHtml
-    );
+    await sendEmail(email, "🔐 Reset Your Password - animedropzone", emailHtml);
 
-    return c.json({ success: true, message: 'Password reset email sent' });
+    return c.json({ success: true, message: "Password reset email sent" });
   } catch (error) {
-    console.error('Error requesting password reset:', error);
+    console.error("Error requesting password reset:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Reset password with token
-app.post('/make-server-95a96d8e/auth/reset-password', async (c) => {
+app.post("/make-server-95a96d8e/auth/reset-password", async (c) => {
   try {
     const { token, newPassword } = await c.req.json();
-    
+
     if (!token || !newPassword) {
-      return c.json({ success: false, message: 'Token and new password are required' }, 400);
+      return c.json({ success: false, message: "Token and new password are required" }, 400);
     }
 
     // Verify token
     const resetData = await kv.get(`password-reset:${token}`);
     if (!resetData) {
-      return c.json({ success: false, message: 'Invalid or expired reset token' }, 400);
+      return c.json({ success: false, message: "Invalid or expired reset token" }, 400);
     }
 
     // Check if token expired
     if (new Date(resetData.expiresAt) < new Date()) {
       await kv.del(`password-reset:${token}`);
-      return c.json({ success: false, message: 'Reset token has expired' }, 400);
+      return c.json({ success: false, message: "Reset token has expired" }, 400);
     }
 
     // Get user by email
     const { data: users, error: listError } = await supabase.auth.admin.listUsers();
     if (listError) {
-      console.error('Error listing users:', listError);
-      return c.json({ success: false, error: 'Failed to find user' }, 500);
+      console.error("Error listing users:", listError);
+      return c.json({ success: false, error: "Failed to find user" }, 500);
     }
 
-    const user = users.users.find(u => u.email === resetData.email);
+    const user = users.users.find((u) => u.email === resetData.email);
     if (!user) {
-      return c.json({ success: false, message: 'User not found' }, 404);
+      return c.json({ success: false, message: "User not found" }, 404);
     }
 
     // Update password
-    const { error: updateError } = await supabase.auth.admin.updateUserById(
-      user.id,
-      { password: newPassword }
-    );
+    const { error: updateError } = await supabase.auth.admin.updateUserById(user.id, { password: newPassword });
 
     if (updateError) {
-      console.error('Error updating password:', updateError);
-      return c.json({ success: false, error: 'Failed to update password' }, 500);
+      console.error("Error updating password:", updateError);
+      return c.json({ success: false, error: "Failed to update password" }, 500);
     }
 
     // Delete used token
@@ -4306,15 +4382,11 @@ app.post('/make-server-95a96d8e/auth/reset-password', async (c) => {
       </div>
     `;
 
-    await sendEmail(
-      resetData.email,
-      '✅ Password Reset Successful - animedropzone',
-      emailHtml
-    );
+    await sendEmail(resetData.email, "✅ Password Reset Successful - animedropzone", emailHtml);
 
-    return c.json({ success: true, message: 'Password reset successful' });
+    return c.json({ success: true, message: "Password reset successful" });
   } catch (error) {
-    console.error('Error resetting password:', error);
+    console.error("Error resetting password:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -4322,41 +4394,41 @@ app.post('/make-server-95a96d8e/auth/reset-password', async (c) => {
 // ==================== ANALYTICS ROUTES ====================
 
 // Get analytics data
-app.get('/make-server-95a96d8e/analytics', async (c) => {
+app.get("/make-server-95a96d8e/analytics", async (c) => {
   try {
-    const range = c.req.query('range') || '30d';
-    
+    const range = c.req.query("range") || "30d";
+
     // Calculate date range
     const now = new Date();
     let startDate = new Date();
     switch (range) {
-      case '7d':
+      case "7d":
         startDate.setDate(now.getDate() - 7);
         break;
-      case '30d':
+      case "30d":
         startDate.setDate(now.getDate() - 30);
         break;
-      case '90d':
+      case "90d":
         startDate.setDate(now.getDate() - 90);
         break;
-      case 'all':
+      case "all":
         startDate = new Date(0);
         break;
     }
 
     // Get all orders
-    const allOrders = await kv.getByPrefix('order:');
+    const allOrders = await kv.getByPrefix("order:");
     const orders = allOrders
-      .map(item => item.value)
+      .map((item) => item.value)
       .filter((order: any) => order && new Date(order.createdAt) >= startDate);
 
     // Get all products
-    const allProducts = await kv.getByPrefix('product:');
-    const products = allProducts.map(item => item.value).filter(p => p);
+    const allProducts = await kv.getByPrefix("product:");
+    const products = allProducts.map((item) => item.value).filter((p) => p);
 
     // Get all users
-    const allUsers = await kv.getByPrefix('user:');
-    const users = allUsers.map(item => item.value).filter(u => u);
+    const allUsers = await kv.getByPrefix("user:");
+    const users = allUsers.map((item) => item.value).filter((u) => u);
 
     // Calculate metrics
     const totalRevenue = orders.reduce((sum: number, order: any) => sum + (order.total || 0), 0);
@@ -4368,12 +4440,13 @@ app.get('/make-server-95a96d8e/analytics', async (c) => {
     const midDate = new Date(startDate.getTime() + (now.getTime() - startDate.getTime()) / 2);
     const recentOrders = orders.filter((order: any) => new Date(order.createdAt) >= midDate);
     const oldOrders = orders.filter((order: any) => new Date(order.createdAt) < midDate);
-    
+
     const recentRevenue = recentOrders.reduce((sum: number, order: any) => sum + (order.total || 0), 0);
     const oldRevenue = oldOrders.reduce((sum: number, order: any) => sum + (order.total || 0), 0);
-    
+
     const revenueGrowth = oldRevenue > 0 ? Math.round(((recentRevenue - oldRevenue) / oldRevenue) * 100) : 0;
-    const ordersGrowth = oldOrders.length > 0 ? Math.round(((recentOrders.length - oldOrders.length) / oldOrders.length) * 100) : 0;
+    const ordersGrowth =
+      oldOrders.length > 0 ? Math.round(((recentOrders.length - oldOrders.length) / oldOrders.length) * 100) : 0;
 
     const averageOrderValue = totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0;
 
@@ -4396,7 +4469,7 @@ app.get('/make-server-95a96d8e/analytics', async (c) => {
     const categorySales: { [key: string]: number } = {};
     orders.forEach((order: any) => {
       order.items?.forEach((item: any) => {
-        categorySales[item.category] = (categorySales[item.category] || 0) + (item.price * item.quantity);
+        categorySales[item.category] = (categorySales[item.category] || 0) + item.price * item.quantity;
       });
     });
     const salesByCategory = Object.entries(categorySales).map(([name, value]) => ({ name, value }));
@@ -4404,7 +4477,7 @@ app.get('/make-server-95a96d8e/analytics', async (c) => {
     // Revenue by month
     const monthlyData: { [key: string]: { revenue: number; orders: number } } = {};
     orders.forEach((order: any) => {
-      const month = new Date(order.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+      const month = new Date(order.createdAt).toLocaleDateString("en-US", { month: "short", year: "numeric" });
       if (!monthlyData[month]) {
         monthlyData[month] = { revenue: 0, orders: 0 };
       }
@@ -4426,9 +4499,7 @@ app.get('/make-server-95a96d8e/analytics', async (c) => {
 
     // Customer insights
     const customerEmails = new Set(orders.map((order: any) => order.customerInfo?.email).filter(Boolean));
-    const newCustomers = users.filter((user: any) => 
-      user.createdAt && new Date(user.createdAt) >= startDate
-    ).length;
+    const newCustomers = users.filter((user: any) => user.createdAt && new Date(user.createdAt) >= startDate).length;
     const returningCustomers = customerEmails.size - newCustomers;
     const averageLifetimeValue = customerEmails.size > 0 ? Math.round(totalRevenue / customerEmails.size) : 0;
 
@@ -4454,7 +4525,7 @@ app.get('/make-server-95a96d8e/analytics', async (c) => {
       },
     });
   } catch (error) {
-    console.error('Error fetching analytics:', error);
+    console.error("Error fetching analytics:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -4462,13 +4533,13 @@ app.get('/make-server-95a96d8e/analytics', async (c) => {
 // ==================== INVENTORY ALERTS ROUTES ====================
 
 // Get inventory alerts
-app.get('/make-server-95a96d8e/inventory-alerts', async (c) => {
+app.get("/make-server-95a96d8e/inventory-alerts", async (c) => {
   try {
-    const settingsData = await kv.get('inventory:settings');
+    const settingsData = await kv.get("inventory:settings");
     const settings = settingsData || { criticalThreshold: 5, warningThreshold: 10 };
 
-    const allProducts = await kv.getByPrefix('product:');
-    const products = allProducts.map(item => item.value).filter(p => p);
+    const allProducts = await kv.getByPrefix("product:");
+    const products = allProducts.map((item) => item.value).filter((p) => p);
 
     const alerts = products
       .filter((product: any) => product.stock <= settings.warningThreshold)
@@ -4480,39 +4551,39 @@ app.get('/make-server-95a96d8e/inventory-alerts', async (c) => {
         threshold: product.stock <= settings.criticalThreshold ? settings.criticalThreshold : settings.warningThreshold,
         category: product.category,
         image: product.image,
-        severity: product.stock <= settings.criticalThreshold ? 'critical' : 'warning',
+        severity: product.stock <= settings.criticalThreshold ? "critical" : "warning",
       }))
       .sort((a: any, b: any) => a.currentStock - b.currentStock);
 
     return c.json({ success: true, alerts });
   } catch (error) {
-    console.error('Error fetching inventory alerts:', error);
+    console.error("Error fetching inventory alerts:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Get inventory settings
-app.get('/make-server-95a96d8e/inventory-settings', async (c) => {
+app.get("/make-server-95a96d8e/inventory-settings", async (c) => {
   try {
-    const settings = await kv.get('inventory:settings');
-    return c.json({ 
-      success: true, 
-      settings: settings || { criticalThreshold: 5, warningThreshold: 10, emailNotifications: true }
+    const settings = await kv.get("inventory:settings");
+    return c.json({
+      success: true,
+      settings: settings || { criticalThreshold: 5, warningThreshold: 10, emailNotifications: true },
     });
   } catch (error) {
-    console.error('Error fetching inventory settings:', error);
+    console.error("Error fetching inventory settings:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Update inventory settings
-app.post('/make-server-95a96d8e/inventory-settings', async (c) => {
+app.post("/make-server-95a96d8e/inventory-settings", async (c) => {
   try {
     const settings = await c.req.json();
-    await kv.set('inventory:settings', settings);
+    await kv.set("inventory:settings", settings);
     return c.json({ success: true });
   } catch (error) {
-    console.error('Error updating inventory settings:', error);
+    console.error("Error updating inventory settings:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -4520,58 +4591,63 @@ app.post('/make-server-95a96d8e/inventory-settings', async (c) => {
 // ==================== BULK OPERATIONS ROUTES ====================
 
 // Export products to CSV
-app.get('/make-server-95a96d8e/products/export-csv', async (c) => {
+app.get("/make-server-95a96d8e/products/export-csv", async (c) => {
   try {
-    const allProducts = await kv.getByPrefix('product:');
-    const products = allProducts.map(item => item.value).filter(p => p);
+    const allProducts = await kv.getByPrefix("product:");
+    const products = allProducts.map((item) => item.value).filter((p) => p);
 
-    const csvHeader = 'name,description,price,category,subcategory,image,stock\n';
-    const csvRows = products.map((product: any) => 
-      `"${product.name}","${product.description}",${product.price},"${product.category}","${product.subcategory || ''}","${product.image}",${product.stock}`
-    ).join('\n');
+    const csvHeader = "name,description,price,category,subcategory,image,stock\n";
+    const csvRows = products
+      .map(
+        (product: any) =>
+          `"${product.name}","${product.description}",${product.price},"${product.category}","${
+            product.subcategory || ""
+          }","${product.image}",${product.stock}`
+      )
+      .join("\n");
 
     const csv = csvHeader + csvRows;
-    
+
     return new Response(csv, {
       headers: {
-        'Content-Type': 'text/csv',
-        'Content-Disposition': 'attachment; filename=products.csv',
+        "Content-Type": "text/csv",
+        "Content-Disposition": "attachment; filename=products.csv",
       },
     });
   } catch (error) {
-    console.error('Error exporting products:', error);
+    console.error("Error exporting products:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Bulk import products from CSV
-app.post('/make-server-95a96d8e/products/bulk-import', async (c) => {
+app.post("/make-server-95a96d8e/products/bulk-import", async (c) => {
   try {
     const formData = await c.req.formData();
-    const file = formData.get('file') as File;
-    const operation = formData.get('operation') as string;
+    const file = formData.get("file") as File;
+    const operation = formData.get("operation") as string;
 
     if (!file) {
-      return c.json({ success: false, error: 'No file provided' }, 400);
+      return c.json({ success: false, error: "No file provided" }, 400);
     }
 
     const text = await file.text();
-    const lines = text.split('\n').filter(line => line.trim());
-    
+    const lines = text.split("\n").filter((line) => line.trim());
+
     if (lines.length < 2) {
-      return c.json({ success: false, error: 'CSV file is empty or invalid' }, 400);
+      return c.json({ success: false, error: "CSV file is empty or invalid" }, 400);
     }
 
-    const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+    const headers = lines[0].split(",").map((h) => h.trim().replace(/"/g, ""));
     const errors: Array<{ row: number; error: string }> = [];
     let processed = 0;
     let failed = 0;
 
     for (let i = 1; i < lines.length; i++) {
       try {
-        const values = lines[i].match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g)?.map(v => v.trim().replace(/^"|"$/g, ''));
+        const values = lines[i].match(/(".*?"|[^,]+)(?=\s*,|\s*$)/g)?.map((v) => v.trim().replace(/^"|"$/g, ""));
         if (!values || values.length !== headers.length) {
-          errors.push({ row: i + 1, error: 'Invalid row format' });
+          errors.push({ row: i + 1, error: "Invalid row format" });
           failed++;
           continue;
         }
@@ -4583,17 +4659,15 @@ app.post('/make-server-95a96d8e/products/bulk-import', async (c) => {
 
         // Validate required fields
         if (!productData.name || !productData.price || !productData.category) {
-          errors.push({ row: i + 1, error: 'Missing required fields' });
+          errors.push({ row: i + 1, error: "Missing required fields" });
           failed++;
           continue;
         }
 
-        if (operation === 'update') {
+        if (operation === "update") {
           // Find existing product by name
-          const allProducts = await kv.getByPrefix('product:');
-          const existingProduct = allProducts.find((p: any) => 
-            p.value && p.value.name === productData.name
-          );
+          const allProducts = await kv.getByPrefix("product:");
+          const existingProduct = allProducts.find((p: any) => p.value && p.value.name === productData.name);
 
           if (existingProduct) {
             const productId = existingProduct.value.id;
@@ -4601,13 +4675,13 @@ app.post('/make-server-95a96d8e/products/bulk-import', async (c) => {
               ...existingProduct.value,
               ...productData,
               price: parseFloat(productData.price),
-              stock: parseInt(productData.stock || '0'),
+              stock: parseInt(productData.stock || "0"),
               updatedAt: new Date().toISOString(),
             };
             await kv.set(productId, updatedProduct);
             processed++;
           } else {
-            errors.push({ row: i + 1, error: 'Product not found for update' });
+            errors.push({ row: i + 1, error: "Product not found for update" });
             failed++;
           }
         } else {
@@ -4617,7 +4691,7 @@ app.post('/make-server-95a96d8e/products/bulk-import', async (c) => {
             id: productId,
             ...productData,
             price: parseFloat(productData.price),
-            stock: parseInt(productData.stock || '0'),
+            stock: parseInt(productData.stock || "0"),
             rating: 0,
             reviews: [],
             createdAt: new Date().toISOString(),
@@ -4641,7 +4715,7 @@ app.post('/make-server-95a96d8e/products/bulk-import', async (c) => {
       },
     });
   } catch (error) {
-    console.error('Error importing products:', error);
+    console.error("Error importing products:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -4649,46 +4723,46 @@ app.post('/make-server-95a96d8e/products/bulk-import', async (c) => {
 // ==================== NEWSLETTER ROUTES ====================
 
 // Get all newsletters
-app.get('/make-server-95a96d8e/newsletters', async (c) => {
+app.get("/make-server-95a96d8e/newsletters", async (c) => {
   try {
-    const allNewsletters = await kv.getByPrefix('newsletter:');
+    const allNewsletters = await kv.getByPrefix("newsletter:");
     const newsletters = allNewsletters
-      .map(item => item.value)
-      .filter(n => n)
+      .map((item) => item.value)
+      .filter((n) => n)
       .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     return c.json({ success: true, newsletters });
   } catch (error) {
-    console.error('Error fetching newsletters:', error);
+    console.error("Error fetching newsletters:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Get newsletter subscribers
-app.get('/make-server-95a96d8e/newsletter-subscribers', async (c) => {
+app.get("/make-server-95a96d8e/newsletter-subscribers", async (c) => {
   try {
     // Get all users who are subscribed
-    const allUsers = await kv.getByPrefix('user:');
+    const allUsers = await kv.getByPrefix("user:");
     const subscribers = allUsers
-      .map(item => item.value)
+      .map((item) => item.value)
       .filter((user: any) => user && user.email)
       .map((user: any) => ({
         id: user.id,
         email: user.email,
-        name: user.name || 'User',
+        name: user.name || "User",
         subscribedAt: user.createdAt || new Date().toISOString(),
-        status: 'active',
+        status: "active",
       }));
 
     return c.json({ success: true, subscribers });
   } catch (error) {
-    console.error('Error fetching subscribers:', error);
+    console.error("Error fetching subscribers:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Create newsletter
-app.post('/make-server-95a96d8e/newsletters', async (c) => {
+app.post("/make-server-95a96d8e/newsletters", async (c) => {
   try {
     const { subject, content, htmlContent, scheduledFor } = await c.req.json();
 
@@ -4700,7 +4774,7 @@ app.post('/make-server-95a96d8e/newsletters', async (c) => {
       htmlContent: htmlContent || content,
       scheduledFor: scheduledFor || null,
       sentAt: null,
-      status: scheduledFor ? 'scheduled' : 'draft',
+      status: scheduledFor ? "scheduled" : "draft",
       recipientCount: 0,
       openRate: 0,
       clickRate: 0,
@@ -4710,20 +4784,20 @@ app.post('/make-server-95a96d8e/newsletters', async (c) => {
     await kv.set(newsletterId, newsletter);
     return c.json({ success: true, newsletter });
   } catch (error) {
-    console.error('Error creating newsletter:', error);
+    console.error("Error creating newsletter:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Update newsletter
-app.put('/make-server-95a96d8e/newsletters/:id', async (c) => {
+app.put("/make-server-95a96d8e/newsletters/:id", async (c) => {
   try {
-    const newsletterId = c.req.param('id');
+    const newsletterId = c.req.param("id");
     const updates = await c.req.json();
 
     const existing = await kv.get(newsletterId);
     if (!existing) {
-      return c.json({ success: false, error: 'Newsletter not found' }, 404);
+      return c.json({ success: false, error: "Newsletter not found" }, 404);
     }
 
     const updated = {
@@ -4735,36 +4809,30 @@ app.put('/make-server-95a96d8e/newsletters/:id', async (c) => {
     await kv.set(newsletterId, updated);
     return c.json({ success: true, newsletter: updated });
   } catch (error) {
-    console.error('Error updating newsletter:', error);
+    console.error("Error updating newsletter:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Send newsletter
-app.post('/make-server-95a96d8e/newsletters/:id/send', async (c) => {
+app.post("/make-server-95a96d8e/newsletters/:id/send", async (c) => {
   try {
-    const newsletterId = c.req.param('id');
+    const newsletterId = c.req.param("id");
     const newsletter = await kv.get(newsletterId);
 
     if (!newsletter) {
-      return c.json({ success: false, error: 'Newsletter not found' }, 404);
+      return c.json({ success: false, error: "Newsletter not found" }, 404);
     }
 
     // Get all subscribers
-    const allUsers = await kv.getByPrefix('user:');
-    const subscribers = allUsers
-      .map(item => item.value)
-      .filter((user: any) => user && user.email);
+    const allUsers = await kv.getByPrefix("user:");
+    const subscribers = allUsers.map((item) => item.value).filter((user: any) => user && user.email);
 
     // Send emails to all subscribers
     let sentCount = 0;
     for (const user of subscribers) {
       try {
-        await sendEmail(
-          user.email,
-          newsletter.subject,
-          newsletter.htmlContent || newsletter.content
-        );
+        await sendEmail(user.email, newsletter.subject, newsletter.htmlContent || newsletter.content);
         sentCount++;
       } catch (error) {
         console.error(`Failed to send to ${user.email}:`, error);
@@ -4774,7 +4842,7 @@ app.post('/make-server-95a96d8e/newsletters/:id/send', async (c) => {
     // Update newsletter status
     const updated = {
       ...newsletter,
-      status: 'sent',
+      status: "sent",
       sentAt: new Date().toISOString(),
       recipientCount: sentCount,
     };
@@ -4782,19 +4850,19 @@ app.post('/make-server-95a96d8e/newsletters/:id/send', async (c) => {
 
     return c.json({ success: true, sentCount });
   } catch (error) {
-    console.error('Error sending newsletter:', error);
+    console.error("Error sending newsletter:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Delete newsletter
-app.delete('/make-server-95a96d8e/newsletters/:id', async (c) => {
+app.delete("/make-server-95a96d8e/newsletters/:id", async (c) => {
   try {
-    const newsletterId = c.req.param('id');
+    const newsletterId = c.req.param("id");
     await kv.del(newsletterId);
     return c.json({ success: true });
   } catch (error) {
-    console.error('Error deleting newsletter:', error);
+    console.error("Error deleting newsletter:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -4802,11 +4870,11 @@ app.delete('/make-server-95a96d8e/newsletters/:id', async (c) => {
 // ==================== LOYALTY PROGRAM ROUTES ====================
 
 // Get loyalty settings
-app.get('/make-server-95a96d8e/loyalty/settings', async (c) => {
+app.get("/make-server-95a96d8e/loyalty/settings", async (c) => {
   try {
-    const settings = await kv.get('loyalty:settings');
-    return c.json({ 
-      success: true, 
+    const settings = await kv.get("loyalty:settings");
+    return c.json({
+      success: true,
       settings: settings || {
         pointsPerRupee: 1,
         signupBonus: 100,
@@ -4815,31 +4883,31 @@ app.get('/make-server-95a96d8e/loyalty/settings', async (c) => {
         reviewBonus: 50,
         minimumRedemption: 500,
         redemptionValue: 10,
-      }
+      },
     });
   } catch (error) {
-    console.error('Error fetching loyalty settings:', error);
+    console.error("Error fetching loyalty settings:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Update loyalty settings
-app.post('/make-server-95a96d8e/loyalty/settings', async (c) => {
+app.post("/make-server-95a96d8e/loyalty/settings", async (c) => {
   try {
     const settings = await c.req.json();
-    await kv.set('loyalty:settings', settings);
+    await kv.set("loyalty:settings", settings);
     return c.json({ success: true });
   } catch (error) {
-    console.error('Error updating loyalty settings:', error);
+    console.error("Error updating loyalty settings:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Get loyalty stats
-app.get('/make-server-95a96d8e/loyalty/stats', async (c) => {
+app.get("/make-server-95a96d8e/loyalty/stats", async (c) => {
   try {
-    const allUsers = await kv.getByPrefix('user:');
-    const users = allUsers.map(item => item.value).filter(u => u);
+    const allUsers = await kv.getByPrefix("user:");
+    const users = allUsers.map((item) => item.value).filter((u) => u);
 
     const totalMembers = users.length;
     const totalPointsIssued = users.reduce((sum: number, user: any) => sum + (user.loyaltyPoints || 0), 0);
@@ -4853,13 +4921,13 @@ app.get('/make-server-95a96d8e/loyalty/stats', async (c) => {
       .slice(0, 10)
       .map((user: any) => {
         const points = user.loyaltyPoints || 0;
-        let tier = 'Bronze';
-        if (points >= 10000) tier = 'Platinum';
-        else if (points >= 5000) tier = 'Gold';
-        else if (points >= 1000) tier = 'Silver';
-        
+        let tier = "Bronze";
+        if (points >= 10000) tier = "Platinum";
+        else if (points >= 5000) tier = "Gold";
+        else if (points >= 1000) tier = "Silver";
+
         return {
-          name: user.name || 'User',
+          name: user.name || "User",
           email: user.email,
           points,
           tier,
@@ -4877,22 +4945,22 @@ app.get('/make-server-95a96d8e/loyalty/stats', async (c) => {
       },
     });
   } catch (error) {
-    console.error('Error fetching loyalty stats:', error);
+    console.error("Error fetching loyalty stats:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Award loyalty points (called after order completion)
-app.post('/make-server-95a96d8e/loyalty/award-points', async (c) => {
+app.post("/make-server-95a96d8e/loyalty/award-points", async (c) => {
   try {
     const { userId, orderId, amount } = await c.req.json();
-    
+
     const user = await kv.get(userId);
     if (!user) {
-      return c.json({ success: false, error: 'User not found' }, 404);
+      return c.json({ success: false, error: "User not found" }, 404);
     }
 
-    const settings = await kv.get('loyalty:settings') || { pointsPerRupee: 1 };
+    const settings = (await kv.get("loyalty:settings")) || { pointsPerRupee: 1 };
     const pointsEarned = Math.floor(amount * settings.pointsPerRupee);
 
     const updatedUser = {
@@ -4901,7 +4969,7 @@ app.post('/make-server-95a96d8e/loyalty/award-points', async (c) => {
       pointsHistory: [
         ...(user.pointsHistory || []),
         {
-          type: 'earned',
+          type: "earned",
           points: pointsEarned,
           orderId,
           date: new Date().toISOString(),
@@ -4913,7 +4981,7 @@ app.post('/make-server-95a96d8e/loyalty/award-points', async (c) => {
 
     return c.json({ success: true, pointsEarned });
   } catch (error) {
-    console.error('Error awarding loyalty points:', error);
+    console.error("Error awarding loyalty points:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -4921,28 +4989,29 @@ app.post('/make-server-95a96d8e/loyalty/award-points', async (c) => {
 // ==================== ADVANCED SEARCH ROUTE ====================
 
 // Advanced product search with filters
-app.post('/make-server-95a96d8e/products/search', async (c) => {
+app.post("/make-server-95a96d8e/products/search", async (c) => {
   try {
     const { query, minPrice, maxPrice, category, minRating, sortBy, inStock } = await c.req.json();
 
-    console.log('🔍 SEARCH REQUEST:', { query, minPrice, maxPrice, category, minRating, sortBy, inStock });
+    console.log("🔍 SEARCH REQUEST:", { query, minPrice, maxPrice, category, minRating, sortBy, inStock });
 
-    const allProducts = await kv.getByPrefix('product:');
+    const allProducts = await kv.getByPrefix("product:");
     console.log(`📦 Total products in database: ${allProducts.length}`);
-    
-    let products = allProducts.map(item => item.value).filter(p => p);
+
+    let products = allProducts.map((item) => item.value).filter((p) => p);
     console.log(`📦 Valid products after filtering nulls: ${products.length}`);
 
     // Apply filters
     if (query) {
       const searchLower = query.toLowerCase();
       console.log(`🔍 Searching for: "${searchLower}"`);
-      
+
       const beforeCount = products.length;
-      products = products.filter((p: any) => 
-        p.name.toLowerCase().includes(searchLower) ||
-        p.description.toLowerCase().includes(searchLower) ||
-        (p.subcategory && p.subcategory.toLowerCase().includes(searchLower))
+      products = products.filter(
+        (p: any) =>
+          p.name.toLowerCase().includes(searchLower) ||
+          p.description.toLowerCase().includes(searchLower) ||
+          (p.subcategory && p.subcategory.toLowerCase().includes(searchLower))
       );
       console.log(`✅ After query filter: ${products.length} (from ${beforeCount})`);
     }
@@ -4969,23 +5038,23 @@ app.post('/make-server-95a96d8e/products/search', async (c) => {
 
     // Apply sorting
     switch (sortBy) {
-      case 'price-low':
+      case "price-low":
         products.sort((a: any, b: any) => a.price - b.price);
         break;
-      case 'price-high':
+      case "price-high":
         products.sort((a: any, b: any) => b.price - a.price);
         break;
-      case 'rating':
+      case "rating":
         products.sort((a: any, b: any) => (b.rating || 0) - (a.rating || 0));
         break;
-      case 'newest':
+      case "newest":
         products.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         break;
     }
 
     return c.json({ success: true, products });
   } catch (error) {
-    console.error('Error searching products:', error);
+    console.error("Error searching products:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -4993,19 +5062,17 @@ app.post('/make-server-95a96d8e/products/search', async (c) => {
 // ==================== PRODUCT RECOMMENDATIONS ROUTE ====================
 
 // Get product recommendations
-app.get('/make-server-95a96d8e/products/:productId/recommendations', async (c) => {
+app.get("/make-server-95a96d8e/products/:productId/recommendations", async (c) => {
   try {
-    const productId = c.req.param('productId');
+    const productId = c.req.param("productId");
     const product = await kv.get(productId);
 
     if (!product) {
-      return c.json({ success: false, error: 'Product not found' }, 404);
+      return c.json({ success: false, error: "Product not found" }, 404);
     }
 
-    const allProducts = await kv.getByPrefix('product:');
-    let recommendations = allProducts
-      .map(item => item.value)
-      .filter((p: any) => p && p.id !== productId);
+    const allProducts = await kv.getByPrefix("product:");
+    let recommendations = allProducts.map((item) => item.value).filter((p: any) => p && p.id !== productId);
 
     // Prioritize same category and subcategory
     recommendations.sort((a: any, b: any) => {
@@ -5029,39 +5096,39 @@ app.get('/make-server-95a96d8e/products/:productId/recommendations', async (c) =
 
     return c.json({ success: true, recommendations });
   } catch (error) {
-    console.error('Error fetching recommendations:', error);
+    console.error("Error fetching recommendations:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Health check endpoint to verify server is working
-app.get('/make-server-95a96d8e/health', (c) => {
-  return c.json({ 
-    success: true, 
-    status: 'healthy',
-    message: 'AnimeDropZone server is running! 🎌',
+app.get("/make-server-95a96d8e/health", (c) => {
+  return c.json({
+    success: true,
+    status: "healthy",
+    message: "AnimeDropZone server is running! 🎌",
     timestamp: new Date().toISOString(),
     services: {
-      database: 'connected',
-      emailProvider: 'mailersend',
-      adminEmail: ADMIN_EMAIL
-    }
+      database: "connected",
+      emailProvider: "mailersend",
+      adminEmail: ADMIN_EMAIL,
+    },
   });
 });
 
 // Test email endpoint - sends a test email to verify email service is working
-app.post('/make-server-95a96d8e/test-email', async (c) => {
+app.post("/make-server-95a96d8e/test-email", async (c) => {
   try {
     const body = await c.req.json();
     const { email } = body;
 
     if (!email) {
-      return c.json({ success: false, error: 'Email address is required' }, 400);
+      return c.json({ success: false, error: "Email address is required" }, 400);
     }
 
-    console.log('🧪 TEST EMAIL: Starting test email send to:', email);
+    console.log("🧪 TEST EMAIL: Starting test email send to:", email);
 
-    const testSubject = '✅ Test Email from AnimeDropZone';
+    const testSubject = "✅ Test Email from AnimeDropZone";
     const testBody = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #1a0033 0%, #000000 100%); color: #ffffff; border: 2px solid #9333ea; border-radius: 12px; overflow: hidden;">
         <div style="background: linear-gradient(90deg, #9333ea 0%, #ec4899 50%, #9333ea 100%); padding: 40px; text-align: center;">
@@ -5080,7 +5147,11 @@ app.post('/make-server-95a96d8e/test-email', async (c) => {
           <div style="background: rgba(147, 51, 234, 0.1); border: 1px solid rgba(147, 51, 234, 0.3); border-radius: 10px; padding: 25px; margin: 30px 0;">
             <h3 style="margin: 0 0 15px 0; color: #a855f7; font-size: 18px;">📊 Test Details</h3>
             <p style="margin: 5px 0; color: #d1d5db; font-size: 14px;">Recipient: ${email}</p>
-            <p style="margin: 5px 0; color: #d1d5db; font-size: 14px;">Sent at: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'full', timeStyle: 'medium' })}</p>
+            <p style="margin: 5px 0; color: #d1d5db; font-size: 14px;">Sent at: ${new Date().toLocaleString("en-IN", {
+              timeZone: "Asia/Kolkata",
+              dateStyle: "full",
+              timeStyle: "medium",
+            })}</p>
             <p style="margin: 5px 0; color: #d1d5db; font-size: 14px;">Provider: MailerSend</p>
           </div>
           <div style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%); border-radius: 8px; padding: 25px; text-align: center; margin-top: 30px;">
@@ -5096,64 +5167,70 @@ app.post('/make-server-95a96d8e/test-email', async (c) => {
       </div>
     `;
 
-    console.log('🧪 TEST EMAIL: Calling sendEmail...');
+    console.log("🧪 TEST EMAIL: Calling sendEmail...");
     const result = await sendEmail(email, testSubject, testBody);
 
-    console.log('🧪 TEST EMAIL: Result:', result);
+    console.log("🧪 TEST EMAIL: Result:", result);
 
     if (result.success) {
       console.log(`✅ TEST EMAIL SENT SUCCESSFULLY to ${email}`);
-      return c.json({ 
-        success: true, 
+      return c.json({
+        success: true,
         message: `Test email sent successfully to ${email}! Check your inbox (and spam folder).`,
-        details: result
+        details: result,
       });
     } else {
       console.error(`❌ TEST EMAIL FAILED for ${email}`);
-      console.error('Error:', JSON.stringify(result.error));
-      return c.json({ 
-        success: false, 
-        error: 'Failed to send test email',
-        details: result.error
-      }, 500);
+      console.error("Error:", JSON.stringify(result.error));
+      return c.json(
+        {
+          success: false,
+          error: "Failed to send test email",
+          details: result.error,
+        },
+        500
+      );
     }
   } catch (error) {
-    console.error('❌ TEST EMAIL EXCEPTION:', error);
-    return c.json({ 
-      success: false, 
-      error: String(error),
-      stack: error instanceof Error ? error.stack : undefined
-    }, 500);
+    console.error("❌ TEST EMAIL EXCEPTION:", error);
+    return c.json(
+      {
+        success: false,
+        error: String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      },
+      500
+    );
   }
 });
 
 // ==================== RETURN REQUEST ROUTES ====================
 
 // Submit a return request
-app.post('/make-server-95a96d8e/orders/:orderId/return-request', async (c) => {
+app.post("/make-server-95a96d8e/orders/:orderId/return-request", async (c) => {
   try {
-    const orderId = c.req.param('orderId');
+    const orderId = c.req.param("orderId");
     const { reason, description, customerEmail, customerName } = await c.req.json();
 
-    console.log('🔵 Return request received for order:', orderId);
+    console.log("🔵 Return request received for order:", orderId);
 
     // Get the order
     const order = await kv.get(orderId);
     if (!order) {
-      return c.json({ success: false, error: 'Order not found' }, 404);
+      return c.json({ success: false, error: "Order not found" }, 404);
     }
 
     // Check if order is delivered
-    if (order.status !== 'delivered') {
-      return c.json({ success: false, error: 'Can only request return for delivered orders' }, 400);
+    if (order.status !== "delivered") {
+      return c.json({ success: false, error: "Can only request return for delivered orders" }, 400);
     }
 
     // Check if within 7 days of delivery
     const deliveryDate = new Date(order.deliveredAt || order.updatedAt);
     const daysSinceDelivery = Math.floor((Date.now() - deliveryDate.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     if (daysSinceDelivery > 7) {
-      return c.json({ success: false, error: 'Return window (7 days) has expired' }, 400);
+      return c.json({ success: false, error: "Return window (7 days) has expired" }, 400);
     }
 
     // Create return request
@@ -5164,14 +5241,14 @@ app.post('/make-server-95a96d8e/orders/:orderId/return-request', async (c) => {
       email: customerEmail,
       reason,
       description,
-      status: 'pending',
+      status: "pending",
       requestedAt: new Date().toISOString(),
       orderTotal: order.total,
       items: order.items,
     };
 
     await kv.set(returnId, returnRequest);
-    console.log('✅ Return request created:', returnId);
+    console.log("✅ Return request created:", returnId);
 
     // Send email to customer
     const customerEmailHtml = `
@@ -5262,46 +5339,46 @@ app.post('/make-server-95a96d8e/orders/:orderId/return-request', async (c) => {
 
     return c.json({ success: true, returnRequest });
   } catch (error) {
-    console.error('Error creating return request:', error);
+    console.error("Error creating return request:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Get all return requests (admin)
-app.get('/make-server-95a96d8e/returns', async (c) => {
+app.get("/make-server-95a96d8e/returns", async (c) => {
   try {
-    const returnKeys = await kv.getByPrefix('return:');
+    const returnKeys = await kv.getByPrefix("return:");
     const returns = returnKeys
-      .map(item => item.value)
-      .filter(item => item !== null && item !== undefined)
+      .map((item) => item.value)
+      .filter((item) => item !== null && item !== undefined)
       .sort((a: any, b: any) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime());
 
     return c.json({ success: true, returns });
   } catch (error) {
-    console.error('Error fetching returns:', error);
+    console.error("Error fetching returns:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Approve return request
-app.post('/make-server-95a96d8e/returns/:orderId/approve', async (c) => {
+app.post("/make-server-95a96d8e/returns/:orderId/approve", async (c) => {
   try {
-    const orderId = c.req.param('orderId');
+    const orderId = c.req.param("orderId");
     const { returnTrackingId } = await c.req.json();
 
-    console.log('🔵 Approving return for order:', orderId);
+    console.log("🔵 Approving return for order:", orderId);
 
     const returnId = `return:${orderId}`;
     const returnRequest = await kv.get(returnId);
 
     if (!returnRequest) {
-      return c.json({ success: false, error: 'Return request not found' }, 404);
+      return c.json({ success: false, error: "Return request not found" }, 404);
     }
 
     // Update return request
     const updatedReturn = {
       ...returnRequest,
-      status: 'approved',
+      status: "approved",
       returnTrackingId,
       processedAt: new Date().toISOString(),
     };
@@ -5313,13 +5390,13 @@ app.post('/make-server-95a96d8e/returns/:orderId/approve', async (c) => {
     if (order) {
       await kv.set(orderId, {
         ...order,
-        status: 'return_approved',
+        status: "return_approved",
         returnTrackingId,
         updatedAt: new Date().toISOString(),
       });
     }
 
-    console.log('✅ Return approved:', returnId);
+    console.log("✅ Return approved:", returnId);
 
     // Send email to customer
     const customerEmailHtml = `
@@ -5383,36 +5460,36 @@ app.post('/make-server-95a96d8e/returns/:orderId/approve', async (c) => {
 
     return c.json({ success: true, returnRequest: updatedReturn });
   } catch (error) {
-    console.error('Error approving return:', error);
+    console.error("Error approving return:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Reject return request
-app.post('/make-server-95a96d8e/returns/:orderId/reject', async (c) => {
+app.post("/make-server-95a96d8e/returns/:orderId/reject", async (c) => {
   try {
-    const orderId = c.req.param('orderId');
+    const orderId = c.req.param("orderId");
     const { rejectionReason } = await c.req.json();
 
-    console.log('🔵 Rejecting return for order:', orderId);
+    console.log("🔵 Rejecting return for order:", orderId);
 
     const returnId = `return:${orderId}`;
     const returnRequest = await kv.get(returnId);
 
     if (!returnRequest) {
-      return c.json({ success: false, error: 'Return request not found' }, 404);
+      return c.json({ success: false, error: "Return request not found" }, 404);
     }
 
     // Update return request
     const updatedReturn = {
       ...returnRequest,
-      status: 'rejected',
+      status: "rejected",
       rejectionReason,
       processedAt: new Date().toISOString(),
     };
 
     await kv.set(returnId, updatedReturn);
-    console.log('✅ Return rejected:', returnId);
+    console.log("✅ Return rejected:", returnId);
 
     // Send email to customer
     const customerEmailHtml = `
@@ -5467,7 +5544,7 @@ app.post('/make-server-95a96d8e/returns/:orderId/reject', async (c) => {
 
     return c.json({ success: true, returnRequest: updatedReturn });
   } catch (error) {
-    console.error('Error rejecting return:', error);
+    console.error("Error rejecting return:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -5475,16 +5552,19 @@ app.post('/make-server-95a96d8e/returns/:orderId/reject', async (c) => {
 // ==================== USER PROFILE ROUTES ====================
 
 // Get user profile with loyalty points and default address
-app.get('/make-server-95a96d8e/user-profile', async (c) => {
+app.get("/make-server-95a96d8e/user-profile", async (c) => {
   try {
-    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    const accessToken = c.req.header("Authorization")?.split(" ")[1];
     if (!accessToken) {
-      return c.json({ success: false, error: 'No authorization token provided' }, 401);
+      return c.json({ success: false, error: "No authorization token provided" }, 401);
     }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(accessToken);
     if (authError || !user) {
-      return c.json({ success: false, error: 'Unauthorized' }, 401);
+      return c.json({ success: false, error: "Unauthorized" }, 401);
     }
 
     const userId = `user:${user.id}`;
@@ -5498,37 +5578,40 @@ app.get('/make-server-95a96d8e/user-profile', async (c) => {
       success: true,
       profile: {
         email: user.email,
-        name: user.user_metadata?.name || '',
-        phone: user.user_metadata?.phone || '',
+        name: user.user_metadata?.name || "",
+        phone: user.user_metadata?.phone || "",
         loyaltyPoints: userData?.loyaltyPoints || 0,
         pointsHistory: userData?.pointsHistory || [],
         defaultAddress: defaultAddress?.value || null,
       },
     });
   } catch (error) {
-    console.error('Error fetching user profile:', error);
+    console.error("Error fetching user profile:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Set default address
-app.post('/make-server-95a96d8e/addresses/:addressId/set-default', async (c) => {
+app.post("/make-server-95a96d8e/addresses/:addressId/set-default", async (c) => {
   try {
-    const accessToken = c.req.header('Authorization')?.split(' ')[1];
+    const accessToken = c.req.header("Authorization")?.split(" ")[1];
     if (!accessToken) {
-      return c.json({ success: false, error: 'No authorization token provided' }, 401);
+      return c.json({ success: false, error: "No authorization token provided" }, 401);
     }
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(accessToken);
     if (authError || !user) {
-      return c.json({ success: false, error: 'Unauthorized' }, 401);
+      return c.json({ success: false, error: "Unauthorized" }, 401);
     }
 
-    const addressId = c.req.param('addressId');
+    const addressId = c.req.param("addressId");
 
     // Get all addresses for this user
     const allAddresses = await kv.getByPrefix(`address:${user.id}:`);
-    
+
     // Remove default flag from all addresses
     for (const addrItem of allAddresses) {
       const addr = addrItem.value;
@@ -5546,7 +5629,7 @@ app.post('/make-server-95a96d8e/addresses/:addressId/set-default', async (c) => 
 
     return c.json({ success: true });
   } catch (error) {
-    console.error('Error setting default address:', error);
+    console.error("Error setting default address:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -5554,40 +5637,40 @@ app.post('/make-server-95a96d8e/addresses/:addressId/set-default', async (c) => 
 // ==================== LEGAL CONTENT MANAGEMENT ====================
 
 // Get legal content (Privacy Policy & Terms of Service)
-app.get('/make-server-95a96d8e/legal-content', async (c) => {
+app.get("/make-server-95a96d8e/legal-content", async (c) => {
   try {
-    const privacyContent = await kv.get('legal:privacy-policy');
-    const termsContent = await kv.get('legal:terms-of-service');
+    const privacyContent = await kv.get("legal:privacy-policy");
+    const termsContent = await kv.get("legal:terms-of-service");
 
-    return c.json({ 
-      success: true, 
-      privacy: privacyContent || '',
-      terms: termsContent || '',
+    return c.json({
+      success: true,
+      privacy: privacyContent || "",
+      terms: termsContent || "",
     });
   } catch (error) {
-    console.error('Error fetching legal content:', error);
+    console.error("Error fetching legal content:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Update legal content (admin only)
-app.post('/make-server-95a96d8e/legal-content', async (c) => {
+app.post("/make-server-95a96d8e/legal-content", async (c) => {
   try {
     const { type, content } = await c.req.json();
 
-    if (!type || (type !== 'privacy' && type !== 'terms')) {
+    if (!type || (type !== "privacy" && type !== "terms")) {
       return c.json({ success: false, error: 'Invalid type. Must be "privacy" or "terms"' }, 400);
     }
 
-    const key = type === 'privacy' ? 'legal:privacy-policy' : 'legal:terms-of-service';
-    
+    const key = type === "privacy" ? "legal:privacy-policy" : "legal:terms-of-service";
+
     // Store the content (empty string means use default)
-    await kv.set(key, content || '');
+    await kv.set(key, content || "");
     console.log(`Legal content updated: ${key}`);
 
-    return c.json({ success: true, message: 'Legal content updated successfully' });
+    return c.json({ success: true, message: "Legal content updated successfully" });
   } catch (error) {
-    console.error('Error updating legal content:', error);
+    console.error("Error updating legal content:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -5595,28 +5678,28 @@ app.post('/make-server-95a96d8e/legal-content', async (c) => {
 // ==================== PAYMENT SETTINGS ====================
 
 // Get payment settings
-app.get('/make-server-95a96d8e/payment-settings', async (c) => {
+app.get("/make-server-95a96d8e/payment-settings", async (c) => {
   try {
-    const settings = await kv.get('payment:settings');
-    
+    const settings = await kv.get("payment:settings");
+
     // Default settings if none exist
     const defaultSettings = {
       razorpay: {
         enabled: true,
-        keyId: '',
-        keySecret: '',
-        mode: 'test',
+        keyId: "",
+        keySecret: "",
+        mode: "test",
       },
       upi: {
         enabled: true,
-        upiId: 'ziddenkhan5@ptaxis',
+        upiId: "ziddenkhan5@ptaxis",
         autoVerify: false,
       },
       paytm: {
         enabled: true,
-        merchantId: '',
-        merchantKey: '',
-        website: '',
+        merchantId: "",
+        merchantKey: "",
+        website: "",
       },
       cod: {
         enabled: true,
@@ -5626,31 +5709,31 @@ app.get('/make-server-95a96d8e/payment-settings', async (c) => {
       },
     };
 
-    return c.json({ 
-      success: true, 
+    return c.json({
+      success: true,
       settings: settings || defaultSettings,
     });
   } catch (error) {
-    console.error('Error fetching payment settings:', error);
+    console.error("Error fetching payment settings:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
 
 // Update payment settings (admin only)
-app.post('/make-server-95a96d8e/payment-settings', async (c) => {
+app.post("/make-server-95a96d8e/payment-settings", async (c) => {
   try {
     const { settings } = await c.req.json();
 
     if (!settings) {
-      return c.json({ success: false, error: 'Settings object is required' }, 400);
+      return c.json({ success: false, error: "Settings object is required" }, 400);
     }
 
-    await kv.set('payment:settings', settings);
-    console.log('Payment settings updated');
+    await kv.set("payment:settings", settings);
+    console.log("Payment settings updated");
 
-    return c.json({ success: true, message: 'Payment settings updated successfully' });
+    return c.json({ success: true, message: "Payment settings updated successfully" });
   } catch (error) {
-    console.error('Error updating payment settings:', error);
+    console.error("Error updating payment settings:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
