@@ -298,12 +298,15 @@ export function WallpaperManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-start gap-6">
         <div>
-          <h2 className="text-2xl text-white mb-2">Hero Wallpapers</h2>
-          <p className="text-gray-400">Manage the sliding hero section wallpapers</p>
+          <h2 className="text-2xl text-white mb-2 flex items-center gap-2">
+            <ImageIcon className="w-6 h-6 text-purple-400" />
+            Hero Wallpapers
+          </h2>
+          <p className="text-gray-400">Manage the sliding hero section wallpapers - Edit, remove, or reorder them</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-col gap-2 sm:flex-row">
           {wallpapers.length > 0 && (
             <motion.button
               onClick={async () => {
@@ -331,6 +334,18 @@ export function WallpaperManagement() {
                     )
                   );
 
+                  // Broadcast wallpaper deletion to other components
+                  try {
+                    const channel = new BroadcastChannel("wallpapers");
+                    channel.postMessage({
+                      type: "wallpaper_deleted_all",
+                      timestamp: Date.now(),
+                    });
+                    channel.close();
+                  } catch (error) {
+                    console.log("BroadcastChannel not available");
+                  }
+
                   await fetchWallpapers();
                   alert("All wallpapers deleted successfully!");
                 } catch (error) {
@@ -338,12 +353,14 @@ export function WallpaperManagement() {
                   alert("Failed to delete all wallpapers");
                 }
               }}
-              className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg flex items-center gap-2 transition-all"
+              className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg flex items-center gap-2 transition-all whitespace-nowrap"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
+              title={`Delete all ${wallpapers.length} wallpapers`}
             >
               <Trash2 className="w-5 h-5" />
-              Clear All
+              <span className="hidden sm:inline">Delete All</span>
+              <span className="sm:hidden">Clear</span>
             </motion.button>
           )}
           <motion.button
@@ -354,7 +371,7 @@ export function WallpaperManagement() {
               setSelectedImage(null);
               setImagePreview("");
             }}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-lg flex items-center gap-2 transition-all"
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-4 py-2 rounded-lg flex items-center gap-2 transition-all whitespace-nowrap"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -491,50 +508,82 @@ export function WallpaperManagement() {
           wallpapers.map((wallpaper, index) => (
             <motion.div
               key={wallpaper.id}
-              className="bg-gradient-to-br from-gray-900 to-black border border-purple-500/30 rounded-xl p-4 flex items-center gap-4"
+              className="bg-gradient-to-br from-gray-900 to-black border border-purple-500/30 hover:border-purple-400/50 rounded-xl p-4 transition-all"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
+              whileHover={{ borderColor: "rgba(192, 132, 250, 0.7)" }}
             >
-              <img
-                src={wallpaper.imageUrl}
-                alt={wallpaper.title}
-                className="w-32 h-20 object-cover rounded-lg border border-purple-500/30"
-              />
-              <div className="flex-1">
-                <h4 className="text-white">{wallpaper.title}</h4>
-                <p className="text-gray-400 text-sm">{wallpaper.subtitle}</p>
-                <p className="text-purple-400 text-xs mt-1">Order: {wallpaper.order + 1}</p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => moveWallpaper(wallpaper.id, "up")}
-                  disabled={index === 0}
-                  className="p-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"
-                  title="Move up"
-                >
-                  <ChevronUp className="w-4 h-4 text-purple-400" />
-                </button>
-                <button
-                  onClick={() => moveWallpaper(wallpaper.id, "down")}
-                  disabled={index === wallpapers.length - 1}
-                  className="p-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"
-                  title="Move down"
-                >
-                  <ChevronDown className="w-4 h-4 text-purple-400" />
-                </button>
-                <button
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                {/* Wallpaper Preview */}
+                <div className="flex-shrink-0 w-full sm:w-32">
+                  <img
+                    src={wallpaper.imageUrl}
+                    alt={wallpaper.title}
+                    className="w-full sm:w-32 h-20 object-cover rounded-lg border border-purple-500/30"
+                    onError={(e) => {
+                      e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='60'%3E%3Crect fill='%23333' width='100' height='60'/%3E%3C/svg%3E";
+                    }}
+                  />
+                </div>
+
+                {/* Wallpaper Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-white font-medium truncate">{wallpaper.title}</h4>
+                      <p className="text-gray-400 text-sm truncate">{wallpaper.subtitle}</p>
+                      <p className="text-purple-400 text-xs mt-2">
+                        Position: <span className="font-semibold">#{wallpaper.order + 1}</span> of {wallpapers.length}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+              <div className="flex gap-2 items-center">
+                {/* Reorder Buttons */}
+                <div className="flex gap-1 border-r border-gray-600 pr-2">
+                  <button
+                    onClick={() => moveWallpaper(wallpaper.id, "up")}
+                    disabled={index === 0}
+                    className="p-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    title="Move up in order"
+                  >
+                    <ChevronUp className="w-4 h-4 text-purple-400" />
+                  </button>
+                  <button
+                    onClick={() => moveWallpaper(wallpaper.id, "down")}
+                    disabled={index === wallpapers.length - 1}
+                    className="p-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    title="Move down in order"
+                  >
+                    <ChevronDown className="w-4 h-4 text-purple-400" />
+                  </button>
+                </div>
+                
+                {/* Edit/Delete Buttons */}
+                <motion.button
                   onClick={() => handleEdit(wallpaper)}
-                  className="p-2 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/50 rounded-lg"
+                  className="flex items-center gap-2 px-3 py-2 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/50 hover:border-blue-400 rounded-lg transition-all"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Edit this wallpaper"
                 >
                   <Edit2 className="w-4 h-4 text-blue-400" />
-                </button>
-                <button
+                  <span className="text-xs text-blue-400 font-medium">Edit</span>
+                </motion.button>
+                
+                <motion.button
                   onClick={() => handleDelete(wallpaper.id)}
-                  className="p-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/50 rounded-lg"
+                  className="flex items-center gap-2 px-3 py-2 bg-red-600/20 hover:bg-red-600/40 border border-red-500/50 hover:border-red-400 rounded-lg transition-all"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Delete this wallpaper"
                 >
                   <Trash2 className="w-4 h-4 text-red-400" />
-                </button>
+                  <span className="text-xs text-red-400 font-medium">Remove</span>
+                </motion.button>
               </div>
             </motion.div>
           ))

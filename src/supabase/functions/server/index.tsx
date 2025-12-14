@@ -19,7 +19,7 @@ const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPAB
 });
 
 // Admin contact information - HARDCODED TO BYPASS CORRUPTED ENV VARS
-const ADMIN_EMAIL = "anime.drop.zone.00@gmail.com"; // FORCED - Ignores Deno.env.get('ADMIN_EMAIL')
+let ADMIN_EMAIL = "anime.drop.zone.00@gmail.com"; // FORCED - Ignores Deno.env.get('ADMIN_EMAIL')
 
 // Validate ADMIN_EMAIL is not accidentally set to an API key or invalid value
 if (
