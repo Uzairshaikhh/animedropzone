@@ -201,17 +201,31 @@ async function sendViaMailerSend(to: string, subject: string, html: string) {
 
 // Hostinger SMTP Configuration
 async function sendViaHostinger(to: string, subject: string, html: string) {
-  const hostingerEmail = Deno.env.get("noreply@animedropzone.com"); // Your full email address (e.g., noreply@yourdomain.com)
-  const hostingerPassword = Deno.env.get("Pepyfog@2"); // Your email password
+  // Get credentials from environment variables (NOT hardcoded!)
+  const hostingerEmail = Deno.env.get("HOSTINGER_SMTP_USER"); // Your full email address (e.g., noreply@yourdomain.com)
+  const hostingerPassword = Deno.env.get("HOSTINGER_SMTP_PASS"); // Your email password
   const hostingerHost = Deno.env.get("HOSTINGER_SMTP_HOST") || "smtp.hostinger.com";
   const hostingerPort = Deno.env.get("HOSTINGER_SMTP_PORT") || "465"; // 465 for SSL, 587 for TLS
 
   if (!hostingerEmail || !hostingerPassword) {
-    console.log("❌ Hostinger credentials not configured");
-    console.log("   Required environment variables:");
-    console.log("   - HOSTINGER_EMAIL: Your full email address");
-    console.log("   - HOSTINGER_PASSWORD: Your email password");
-    return { success: false, error: "Hostinger not configured. Please add HOSTINGER_EMAIL and HOSTINGER_PASSWORD." };
+    console.error("❌ Hostinger credentials NOT configured");
+    console.error("");
+    console.error("⚠️ SETUP REQUIRED - Add these secrets to Supabase Edge Functions:");
+    console.error("");
+    console.error("1. Go to Supabase Dashboard");
+    console.error("2. Project Settings → Edge Functions → Secrets");
+    console.error("3. Add these secrets:");
+    console.error("   • HOSTINGER_SMTP_USER = your-email@yourdomain.com");
+    console.error("   • HOSTINGER_SMTP_PASS = your-email-password");
+    console.error("   • HOSTINGER_SMTP_HOST = smtp.hostinger.com (optional, default is used)");
+    console.error("   • HOSTINGER_SMTP_PORT = 465 or 587 (optional, default is 465)");
+    console.error("4. Click Save and redeploy functions");
+    console.error("");
+    return {
+      success: false,
+      error:
+        "Hostinger SMTP credentials not configured. Please add HOSTINGER_SMTP_USER and HOSTINGER_SMTP_PASS to Edge Function secrets.",
+    };
   }
 
   // Validate email addresses

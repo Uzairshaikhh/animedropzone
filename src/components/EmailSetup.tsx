@@ -132,32 +132,81 @@ export function EmailSetup() {
 
             {/* Setup Instructions */}
             {(!isConfigured || showInstructions) && (
-              <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
-                <h4 className="text-white mb-3">📧 Hostinger Email Setup Guide</h4>
-                <div className="mb-4 p-3 bg-black/30 rounded-lg">
-                  <p className="text-purple-300 text-sm">
-                    🏠 Hostinger provides professional email hosting with your domain
-                  </p>
-                  <p className="text-gray-400 text-xs mt-1">
-                    Reliable delivery • Custom domain emails • POP/IMAP access
+              <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4 space-y-4">
+                <div>
+                  <h4 className="text-white mb-3 flex items-center gap-2">
+                    <span>📧 Quick Setup - Hostinger Email</span>
+                  </h4>
+                  
+                  {/* Quick Start Card */}
+                  <div className="bg-gradient-to-r from-purple-900/40 to-pink-900/40 border border-purple-500/50 rounded-lg p-4 mb-4">
+                    <p className="text-purple-200 text-sm font-medium mb-3">⚡ Complete these 3 steps:</p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2 text-gray-300">
+                        <span className="bg-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">1</span>
+                        <span>Create email account in Hostinger (noreply@yourdomain.com)</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-300">
+                        <span className="bg-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">2</span>
+                        <span>Add SMTP secrets to Supabase Edge Functions</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-300">
+                        <span className="bg-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">3</span>
+                        <span>Redeploy function and test</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="border-t border-purple-500/30 pt-4">
+                  <h5 className="text-white mb-3 text-sm font-medium">📋 Required Secrets for Supabase:</h5>
+                  <div className="space-y-2">
+                    <div className="bg-black/40 rounded-lg p-3">
+                      <p className="text-gray-400 text-xs mb-1">Secret 1: Your Email Address</p>
+                      <div className="flex gap-2">
+                        <span className="text-green-400 flex-shrink-0">Name:</span>
+                        <code className="text-gray-300">HOSTINGER_SMTP_USER</code>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="text-green-400 flex-shrink-0">Value:</span>
+                        <code className="text-purple-300">noreply@yourdomain.com</code>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-black/40 rounded-lg p-3">
+                      <p className="text-gray-400 text-xs mb-1">Secret 2: Email Password</p>
+                      <div className="flex gap-2">
+                        <span className="text-green-400 flex-shrink-0">Name:</span>
+                        <code className="text-gray-300">HOSTINGER_SMTP_PASS</code>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="text-green-400 flex-shrink-0">Value:</span>
+                        <code className="text-purple-300">[Your email password]</code>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-black/40 rounded-lg p-3">
+                      <p className="text-gray-400 text-xs mb-1">Secret 3: Email Provider</p>
+                      <div className="flex gap-2">
+                        <span className="text-green-400 flex-shrink-0">Name:</span>
+                        <code className="text-gray-300">EMAIL_PROVIDER</code>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="text-green-400 flex-shrink-0">Value:</span>
+                        <code className="text-purple-300">hostinger</code>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <p className="text-gray-400 text-xs mt-3">
+                    💡 How to add secrets: Go to <strong>Supabase Dashboard</strong> → <strong>Project Settings</strong> → <strong>Edge Functions</strong> → <strong>Secrets</strong>
                   </p>
                 </div>
-                <ol className="space-y-3 text-sm text-gray-300">
-                  <li className="flex items-start gap-2 bg-black/20 p-3 rounded-lg">
-                    <span className="text-purple-400 flex-shrink-0">1.</span>
-                    <div className="flex-1">
-                      <span>Log into your </span>
-                      <a
-                        href="https://www.hostinger.com"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-purple-400 hover:text-purple-300 inline-flex items-center gap-1"
-                      >
-                        Hostinger account
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </div>
-                  </li>
+
+                {/* Detailed Instructions */}
+                <div className="border-t border-purple-500/30 pt-4">
+                  <h5 className="text-white mb-3 text-sm font-medium">📖 Detailed Setup Instructions:</h5>
+                  <ol className="space-y-3 text-sm text-gray-300">
                   <li className="flex items-start gap-2 bg-black/20 p-3 rounded-lg">
                     <span className="text-purple-400 flex-shrink-0">2.</span>
                     <div className="flex-1">
