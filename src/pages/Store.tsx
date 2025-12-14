@@ -1,30 +1,30 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { useToast } from '../contexts/ToastContext';
-import { Package, Swords, Sparkles, Image, Shirt, Bookmark, type LucideIcon } from 'lucide-react';
-import { Navbar } from '../components/Navbar';
-import { Hero } from '../components/Hero';
-import { CategoryCard } from '../components/CategoryCard';
-import { ProductCard, type Product } from '../components/ProductCard';
-import { Footer } from '../components/Footer';
-import { Cart } from '../components/Cart';
-import { Wishlist } from '../components/Wishlist';
-import { UserAuth } from '../components/UserAuth';
-import { CheckoutModal } from '../components/CheckoutModal';
-import { SubcategoryModal } from '../components/SubcategoryModal';
-import { ProductDetailModal } from '../components/ProductDetailModal';
-import { CustomClothingModal } from '../components/CustomClothingModal';
-import { ProductRecommendations } from '../components/ProductRecommendations';
-import { FloatingParticles } from '../components/FloatingParticles';
-import { AboutUs } from '../components/AboutUs';
-import { ContactUs } from '../components/ContactUs';
-import { NewsletterSubscribe } from '../components/NewsletterSubscribe';
-import { Logo } from '../components/Logo';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { supabase } from '../utils/supabase/client';
-import { CherryBlossomTree } from '../components/CherryBlossomTree';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "motion/react";
+import { useToast } from "../contexts/ToastContext";
+import { Package, Swords, Sparkles, Image, Shirt, Bookmark, type LucideIcon } from "lucide-react";
+import { Navbar } from "../components/Navbar";
+import { Hero } from "../components/Hero";
+import { CategoryCard } from "../components/CategoryCard";
+import { ProductCard, type Product } from "../components/ProductCard";
+import { Footer } from "../components/Footer";
+import { Cart } from "../components/Cart";
+import { Wishlist } from "../components/Wishlist";
+import { UserAuth } from "../components/UserAuth";
+import { CheckoutModal } from "../components/CheckoutModal";
+import { SubcategoryModal } from "../components/SubcategoryModal";
+import { ProductDetailModal } from "../components/ProductDetailModal";
+import { CustomClothingModal } from "../components/CustomClothingModal";
+import { ProductRecommendations } from "../components/ProductRecommendations";
+import { FloatingParticles } from "../components/FloatingParticles";
+import { AboutUs } from "../components/AboutUs";
+import { ContactUs } from "../components/ContactUs";
+import { NewsletterSubscribe } from "../components/NewsletterSubscribe";
+import { Logo } from "../components/Logo";
+import { projectId, publicAnonKey } from "../utils/supabase/info";
+import { supabase } from "../utils/supabase/client";
+import { CherryBlossomTree } from "../components/CherryBlossomTree";
+import { Link } from "react-router-dom";
 
 interface CartItem extends Product {
   quantity: number;
@@ -53,42 +53,44 @@ const iconMap: { [key: string]: LucideIcon } = {
 // Fallback default categories (used if database is empty)
 const defaultCategories = [
   {
-    icon: 'Package',
-    title: 'Figures',
-    description: 'Premium anime action figures and statues',
-    value: 'figures',
+    icon: "Package",
+    title: "Figures",
+    description: "Premium anime action figures and statues",
+    value: "figures",
   },
   {
-    icon: 'Swords',
-    title: 'Katana',
-    description: 'Authentic Japanese swords and replicas',
-    value: 'katana',
+    icon: "Swords",
+    title: "Katana",
+    description: "Authentic Japanese swords and replicas",
+    value: "katana",
   },
   {
-    icon: 'Sparkles',
-    title: 'Accessories',
-    description: 'Keychains, pins, and more collectibles',
-    value: 'accessories',
+    icon: "Sparkles",
+    title: "Accessories",
+    description: "Keychains, pins, and more collectibles",
+    value: "accessories",
   },
   {
-    icon: 'Image',
-    title: 'Posters',
-    description: 'High-quality anime art prints',
-    value: 'posters',
+    icon: "Image",
+    title: "Posters",
+    description: "High-quality anime art prints",
+    value: "posters",
   },
   {
-    icon: 'Shirt',
-    title: 'Clothing',
-    description: 'Anime-themed apparel and cosplay',
-    value: 'clothing',
+    icon: "Shirt",
+    title: "Clothing",
+    description: "Anime-themed apparel and cosplay",
+    value: "clothing",
   },
   {
-    icon: 'Bookmark',
-    title: 'Collectibles',
-    description: 'Limited edition merchandise',
-    value: 'collectibles',
+    icon: "Bookmark",
+    title: "Collectibles",
+    description: "Limited edition merchandise",
+    value: "collectibles",
   },
 ];
+
+// Featured Products Section - Only show when no category selected
 
 export function StorePage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -102,7 +104,7 @@ export function StorePage() {
   const [isUserAuthOpen, setIsUserAuthOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSubcategoryModalOpen, setIsSubcategoryModalOpen] = useState(false);
-  const [pendingCategory, setPendingCategory] = useState<string>('');
+  const [pendingCategory, setPendingCategory] = useState<string>("");
   const [user, setUser] = useState<any>(null);
   const [pendingCheckout, setPendingCheckout] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -122,19 +124,19 @@ export function StorePage() {
 
   // Load wishlist from localStorage on mount
   const loadWishlistFromStorage = () => {
-    const savedWishlist = localStorage.getItem('animedropzone_wishlist');
+    const savedWishlist = localStorage.getItem("animedropzone_wishlist");
     if (savedWishlist) {
       try {
         setWishlistItems(JSON.parse(savedWishlist));
       } catch (error) {
-        console.error('Error loading wishlist:', error);
+        console.error("Error loading wishlist:", error);
       }
     }
   };
 
   // Save wishlist to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('animedropzone_wishlist', JSON.stringify(wishlistItems));
+    localStorage.setItem("animedropzone_wishlist", JSON.stringify(wishlistItems));
   }, [wishlistItems]);
 
   const handleToggleWishlist = (product: Product) => {
@@ -148,21 +150,21 @@ export function StorePage() {
         return [...prev, product];
       }
     });
-    
+
     // Show toast after state update
     const exists = wishlistItems.find((item) => item.id === product.id);
     if (exists) {
-      showToast(`Removed ${product.name} from wishlist`, 'info', 3000);
+      showToast(`Removed ${product.name} from wishlist`, "info", 3000);
     } else {
-      showToast(`Added ${product.name} to wishlist!`, 'info', 3000);
+      showToast(`Added ${product.name} to wishlist!`, "info", 3000);
     }
   };
 
   const handleRemoveFromWishlist = (productId: string) => {
-    const product = wishlistItems.find(item => item.id === productId);
+    const product = wishlistItems.find((item) => item.id === productId);
     setWishlistItems((prev) => prev.filter((item) => item.id !== productId));
     if (product) {
-      showToast(`Removed ${product.name} from wishlist`, 'info', 3000);
+      showToast(`Removed ${product.name} from wishlist`, "info", 3000);
     }
   };
 
@@ -174,7 +176,7 @@ export function StorePage() {
     try {
       const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/categories`, {
         headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
+          Authorization: `Bearer ${publicAnonKey}`,
         },
       });
 
@@ -190,7 +192,7 @@ export function StorePage() {
               description: cat.description,
               value: cat.slug,
             }));
-          
+
           setCategories(formattedCategories);
 
           // Build subcategory data
@@ -203,45 +205,51 @@ export function StorePage() {
           setSubcategoryData(subData);
         } else {
           // Use default categories if none in database
-          setCategories(defaultCategories.map(cat => ({
+          setCategories(
+            defaultCategories.map((cat) => ({
+              icon: iconMap[cat.icon] || Package,
+              title: cat.title,
+              description: cat.description,
+              value: cat.value,
+            }))
+          );
+        }
+      } else {
+        // Fallback to default categories
+        setCategories(
+          defaultCategories.map((cat) => ({
             icon: iconMap[cat.icon] || Package,
             title: cat.title,
             description: cat.description,
             value: cat.value,
-          })));
-        }
-      } else {
-        // Fallback to default categories
-        setCategories(defaultCategories.map(cat => ({
+          }))
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      // Fallback to default categories
+      setCategories(
+        defaultCategories.map((cat) => ({
           icon: iconMap[cat.icon] || Package,
           title: cat.title,
           description: cat.description,
           value: cat.value,
-        })));
-      }
-    } catch (error) {
-      console.error('Error fetching categories:', error);
-      // Fallback to default categories
-      setCategories(defaultCategories.map(cat => ({
-        icon: iconMap[cat.icon] || Package,
-        title: cat.title,
-        description: cat.description,
-        value: cat.value,
-      })));
+        }))
+      );
     }
   };
 
   useEffect(() => {
     let filtered = products;
-    
+
     if (selectedCategory) {
-      filtered = filtered.filter(p => p.category === selectedCategory);
+      filtered = filtered.filter((p) => p.category === selectedCategory);
     }
-    
+
     if (selectedSubcategory) {
-      filtered = filtered.filter(p => (p as any).subcategory === selectedSubcategory);
+      filtered = filtered.filter((p) => (p as any).subcategory === selectedSubcategory);
     }
-    
+
     setFilteredProducts(filtered);
   }, [selectedCategory, selectedSubcategory, products]);
 
@@ -259,47 +267,40 @@ export function StorePage() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/products`,
-        {
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-        }
-      );
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/products`, {
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`,
+        },
+      });
       const data = await response.json();
       if (data.success) {
         setProducts(data.products);
       }
     } catch (error) {
-      console.log('Error fetching products:', error);
+      console.log("Error fetching products:", error);
     }
   };
 
   const handleAddToCart = (product: Product) => {
     const existing = cartItems.find((item) => item.id === product.id);
-    
+
     setCartItems((prev) => {
       if (existing) {
-        return prev.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-        );
+        return prev.map((item) => (item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item));
       }
       return [...prev, { ...product, quantity: 1 }];
     });
-    
+
     // Show toast after state update
     if (existing) {
-      showToast(`Added another ${product.name} to cart!`, 'success', 3000);
+      showToast(`Added another ${product.name} to cart!`, "success", 3000);
     } else {
-      showToast(`${product.name} added to cart!`, 'success', 3000);
+      showToast(`${product.name} added to cart!`, "success", 3000);
     }
   };
 
   const handleUpdateQuantity = (id: string, quantity: number) => {
-    setCartItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
-    );
+    setCartItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity } : item)));
   };
 
   const handleRemoveItem = (id: string) => {
@@ -340,7 +341,7 @@ export function StorePage() {
   const handleSubcategorySelect = (subcategory: string) => {
     setSelectedCategory(pendingCategory);
     setSelectedSubcategory(subcategory);
-    document.getElementById('shop')?.scrollIntoView({ behavior: 'smooth' });
+    document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" });
   };
 
   const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -371,7 +372,7 @@ export function StorePage() {
         {/* Categories Section */}
         <section id="categories" className="py-20 px-4">
           <div className="max-w-7xl mx-auto">
-            <motion.div 
+            <motion.div
               className="text-center mb-12"
               initial={{ opacity: 0, y: -20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -381,9 +382,7 @@ export function StorePage() {
               <h2 className="mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
                 Browse Categories
               </h2>
-              <p className="text-gray-400 max-w-2xl mx-auto">
-                Explore our wide range of anime merchandise categories
-              </p>
+              <p className="text-gray-400 max-w-2xl mx-auto">Explore our wide range of anime merchandise categories</p>
             </motion.div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {categories.map((category, index) => (
@@ -429,52 +428,130 @@ export function StorePage() {
           </div>
         </section>
 
-        {/* Products Section */}
-        <section id="shop" className="py-20 px-4 bg-gradient-to-b from-transparent to-purple-900/10">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
-                {selectedSubcategory
-                  ? `${subcategoryData[selectedCategory!]?.find(s => s.value === selectedSubcategory)?.name || 'Products'}`
-                  : selectedCategory
-                  ? `${categories.find(c => c.value === selectedCategory)?.title} Collection`
-                  : 'Featured Products'}
-              </h2>
-              <p className="text-gray-400 max-w-2xl mx-auto">
-                {selectedSubcategory
-                  ? `Browse ${subcategoryData[selectedCategory!]?.find(s => s.value === selectedSubcategory)?.description || 'products'}`
-                  : selectedCategory
-                  ? `Browse our collection of ${categories.find(c => c.value === selectedCategory)?.title.toLowerCase()}`
-                  : 'Discover our handpicked selection of premium anime merchandise'}
-              </p>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filteredProducts.length === 0 ? (
-                <div className="col-span-full text-center py-20">
-                  <p className="text-gray-400 text-lg mb-4">
-                    {products.length === 0
-                      ? 'No products available yet.'
-                      : 'No products found in this category.'}
-                  </p>
+        {/* Featured Products Section - Only show when no category selected */}
+        {!selectedCategory && !selectedSubcategory && (
+          <section id="featured" className="py-20 px-4">
+            <div className="max-w-7xl mx-auto">
+              <motion.div
+                className="text-center mb-12"
+                initial={{ opacity: 0, y: -20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <h2 className="mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
+                  Featured Products
+                </h2>
+                <p className="text-gray-400 max-w-2xl mx-auto">
+                  Discover our handpicked selection of premium anime merchandise
+                </p>
+              </motion.div>
+
+              {products.length >= 4 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {/* Show last 4 products (most recent) */}
+                  {products
+                    .sort((a, b) => {
+                      // Sort by createdAt if available, otherwise by id (assuming newer ids are higher)
+                      const aTime = (a as any).createdAt
+                        ? new Date((a as any).createdAt).getTime()
+                        : parseInt(a.id) || 0;
+                      const bTime = (b as any).createdAt
+                        ? new Date((b as any).createdAt).getTime()
+                        : parseInt(b.id) || 0;
+                      return bTime - aTime; // Most recent first
+                    })
+                    .slice(0, 4)
+                    .map((product) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        onAddToCart={handleAddToCart}
+                        onViewDetails={() => {
+                          setSelectedProduct(product);
+                          setIsProductDetailModalOpen(true);
+                        }}
+                        onToggleWishlist={handleToggleWishlist}
+                        isInWishlist={isInWishlist(product.id)}
+                      />
+                    ))}
                 </div>
               ) : (
-                filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onAddToCart={handleAddToCart}
-                    onViewDetails={() => {
-                      setSelectedProduct(product);
-                      setIsProductDetailModalOpen(true);
-                    }}
-                    onToggleWishlist={handleToggleWishlist}
-                    isInWishlist={isInWishlist(product.id)}
-                  />
-                ))
+                // Fallback for when there are fewer than 4 products
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {products.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onAddToCart={handleAddToCart}
+                      onViewDetails={() => {
+                        setSelectedProduct(product);
+                        setIsProductDetailModalOpen(true);
+                      }}
+                      onToggleWishlist={handleToggleWishlist}
+                      isInWishlist={isInWishlist(product.id)}
+                    />
+                  ))}
+                </div>
               )}
             </div>
-          </div>
-        </section>
+          </section>
+        )}
+
+        {/* Products Section - Only show when category/subcategory selected */}
+        {(selectedCategory || selectedSubcategory) && (
+          <section id="shop" className="py-20 px-4 bg-gradient-to-b from-transparent to-purple-900/10">
+            <div className="max-w-7xl mx-auto">
+              <div className="text-center mb-12">
+                <h2 className="mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
+                  {selectedSubcategory
+                    ? `${
+                        subcategoryData[selectedCategory!]?.find((s) => s.value === selectedSubcategory)?.name ||
+                        "Products"
+                      }`
+                    : selectedCategory
+                    ? `${categories.find((c) => c.value === selectedCategory)?.title} Collection`
+                    : "All Products"}
+                </h2>
+                <p className="text-gray-400 max-w-2xl mx-auto">
+                  {selectedSubcategory
+                    ? `Browse ${
+                        subcategoryData[selectedCategory!]?.find((s) => s.value === selectedSubcategory)?.description ||
+                        "products"
+                      }`
+                    : selectedCategory
+                    ? `Browse our collection of ${categories
+                        .find((c) => c.value === selectedCategory)
+                        ?.title.toLowerCase()}`
+                    : "Discover our handpicked selection of premium anime merchandise"}
+                </p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {filteredProducts.length === 0 ? (
+                  <div className="col-span-full text-center py-20">
+                    <p className="text-gray-400 text-lg mb-4">
+                      {products.length === 0 ? "No products available yet." : "No products found in this category."}
+                    </p>
+                  </div>
+                ) : (
+                  filteredProducts.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onAddToCart={handleAddToCart}
+                      onViewDetails={() => {
+                        setSelectedProduct(product);
+                        setIsProductDetailModalOpen(true);
+                      }}
+                      onToggleWishlist={handleToggleWishlist}
+                      isInWishlist={isInWishlist(product.id)}
+                    />
+                  ))
+                )}
+              </div>
+            </div>
+          </section>
+        )}
 
         <AboutUs />
         <ContactUs />
@@ -515,8 +592,8 @@ export function StorePage() {
                   <a href="#contact" className="block text-gray-400 hover:text-purple-400 transition-colors">
                     Contact Us
                   </a>
-                  <button 
-                    onClick={() => navigate('/track-order')}
+                  <button
+                    onClick={() => navigate("/track-order")}
                     className="block text-gray-400 hover:text-purple-400 transition-colors text-left"
                   >
                     Track Order
@@ -602,7 +679,11 @@ export function StorePage() {
         isOpen={isCustomClothingModalOpen}
         onClose={() => setIsCustomClothingModalOpen(false)}
         onSuccess={() => {
-          showToast('Custom clothing request submitted successfully! We\'ll get back to you soon with a quote.', 'success', 6000);
+          showToast(
+            "Custom clothing request submitted successfully! We'll get back to you soon with a quote.",
+            "success",
+            6000
+          );
         }}
       />
     </div>
