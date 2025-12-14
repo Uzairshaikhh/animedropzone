@@ -59,30 +59,16 @@ export default function App() {
             element={
               <div
                 style={{
+                  backgroundColor: "red",
                   minHeight: "100vh",
-                  backgroundColor: "#ff0000",
-                  color: "#fff",
+                  color: "white",
+                  fontSize: "48px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: "48px",
-                  fontWeight: "bold",
                 }}
               >
-                <div
-                  style={{
-                    backgroundColor: "#333",
-                    padding: "40px",
-                    borderRadius: "10px",
-                    border: "5px solid #00ff00",
-                  }}
-                >
-                  <h1 style={{ color: "#ffff00", marginBottom: "20px" }}>ADMIN ROUTE WORKING!</h1>
-                  <p style={{ color: "#ffffff" }}>
-                    If you see this RED background with this message, routing is working.
-                  </p>
-                  <p style={{ color: "#ff00ff", marginTop: "20px" }}>Time: {new Date().toLocaleString()}</p>
-                </div>
+                ADMIN ROUTE TEST
               </div>
             }
           />
