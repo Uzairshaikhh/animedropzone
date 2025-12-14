@@ -505,20 +505,14 @@ export function StorePage() {
               <div className="text-center mb-12">
                 <h2 className="mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
                   {selectedSubcategory
-                    ? `${
-                        subcategoryData[selectedCategory!]?.find((s) => s.value === selectedSubcategory)?.name ||
-                        "Products"
-                      }`
+                    ? `${selectedSubcategory.charAt(0).toUpperCase() + selectedSubcategory.slice(1)}`
                     : selectedCategory
                     ? `${categories.find((c) => c.value === selectedCategory)?.title} Collection`
                     : "All Products"}
                 </h2>
                 <p className="text-gray-400 max-w-2xl mx-auto">
                   {selectedSubcategory
-                    ? `Browse ${
-                        subcategoryData[selectedCategory!]?.find((s) => s.value === selectedSubcategory)?.description ||
-                        "products"
-                      }`
+                    ? `Browse ${selectedSubcategory} products`
                     : selectedCategory
                     ? `Browse our collection of ${categories
                         .find((c) => c.value === selectedCategory)

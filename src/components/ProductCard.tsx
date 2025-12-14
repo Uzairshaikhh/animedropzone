@@ -1,6 +1,6 @@
-import { ShoppingCart, Star, Eye, Heart } from 'lucide-react';
-import { motion } from 'motion/react';
-import { useNavigate } from 'react-router-dom';
+import { ShoppingCart, Star, Eye, Heart } from "lucide-react";
+import { motion } from "motion/react";
+import { useNavigate } from "react-router-dom";
 
 export interface Product {
   id: string;
@@ -8,7 +8,8 @@ export interface Product {
   description: string;
   price: number;
   category: string;
-  image: string;
+  image?: string;
+  images?: string[];
   stock: number;
 }
 
@@ -20,15 +21,26 @@ interface ProductCardProps {
   onToggleWishlist?: (product: Product) => void;
 }
 
-export function ProductCard({ product, onAddToCart, onViewDetails, isInWishlist = false, onToggleWishlist }: ProductCardProps) {
+export function ProductCard({
+  product,
+  onAddToCart,
+  onViewDetails,
+  isInWishlist = false,
+  onToggleWishlist,
+}: ProductCardProps) {
   const navigate = useNavigate();
+
+  const imageUrl =
+    product.images?.[0] ||
+    product.image ||
+    "https://images.unsplash.com/photo-1763771757355-4c0441df34ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhbmltZSUyMG1lcmNoYW5kaXNlfGVufDF8fHx8MTc2NTE4ODk3OXww&ixlib=rb-4.1.0&q=80&w=1080";
 
   const handleViewDetails = () => {
     navigate(`/product/${product.id}`);
   };
 
   return (
-    <motion.div 
+    <motion.div
       className="group bg-gradient-to-br from-black to-purple-900/20 border border-purple-500/30 rounded-xl overflow-hidden hover:border-purple-500 transition-all hover:shadow-lg hover:shadow-purple-900/50 cursor-pointer relative"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -47,11 +59,9 @@ export function ProductCard({ product, onAddToCart, onViewDetails, isInWishlist 
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
         >
-          <Heart 
+          <Heart
             className={`w-5 h-5 transition-all ${
-              isInWishlist 
-                ? 'fill-pink-500 text-pink-500' 
-                : 'text-gray-400 hover:text-pink-400'
+              isInWishlist ? "fill-pink-500 text-pink-500" : "text-gray-400 hover:text-pink-400"
             }`}
           />
         </motion.button>
@@ -59,14 +69,14 @@ export function ProductCard({ product, onAddToCart, onViewDetails, isInWishlist 
 
       <div className="relative overflow-hidden aspect-square bg-black/50">
         <motion.img
-          src={product.image || 'https://images.unsplash.com/photo-1763771757355-4c0441df34ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhbmltZSUyMG1lcmNoYW5kaXNlfGVufDF8fHx8MTc2NTE4ODk3OXww&ixlib=rb-4.1.0&q=80&w=1080'}
+          src={imageUrl}
           alt={product.name}
           className="w-full h-full object-cover"
           whileHover={{ scale: 1.1 }}
           transition={{ duration: 0.3 }}
         />
         {product.stock === 0 && (
-          <motion.div 
+          <motion.div
             className="absolute inset-0 bg-black/80 flex items-center justify-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -92,7 +102,7 @@ export function ProductCard({ product, onAddToCart, onViewDetails, isInWishlist 
         </div>
         <h3 className="text-white mb-1 line-clamp-1">{product.name}</h3>
         <p className="text-gray-400 text-sm mb-3 line-clamp-2">{product.description}</p>
-        <motion.div 
+        <motion.div
           className="mb-3"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}

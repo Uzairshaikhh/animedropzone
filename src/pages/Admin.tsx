@@ -117,10 +117,11 @@ export function AdminPage() {
     category: "figures",
     subcategory: "",
     image: "",
+    images: [] as string[],
     stock: "",
   });
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>("");
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [showStorageFix, setShowStorageFix] = useState(false);
   const [activeTab, setActiveTab] = useState<
@@ -158,6 +159,10 @@ export function AdminPage() {
   });
   const [categories, setCategories] = useState<any[]>([]);
   const [orderStatusFilter, setOrderStatusFilter] = useState<string>("all");
+
+  // Defensive fallbacks to avoid HMR state shape issues
+  const galleryImages = formData.images || [];
+  const pendingPreviews = imagePreviews || [];
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -283,7 +288,10 @@ export function AdminPage() {
           Authorization: `Bearer ${publicAnonKey}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          image: formData.image || formData.images[0] || "",
+        }),
       });
 
       const data = await response.json();
@@ -295,8 +303,11 @@ export function AdminPage() {
           category: "figures",
           subcategory: "",
           image: "",
+          images: [],
           stock: "",
         });
+        setSelectedImages([]);
+        setImagePreviews([]);
         setEditingProduct(null);
         setShowForm(false);
         fetchProducts();
@@ -337,53 +348,87 @@ export function AdminPage() {
       price: product.price.toString(),
       category: product.category,
       subcategory: (product as any).subcategory || "",
-      image: product.image,
+      image: product.image || (product as any).images?.[0] || "",
+      images: (product as any).images || (product.image ? [product.image] : []),
       stock: product.stock.toString(),
     });
+    setSelectedImages([]);
+    setImagePreviews([]);
     setShowForm(true);
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedImage(file);
-      setImagePreview(URL.createObjectURL(file));
-    }
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    setSelectedImages(files);
+    setImagePreviews(files.map((file) => URL.createObjectURL(file)));
   };
 
   const handleUploadImage = async () => {
-    if (!selectedImage) return;
+    if (!selectedImages.length) return;
     setUploadingImage(true);
 
     try {
-      // Create a unique filename with timestamp
-      const fileExt = selectedImage.name.split(".").pop();
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const uploadedUrls: string[] = [];
 
-      const { data, error } = await supabase.storage.from("product-images").upload(fileName, selectedImage, {
-        cacheControl: "3600",
-        upsert: false,
-      });
+      for (const file of selectedImages || []) {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
 
-      if (error) {
-        console.error("Error uploading image:", error);
-        // Check if it's an RLS error
-        if (error.message && error.message.includes("row-level security")) {
-          setShowStorageFix(true);
-        } else {
-          alert(`Failed to upload image: ${error.message}`);
+        const { data, error } = await supabase.storage.from("product-images").upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
+
+        if (error) {
+          console.error("Error uploading image:", error);
+          if (error.message && error.message.includes("row-level security")) {
+            setShowStorageFix(true);
+          } else {
+            alert(`Failed to upload image: ${error.message}`);
+          }
+          continue;
         }
-      } else {
-        const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(data.path);
 
-        setFormData({ ...formData, image: urlData.publicUrl });
+        const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(data.path);
+        if (urlData?.publicUrl) {
+          uploadedUrls.push(urlData.publicUrl);
+        }
+      }
+
+      if (uploadedUrls.length) {
+        setFormData((prev) => {
+          const images = [...prev.images, ...uploadedUrls];
+          return {
+            ...prev,
+            images,
+            image: prev.image || images[0],
+          };
+        });
       }
     } catch (error) {
       console.error("Error uploading image:", error);
       alert("Failed to upload image. Please try again.");
     } finally {
       setUploadingImage(false);
+      setSelectedImages([]);
+      setImagePreviews([]);
     }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setFormData((prev) => {
+      const removed = prev.images[index];
+      const updatedImages = prev.images.filter((_, i) => i !== index);
+      const nextPrimary = updatedImages[0] || "";
+
+      return {
+        ...prev,
+        images: updatedImages,
+        image: prev.image === removed ? nextPrimary : prev.image,
+      };
+    });
   };
 
   try {
@@ -764,6 +809,7 @@ export function AdminPage() {
                               category: "figures",
                               subcategory: "",
                               image: "",
+                              images: [],
                               stock: "",
                             });
                           }}
@@ -883,46 +929,81 @@ export function AdminPage() {
                             })()}
                           </div>
                           <div>
-                            <label className="block text-gray-300 mb-2">Product Image</label>
-                            <div className="space-y-3">
-                              {/* Image Preview */}
-                              {(imagePreview || formData.image) && (
-                                <div className="relative w-full h-48 bg-purple-900/20 border border-purple-500/30 rounded-lg overflow-hidden">
-                                  <img
-                                    src={imagePreview || formData.image}
-                                    alt="Product preview"
-                                    className="w-full h-full object-cover"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setImagePreview("");
-                                      setSelectedImage(null);
-                                      setFormData({ ...formData, image: "" });
-                                    }}
-                                    className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 p-2 rounded-full transition-colors"
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </button>
+                            <label className="block text-gray-300 mb-2">Product Images</label>
+                            <div className="space-y-4">
+                              {/* Current gallery */}
+                              {galleryImages.length > 0 && (
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                  {galleryImages.map((img, idx) => (
+                                    <div
+                                      key={img + idx}
+                                      className="relative rounded-lg overflow-hidden border border-purple-500/30 bg-purple-900/10"
+                                    >
+                                      <img src={img} alt={`Product ${idx + 1}`} className="w-full h-32 object-cover" />
+                                      <div className="absolute top-2 left-2 flex gap-2">
+                                        {idx === 0 && (
+                                          <span className="text-xs bg-black/70 text-purple-200 px-2 py-1 rounded-full border border-purple-500/50">
+                                            Primary
+                                          </span>
+                                        )}
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveImage(idx)}
+                                        className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 p-1 rounded-full border border-purple-500/50 transition-colors"
+                                      >
+                                        <X className="w-4 h-4 text-gray-200" />
+                                      </button>
+                                    </div>
+                                  ))}
                                 </div>
                               )}
 
-                              {/* Upload Button */}
-                              <div className="flex gap-2">
-                                <label className="flex-1 bg-purple-900/20 border border-purple-500/30 rounded-lg px-4 py-3 cursor-pointer hover:bg-purple-900/30 transition-colors flex items-center justify-center gap-2">
+                              {/* Pending uploads preview */}
+                              {pendingPreviews.length > 0 && (
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                  {pendingPreviews.map((preview, idx) => (
+                                    <div
+                                      key={preview + idx}
+                                      className="relative rounded-lg overflow-hidden border border-dashed border-purple-500/40 bg-purple-900/10"
+                                    >
+                                      <img
+                                        src={preview}
+                                        alt={`Preview ${idx + 1}`}
+                                        className="w-full h-32 object-cover opacity-80"
+                                      />
+                                      <span className="absolute bottom-2 left-2 text-xs bg-black/70 text-gray-200 px-2 py-1 rounded-full border border-purple-500/50">
+                                        Ready to upload
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Upload controls */}
+                              <div className="flex flex-col sm:flex-row gap-2">
+                                <label className="flex-1 bg-purple-900/20 border border-purple-500/30 rounded-lg px-4 py-3 cursor-pointer hover:bg-purple-900/30 transition-colors flex items-center justify-center gap-2 text-center">
                                   <Upload className="w-5 h-5 text-purple-400" />
                                   <span className="text-gray-300">
-                                    {selectedImage ? selectedImage.name : "Choose Image from Gallery"}
+                                    {(selectedImages || []).length
+                                      ? `${selectedImages.length} image(s) selected`
+                                      : "Choose images (you can select multiple)"}
                                   </span>
-                                  <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    multiple
+                                    onChange={handleImageChange}
+                                    className="hidden"
+                                  />
                                 </label>
 
-                                {selectedImage && !formData.image && (
+                                {(selectedImages || []).length > 0 && (
                                   <button
                                     type="button"
                                     onClick={handleUploadImage}
                                     disabled={uploadingImage}
-                                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 px-6 rounded-lg transition-all flex items-center gap-2"
+                                    className="sm:w-48 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 px-6 py-3 rounded-lg transition-all flex items-center justify-center gap-2"
                                   >
                                     {uploadingImage ? (
                                       <>
@@ -938,6 +1019,10 @@ export function AdminPage() {
                                   </button>
                                 )}
                               </div>
+
+                              <p className="text-sm text-gray-400">
+                                Tip: The first image is used as the primary thumbnail. Re-upload to change the order.
+                              </p>
                             </div>
                           </div>
                           <div className="flex gap-4">
@@ -975,6 +1060,7 @@ export function AdminPage() {
                             >
                               <img
                                 src={
+                                  (product as any).images?.[0] ||
                                   product.image ||
                                   "https://images.unsplash.com/photo-1763771757355-4c0441df34ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhbmltZSUyMG1lcmNoYW5kaXNlfGVufDF8fHx8MTc2NTE4ODk3OXww&ixlib=rb-4.1.0&q=80&w=1080"
                                 }

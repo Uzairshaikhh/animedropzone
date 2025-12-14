@@ -1,16 +1,26 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { ArrowLeft, ShoppingCart, Star, Package, Shield, Truck, CreditCard, ChevronDown, ChevronUp } from 'lucide-react';
-import { Navbar } from '../components/Navbar';
-import { FloatingParticles } from '../components/FloatingParticles';
-import { Cart } from '../components/Cart';
-import { UserAuth } from '../components/UserAuth';
-import { CheckoutModal } from '../components/CheckoutModal';
-import { Product } from '../components/ProductCard';
-import { ProductReviews } from '../components/ProductReviews';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { supabase } from '../utils/supabase/client';
+import { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "motion/react";
+import {
+  ArrowLeft,
+  ShoppingCart,
+  Star,
+  Package,
+  Shield,
+  Truck,
+  CreditCard,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import { Navbar } from "../components/Navbar";
+import { FloatingParticles } from "../components/FloatingParticles";
+import { Cart } from "../components/Cart";
+import { UserAuth } from "../components/UserAuth";
+import { CheckoutModal } from "../components/CheckoutModal";
+import { Product } from "../components/ProductCard";
+import { ProductReviews } from "../components/ProductReviews";
+import { projectId, publicAnonKey } from "../utils/supabase/info";
+import { supabase } from "../utils/supabase/client";
 
 interface CartItem extends Product {
   quantity: number;
@@ -38,12 +48,58 @@ export function ProductPage() {
   const [quantity, setQuantity] = useState(1);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [pendingCheckout, setPendingCheckout] = useState(false);
+  const slideTimer = useRef<number | null>(null);
 
   useEffect(() => {
     fetchProduct();
     fetchReviews();
     checkUser();
   }, [id]);
+
+  useEffect(() => {
+    setSelectedImage(0);
+    if (slideTimer.current) {
+      clearInterval(slideTimer.current);
+      slideTimer.current = null;
+    }
+  }, [product?.id]);
+
+  // Auto-advance slider for products with multiple images
+  useEffect(() => {
+    if (!product) {
+      if (slideTimer.current) {
+        clearInterval(slideTimer.current);
+        slideTimer.current = null;
+      }
+      return;
+    }
+
+    const currentGallery = (product.images && product.images.length ? product.images : [product.image]).filter(Boolean);
+    const currentSafeGallery = currentGallery.length
+      ? currentGallery
+      : [
+          "https://images.unsplash.com/photo-1763771757355-4c0441df34ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhbmltZSUyMG1lcmNoYW5kaXNlfGVufDF8fHx8MTc2NTE4ODk3OXww&ixlib=rb-4.1.0&q=80&w=1080",
+        ];
+
+    if (currentSafeGallery.length <= 1) {
+      if (slideTimer.current) {
+        clearInterval(slideTimer.current);
+        slideTimer.current = null;
+      }
+      return;
+    }
+
+    slideTimer.current = window.setInterval(() => {
+      setSelectedImage((prev) => (prev + 1) % currentSafeGallery.length);
+    }, 5000);
+
+    return () => {
+      if (slideTimer.current) {
+        clearInterval(slideTimer.current);
+        slideTimer.current = null;
+      }
+    };
+  }, [product?.images, product?.image]);
 
   const checkUser = async () => {
     const { data } = await supabase.auth.getSession();
@@ -59,57 +115,49 @@ export function ProductPage() {
 
   const fetchProduct = async () => {
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/products`,
-        {
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-        }
-      );
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/products`, {
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`,
+        },
+      });
       const data = await response.json();
       if (data.success) {
         const foundProduct = data.products.find((p: Product) => p.id === id);
         if (foundProduct) {
           setProduct(foundProduct);
         } else {
-          navigate('/');
+          navigate("/");
         }
       }
     } catch (error) {
-      console.log('Error fetching product:', error);
-      navigate('/');
+      console.log("Error fetching product:", error);
+      navigate("/");
     }
   };
 
   const fetchReviews = async () => {
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/reviews/${id}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-        }
-      );
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/reviews/${id}`, {
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`,
+        },
+      });
       const data = await response.json();
       if (data.success) {
         setReviews(data.reviews || []);
       }
     } catch (error) {
-      console.log('Error fetching reviews:', error);
+      console.log("Error fetching reviews:", error);
     }
   };
 
   const handleAddToCart = () => {
     if (!product) return;
-    
+
     setCartItems((prev) => {
       const existing = prev.find((item) => item.id === product.id);
       if (existing) {
-        return prev.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item
-        );
+        return prev.map((item) => (item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item));
       }
       return [...prev, { ...product, quantity }];
     });
@@ -126,7 +174,7 @@ export function ProductPage() {
     }
 
     // Add to cart and immediately checkout
-    const newCartItems = [{...product, quantity}];
+    const newCartItems = [{ ...product, quantity }];
     setCartItems(newCartItems);
     setIsCheckoutOpen(true);
   };
@@ -142,13 +190,11 @@ export function ProductPage() {
   const handleCheckoutSuccess = () => {
     setCartItems([]);
     setIsCheckoutOpen(false);
-    navigate('/');
+    navigate("/");
   };
 
   const handleUpdateQuantity = (productId: string, newQuantity: number) => {
-    setCartItems((prev) =>
-      prev.map((item) => (item.id === productId ? { ...item, quantity: newQuantity } : item))
-    );
+    setCartItems((prev) => prev.map((item) => (item.id === productId ? { ...item, quantity: newQuantity } : item)));
   };
 
   const handleRemoveItem = (productId: string) => {
@@ -175,13 +221,24 @@ export function ProductPage() {
     );
   }
 
-  const averageRating = reviews.length > 0
-    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
-    : 4.8;
-
+  const averageRating = reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 4.8;
   const displayedReviews = showAllReviews ? reviews : reviews.slice(0, 3);
-
   const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const fallbackImage =
+    "https://images.unsplash.com/photo-1763771757355-4c0441df34ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhbmltZSUyMG1lcmNoYW5kaXNlfGVufDF8fHx8MTc2NTE4ODk3OXww&ixlib=rb-4.1.0&q=80&w=1080";
+  const gallery = (product.images && product.images.length ? product.images : [product.image]).filter(Boolean);
+  const safeGallery = gallery.length ? gallery : [fallbackImage];
+  const activeImage = safeGallery[Math.min(selectedImage, safeGallery.length - 1)];
+
+  const goNext = () => {
+    if (!safeGallery.length) return;
+    setSelectedImage((prev) => (prev + 1) % safeGallery.length);
+  };
+
+  const goPrev = () => {
+    if (!safeGallery.length) return;
+    setSelectedImage((prev) => (prev - 1 + safeGallery.length) % safeGallery.length);
+  };
 
   return (
     <div className="min-h-screen bg-black">
@@ -200,7 +257,7 @@ export function ProductPage() {
         {/* Back Button */}
         <div className="max-w-7xl mx-auto px-4 py-6">
           <motion.button
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
             whileHover={{ x: -5 }}
           >
@@ -212,13 +269,9 @@ export function ProductPage() {
         <section className="max-w-7xl mx-auto px-4 py-8">
           <div className="grid md:grid-cols-2 gap-12">
             {/* Product Images */}
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
-            >
+            <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
               <div className="relative">
-                <motion.div 
+                <motion.div
                   className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur-xl opacity-50"
                   animate={{
                     opacity: [0.5, 0.7, 0.5],
@@ -226,12 +279,12 @@ export function ProductPage() {
                   transition={{
                     duration: 2,
                     repeat: Infinity,
-                    ease: "easeInOut"
+                    ease: "easeInOut",
                   }}
                 />
                 <div className="relative rounded-2xl overflow-hidden border-2 border-purple-500/50 bg-black">
                   <motion.img
-                    src={product.image}
+                    src={activeImage}
                     alt={product.name}
                     className="w-full h-auto object-cover"
                     layoutId={`product-${product.id}`}
@@ -243,21 +296,84 @@ export function ProductPage() {
                       </span>
                     </div>
                   )}
+                  {safeGallery.length > 1 && (
+                    <>
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-2 z-20">
+                        <button
+                          type="button"
+                          onClick={goPrev}
+                          className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white p-3 rounded-full border-2 border-purple-400 transition-all shadow-lg hover:shadow-purple-600/50 cursor-pointer"
+                          aria-label="Previous image"
+                        >
+                          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                              fillRule="evenodd"
+                              d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-2 z-20">
+                        <button
+                          type="button"
+                          onClick={goNext}
+                          className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white p-3 rounded-full border-2 border-purple-400 transition-all shadow-lg hover:shadow-purple-600/50 cursor-pointer"
+                          aria-label="Next image"
+                        >
+                          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path
+                              fillRule="evenodd"
+                              d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+                {/* Thumbnail Gallery Slider */}
+                <div className="mt-6 pt-4 border-t border-purple-500/20">
+                  <p className="text-gray-400 text-sm mb-3">
+                    Product Images {safeGallery.length > 1 && `(${safeGallery.length} available)`}
+                  </p>
+                  <div className="flex gap-3 overflow-x-auto pb-2">
+                    {safeGallery.map((img, idx) => (
+                      <button
+                        type="button"
+                        key={`${idx}-${img.substring(0, 20)}`}
+                        onClick={() => setSelectedImage(idx)}
+                        className={`shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all hover:scale-105 cursor-pointer ${
+                          selectedImage === idx
+                            ? "border-purple-500 shadow-lg shadow-purple-900/50 ring-2 ring-purple-400"
+                            : "border-purple-500/30 hover:border-purple-400"
+                        }`}
+                        aria-label={`View image ${idx + 1}`}
+                      >
+                        <img
+                          src={img}
+                          alt={`Thumbnail ${idx + 1}`}
+                          className="w-full h-full object-cover pointer-events-none"
+                        />
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
               {/* Features */}
-              <motion.div 
+              <motion.div
                 className="grid grid-cols-2 gap-4 mt-8"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
               >
                 {[
-                  { icon: Shield, text: '100% Authentic' },
-                  { icon: Truck, text: 'Fast Delivery' },
-                  { icon: Package, text: 'Secure Packaging' },
-                  { icon: CreditCard, text: 'Secure Payment' },
+                  { icon: Shield, text: "100% Authentic" },
+                  { icon: Truck, text: "Fast Delivery" },
+                  { icon: Package, text: "Secure Packaging" },
+                  { icon: CreditCard, text: "Secure Payment" },
                 ].map((feature, index) => (
                   <motion.div
                     key={feature.text}
@@ -300,7 +416,7 @@ export function ProductPage() {
               </motion.h1>
 
               {/* Rating */}
-              <motion.div 
+              <motion.div
                 className="flex items-center gap-4 mb-6"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -311,9 +427,7 @@ export function ProductPage() {
                     <Star
                       key={i}
                       className={`w-5 h-5 ${
-                        i < Math.floor(averageRating)
-                          ? 'fill-yellow-400 text-yellow-400'
-                          : 'text-gray-600'
+                        i < Math.floor(averageRating) ? "fill-yellow-400 text-yellow-400" : "text-gray-600"
                       }`}
                     />
                   ))}
@@ -342,7 +456,8 @@ export function ProductPage() {
                   ₹{product.price.toLocaleString()}
                 </span>
                 <p className="text-gray-400 mt-2">
-                  Stock: <span className={product.stock > 10 ? 'text-green-400' : 'text-orange-400'}>
+                  Stock:{" "}
+                  <span className={product.stock > 10 ? "text-green-400" : "text-orange-400"}>
                     {product.stock} available
                   </span>
                 </p>
@@ -415,11 +530,7 @@ export function ProductPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <ProductReviews
-              productId={id!}
-              user={user}
-              onLoginClick={() => setIsUserAuthOpen(true)}
-            />
+            <ProductReviews productId={id!} user={user} onLoginClick={() => setIsUserAuthOpen(true)} />
           </motion.div>
         </section>
       </main>

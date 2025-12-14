@@ -1,7 +1,7 @@
-import { X, Plus, Trash2, Edit2 } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { Product } from './ProductCard';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { X, Plus, Trash2, Edit2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Product } from "./ProductCard";
+import { projectId, publicAnonKey } from "../utils/supabase/info";
 
 interface AdminPanelProps {
   isOpen: boolean;
@@ -14,13 +14,13 @@ export function AdminPanel({ isOpen, onClose, onProductAdded }: AdminPanelProps)
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    price: '',
-    category: 'figures',
-    subcategory: '',
-    image: '',
-    stock: '',
+    name: "",
+    description: "",
+    price: "",
+    category: "figures",
+    subcategory: "",
+    image: "",
+    stock: "",
   });
 
   useEffect(() => {
@@ -31,20 +31,17 @@ export function AdminPanel({ isOpen, onClose, onProductAdded }: AdminPanelProps)
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/products`,
-        {
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-        }
-      );
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/products`, {
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`,
+        },
+      });
       const data = await response.json();
       if (data.success) {
         setProducts(data.products);
       }
     } catch (error) {
-      console.log('Error fetching products:', error);
+      console.log("Error fetching products:", error);
     }
   };
 
@@ -54,12 +51,12 @@ export function AdminPanel({ isOpen, onClose, onProductAdded }: AdminPanelProps)
       const url = editingProduct
         ? `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/products/${editingProduct.id}`
         : `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/products`;
-      
+
       const response = await fetch(url, {
-        method: editingProduct ? 'PUT' : 'POST',
+        method: editingProduct ? "PUT" : "POST",
         headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${publicAnonKey}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
@@ -67,13 +64,13 @@ export function AdminPanel({ isOpen, onClose, onProductAdded }: AdminPanelProps)
       const data = await response.json();
       if (data.success) {
         setFormData({
-          name: '',
-          description: '',
-          price: '',
-          category: 'figures',
-          subcategory: '',
-          image: '',
-          stock: '',
+          name: "",
+          description: "",
+          price: "",
+          category: "figures",
+          subcategory: "",
+          image: "",
+          stock: "",
         });
         setEditingProduct(null);
         setShowForm(false);
@@ -81,20 +78,20 @@ export function AdminPanel({ isOpen, onClose, onProductAdded }: AdminPanelProps)
         onProductAdded();
       }
     } catch (error) {
-      console.log('Error saving product:', error);
+      console.log("Error saving product:", error);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+    if (!confirm("Are you sure you want to delete this product?")) return;
 
     try {
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/products/${id}`,
         {
-          method: 'DELETE',
+          method: "DELETE",
           headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
+            Authorization: `Bearer ${publicAnonKey}`,
           },
         }
       );
@@ -105,7 +102,7 @@ export function AdminPanel({ isOpen, onClose, onProductAdded }: AdminPanelProps)
         onProductAdded();
       }
     } catch (error) {
-      console.log('Error deleting product:', error);
+      console.log("Error deleting product:", error);
     }
   };
 
@@ -116,8 +113,8 @@ export function AdminPanel({ isOpen, onClose, onProductAdded }: AdminPanelProps)
       description: product.description,
       price: product.price.toString(),
       category: product.category,
-      subcategory: (product as any).subcategory || '',
-      image: product.image,
+      subcategory: (product as any).subcategory || "",
+      image: product.image || product.images?.[0] || "",
       stock: product.stock.toString(),
     });
     setShowForm(true);
@@ -138,13 +135,13 @@ export function AdminPanel({ isOpen, onClose, onProductAdded }: AdminPanelProps)
                   setShowForm(true);
                   setEditingProduct(null);
                   setFormData({
-                    name: '',
-                    description: '',
-                    price: '',
-                    category: 'figures',
-                    subcategory: '',
-                    image: '',
-                    stock: '',
+                    name: "",
+                    description: "",
+                    price: "",
+                    category: "figures",
+                    subcategory: "",
+                    image: "",
+                    stock: "",
                   });
                 }}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-4 py-2 rounded-lg flex items-center gap-2 transition-all"
@@ -246,7 +243,7 @@ export function AdminPanel({ isOpen, onClose, onProductAdded }: AdminPanelProps)
                   type="submit"
                   className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 py-3 rounded-lg transition-all"
                 >
-                  {editingProduct ? 'Update Product' : 'Add Product'}
+                  {editingProduct ? "Update Product" : "Add Product"}
                 </button>
                 <button
                   type="button"
@@ -273,7 +270,11 @@ export function AdminPanel({ isOpen, onClose, onProductAdded }: AdminPanelProps)
                     className="flex gap-4 bg-purple-900/10 border border-purple-500/20 rounded-lg p-4"
                   >
                     <img
-                      src={product.image || 'https://images.unsplash.com/photo-1763771757355-4c0441df34ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhbmltZSUyMG1lcmNoYW5kaXNlfGVufDF8fHx8MTc2NTE4ODk3OXww&ixlib=rb-4.1.0&q=80&w=1080'}
+                      src={
+                        product.images?.[0] ||
+                        product.image ||
+                        "https://images.unsplash.com/photo-1763771757355-4c0441df34ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhbmltZSUyMG1lcmNoYW5kaXNlfGVufDF8fHx8MTc2NTE4ODk3OXww&ixlib=rb-4.1.0&q=80&w=1080"
+                      }
                       alt={product.name}
                       className="w-24 h-24 object-cover rounded-lg"
                     />
