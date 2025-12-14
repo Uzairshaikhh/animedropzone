@@ -73,13 +73,13 @@ export function Hero() {
           if (validWallpapers.length > 0) {
             setWallpapers(validWallpapers);
           } else {
-            console.log("⚠️ No valid wallpapers, using defaults");
-            setWallpapers(getDefaultWallpapers());
+            console.log("⚠️ No valid wallpapers, seeding defaults...");
+            await seedDefaultWallpapers();
           }
         } else {
           // Use default wallpapers if none in database
-          console.log("⚠️ No wallpapers in database, using defaults");
-          setWallpapers(getDefaultWallpapers());
+          console.log("⚠️ No wallpapers in database, seeding defaults...");
+          await seedDefaultWallpapers();
         }
       } else {
         console.error("❌ Failed to fetch wallpapers:", response.status);
@@ -90,6 +90,60 @@ export function Hero() {
       setWallpapers(getDefaultWallpapers());
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const seedDefaultWallpapers = async () => {
+    try {
+      console.log("🌱 Seeding default wallpapers...");
+      const defaults = getDefaultWallpapers();
+
+      for (const wallpaper of defaults) {
+        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            imageUrl: wallpaper.imageUrl,
+            title: wallpaper.title,
+            subtitle: wallpaper.subtitle,
+          }),
+        });
+
+        if (response.ok) {
+          console.log(`✅ Seeded wallpaper: ${wallpaper.title}`);
+        } else {
+          console.error(`❌ Failed to seed wallpaper: ${wallpaper.title}`);
+        }
+      }
+
+      // Fetch again after seeding
+      console.log("🔄 Re-fetching wallpapers after seeding...");
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers`, {
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const validWallpapers = (data.wallpapers || [])
+          .filter((w: Wallpaper | null) => w !== null && w !== undefined)
+          .sort((a: Wallpaper, b: Wallpaper) => (a.order || 0) - (b.order || 0));
+
+        if (validWallpapers.length > 0) {
+          console.log("✅ Wallpapers seeded and fetched successfully!");
+          setWallpapers(validWallpapers);
+        } else {
+          console.log("ℹ️ Using local default wallpapers");
+          setWallpapers(getDefaultWallpapers());
+        }
+      }
+    } catch (error) {
+      console.error("❌ Error seeding wallpapers:", error);
+      setWallpapers(getDefaultWallpapers());
     }
   };
 
