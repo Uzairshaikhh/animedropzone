@@ -16,14 +16,16 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    console.error("ErrorBoundary: getDerivedStateFromError called with:", error);
     return { hasError: true, error };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
+    console.error("ErrorBoundary: componentDidCatch called with:", error, errorInfo);
   }
 
   render() {
+    console.log("ErrorBoundary render called, hasError:", this.state.hasError);
     if (this.state.hasError) {
       return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-black text-white flex items-center justify-center">
