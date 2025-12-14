@@ -24,7 +24,36 @@ export default function App() {
       <Favicon />
       <Router>
         <Routes>
-          <Route path="/" element={<StorePage />} />
+          <Route
+            path="/"
+            element={
+              <div
+                style={{
+                  minHeight: "100vh",
+                  backgroundColor: "#0000ff",
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "48px",
+                  fontWeight: "bold",
+                }}
+              >
+                <div
+                  style={{
+                    backgroundColor: "#333",
+                    padding: "40px",
+                    borderRadius: "10px",
+                    border: "5px solid #ffff00",
+                  }}
+                >
+                  <h1 style={{ color: "#ff0000", marginBottom: "20px" }}>MAIN PAGE TEST</h1>
+                  <p style={{ color: "#ffffff" }}>If you see this BLUE background, the app is working.</p>
+                  <p style={{ color: "#00ff00", marginTop: "20px" }}>Time: {new Date().toLocaleString()}</p>
+                </div>
+              </div>
+            }
+          />
           <Route
             path="/secret-admin-panel-7b2cbf"
             element={
