@@ -25,14 +25,7 @@ export default function App() {
       <Router>
         <Routes>
           <Route path="/" element={<StorePage />} />
-          <Route
-            path="/secret-admin-panel-7b2cbf"
-            element={
-              <ErrorBoundary>
-                <AdminPage />
-              </ErrorBoundary>
-            }
-          />
+          <Route path="/secret-admin-panel-7b2cbf" element={<AdminPage />} />
           {/* Redirect old admin route to home */}
           <Route path="/admin" element={<StorePage />} />
           <Route path="/track-order" element={<TrackOrderPage />} />
