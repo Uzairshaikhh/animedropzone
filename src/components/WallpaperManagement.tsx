@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Image as ImageIcon, Plus, Trash2, Edit2, Upload, X, ChevronUp, ChevronDown } from 'lucide-react';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { motion } from 'motion/react';
+import { useState, useEffect } from "react";
+import { Image as ImageIcon, Plus, Trash2, Edit2, Upload, X, ChevronUp, ChevronDown } from "lucide-react";
+import { projectId, publicAnonKey } from "../utils/supabase/info";
+import { motion } from "motion/react";
 
 interface Wallpaper {
   id: string;
@@ -17,12 +17,12 @@ export function WallpaperManagement() {
   const [editingWallpaper, setEditingWallpaper] = useState<Wallpaper | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    imageUrl: '',
-    title: '',
-    subtitle: '',
+    imageUrl: "",
+    title: "",
+    subtitle: "",
   });
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>('');
+  const [imagePreview, setImagePreview] = useState<string>("");
   const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
@@ -31,31 +31,31 @@ export function WallpaperManagement() {
 
   const fetchWallpapers = async () => {
     try {
-      console.log('🔵 Fetching wallpapers...');
+      console.log("🔵 Fetching wallpapers...");
       const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers`, {
         headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
+          Authorization: `Bearer ${publicAnonKey}`,
         },
       });
 
-      console.log('📡 Wallpaper fetch response status:', response.status);
-      
+      console.log("📡 Wallpaper fetch response status:", response.status);
+
       if (response.ok) {
         const data = await response.json();
-        console.log('✅ Wallpaper data received:', data);
-        
+        console.log("✅ Wallpaper data received:", data);
+
         // Filter out any null/undefined wallpapers
         const validWallpapers = (data.wallpapers || []).filter((w: Wallpaper | null) => w !== null && w !== undefined);
-        console.log('✅ Valid wallpapers count:', validWallpapers.length);
-        console.log('✅ Wallpapers:', validWallpapers);
-        
+        console.log("✅ Valid wallpapers count:", validWallpapers.length);
+        console.log("✅ Wallpapers:", validWallpapers);
+
         setWallpapers(validWallpapers);
       } else {
         const errorText = await response.text();
-        console.error('❌ Failed to fetch wallpapers:', response.status, errorText);
+        console.error("❌ Failed to fetch wallpapers:", response.status, errorText);
       }
     } catch (error) {
-      console.error('❌ Error fetching wallpapers:', error);
+      console.error("❌ Error fetching wallpapers:", error);
     }
   };
 
@@ -76,35 +76,40 @@ export function WallpaperManagement() {
 
     setUploadingImage(true);
     const formDataObj = new FormData();
-    formDataObj.append('file', selectedImage);
+    formDataObj.append("file", selectedImage);
 
     try {
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/upload-wallpaper`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
-        },
-        body: formDataObj,
-      });
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/upload-wallpaper`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+          },
+          body: formDataObj,
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
         return data.imageUrl;
       } else {
         const errorData = await response.json();
-        const errorMsg = errorData.error || 'Failed to upload image';
-        
+        const errorMsg = errorData.error || "Failed to upload image";
+
         // Check for RLS error
-        if (errorMsg.includes('row-level security') || errorMsg.includes('RLS')) {
-          alert('⚠️ Storage RLS Error detected!\n\nPlease go to the Admin Panel and look for the "Fix Storage" button, or manually configure RLS policies in your Supabase dashboard.');
+        if (errorMsg.includes("row-level security") || errorMsg.includes("RLS")) {
+          alert(
+            '⚠️ Storage RLS Error detected!\n\nPlease go to the Admin Panel and look for the "Fix Storage" button, or manually configure RLS policies in your Supabase dashboard.'
+          );
         } else {
           alert(`Failed to upload image: ${errorMsg}`);
         }
         return null;
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
-      alert('Error uploading image');
+      console.error("Error uploading image:", error);
+      alert("Error uploading image");
       return null;
     } finally {
       setUploadingImage(false);
@@ -118,26 +123,26 @@ export function WallpaperManagement() {
     try {
       let imageUrl = formData.imageUrl;
 
-      console.log('🔵 WALLPAPER SUBMIT - Starting...');
-      console.log('📝 Form Data:', formData);
-      console.log('🖼️ Selected Image:', selectedImage?.name);
+      console.log("🔵 WALLPAPER SUBMIT - Starting...");
+      console.log("📝 Form Data:", formData);
+      console.log("🖼️ Selected Image:", selectedImage?.name);
 
       // Upload image if a new one was selected
       if (selectedImage) {
-        console.log('📤 Uploading image...');
+        console.log("📤 Uploading image...");
         const uploadedUrl = await uploadImage();
         if (!uploadedUrl) {
-          console.error('❌ Image upload failed');
+          console.error("❌ Image upload failed");
           setIsLoading(false);
           return;
         }
-        console.log('✅ Image uploaded:', uploadedUrl);
+        console.log("✅ Image uploaded:", uploadedUrl);
         imageUrl = uploadedUrl;
       }
 
       // Validate that we have an image URL
-      if (!imageUrl || imageUrl.trim() === '') {
-        alert('Please provide an image URL or upload an image');
+      if (!imageUrl || imageUrl.trim() === "") {
+        alert("Please provide an image URL or upload an image");
         setIsLoading(false);
         return;
       }
@@ -148,47 +153,59 @@ export function WallpaperManagement() {
         subtitle: formData.subtitle,
       };
 
-      console.log('📦 Wallpaper data to send:', wallpaperData);
+      console.log("📦 Wallpaper data to send:", wallpaperData);
 
       const url = editingWallpaper
         ? `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers/${editingWallpaper.id}`
         : `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers`;
 
-      const method = editingWallpaper ? 'PUT' : 'POST';
+      const method = editingWallpaper ? "PUT" : "POST";
 
       console.log(`📡 Sending ${method} request to:`, url);
 
       const response = await fetch(url, {
         method,
         headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${publicAnonKey}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(wallpaperData),
       });
 
-      console.log('📡 Response status:', response.status);
+      console.log("📡 Response status:", response.status);
 
       if (response.ok) {
         const result = await response.json();
-        console.log('✅ Wallpaper saved successfully:', result);
-        
-        alert('Wallpaper saved successfully! ✅');
-        
+        console.log("✅ Wallpaper saved successfully:", result);
+
+        alert("Wallpaper saved successfully! ✅");
+
+        // Broadcast wallpaper update to other components
+        try {
+          const channel = new BroadcastChannel("wallpapers");
+          channel.postMessage({
+            type: editingWallpaper ? "wallpaper_updated" : "wallpaper_added",
+            timestamp: Date.now(),
+          });
+          channel.close();
+        } catch (error) {
+          console.log("BroadcastChannel not available");
+        }
+
         await fetchWallpapers();
         setShowForm(false);
         setEditingWallpaper(null);
-        setFormData({ imageUrl: '', title: '', subtitle: '' });
+        setFormData({ imageUrl: "", title: "", subtitle: "" });
         setSelectedImage(null);
-        setImagePreview('');
+        setImagePreview("");
       } else {
         const errorData = await response.json();
-        console.error('❌ Failed to save wallpaper:', errorData);
-        alert(`Failed to save wallpaper: ${errorData.error || 'Unknown error'}`);
+        console.error("❌ Failed to save wallpaper:", errorData);
+        alert(`Failed to save wallpaper: ${errorData.error || "Unknown error"}`);
       }
     } catch (error) {
-      console.error('❌ Error saving wallpaper:', error);
-      alert(`Error saving wallpaper: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("❌ Error saving wallpaper:", error);
+      alert(`Error saving wallpaper: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setIsLoading(false);
     }
@@ -206,43 +223,76 @@ export function WallpaperManagement() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this wallpaper?')) return;
+    if (!confirm("Are you sure you want to delete this wallpaper?")) return;
 
     try {
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
-        },
-      });
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers/${id}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+          },
+        }
+      );
 
       if (response.ok) {
+        // Broadcast wallpaper deletion to other components
+        try {
+          const channel = new BroadcastChannel("wallpapers");
+          channel.postMessage({
+            type: "wallpaper_deleted",
+            id,
+            timestamp: Date.now(),
+          });
+          channel.close();
+        } catch (error) {
+          console.log("BroadcastChannel not available");
+        }
+
         await fetchWallpapers();
       } else {
-        alert('Failed to delete wallpaper');
+        alert("Failed to delete wallpaper");
       }
     } catch (error) {
-      console.error('Error deleting wallpaper:', error);
-      alert('Error deleting wallpaper');
+      console.error("Error deleting wallpaper:", error);
+      alert("Error deleting wallpaper");
     }
   };
 
-  const moveWallpaper = async (id: string, direction: 'up' | 'down') => {
+  const moveWallpaper = async (id: string, direction: "up" | "down") => {
     try {
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers/${id}/reorder`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ direction }),
-      });
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers/${id}/reorder`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ direction }),
+        }
+      );
 
       if (response.ok) {
+        // Broadcast wallpaper reorder to other components
+        try {
+          const channel = new BroadcastChannel("wallpapers");
+          channel.postMessage({
+            type: "wallpaper_reordered",
+            id,
+            direction,
+            timestamp: Date.now(),
+          });
+          channel.close();
+        } catch (error) {
+          console.log("BroadcastChannel not available");
+        }
+
         await fetchWallpapers();
       }
     } catch (error) {
-      console.error('Error reordering wallpaper:', error);
+      console.error("Error reordering wallpaper:", error);
     }
   };
 
@@ -257,28 +307,35 @@ export function WallpaperManagement() {
           {wallpapers.length > 0 && (
             <motion.button
               onClick={async () => {
-                if (!confirm(`Are you sure you want to delete all ${wallpapers.length} wallpapers? This action cannot be undone.`)) {
+                if (
+                  !confirm(
+                    `Are you sure you want to delete all ${wallpapers.length} wallpapers? This action cannot be undone.`
+                  )
+                ) {
                   return;
                 }
-                
+
                 try {
                   // Delete all wallpapers
                   await Promise.all(
-                    wallpapers.map(wallpaper => 
-                      fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers/${wallpaper.id}`, {
-                        method: 'DELETE',
-                        headers: {
-                          'Authorization': `Bearer ${publicAnonKey}`,
-                        },
-                      })
+                    wallpapers.map((wallpaper) =>
+                      fetch(
+                        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers/${wallpaper.id}`,
+                        {
+                          method: "DELETE",
+                          headers: {
+                            Authorization: `Bearer ${publicAnonKey}`,
+                          },
+                        }
+                      )
                     )
                   );
-                  
+
                   await fetchWallpapers();
-                  alert('All wallpapers deleted successfully!');
+                  alert("All wallpapers deleted successfully!");
                 } catch (error) {
-                  console.error('Error deleting wallpapers:', error);
-                  alert('Failed to delete all wallpapers');
+                  console.error("Error deleting wallpapers:", error);
+                  alert("Failed to delete all wallpapers");
                 }
               }}
               className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-lg flex items-center gap-2 transition-all"
@@ -293,9 +350,9 @@ export function WallpaperManagement() {
             onClick={() => {
               setShowForm(true);
               setEditingWallpaper(null);
-              setFormData({ imageUrl: '', title: '', subtitle: '' });
+              setFormData({ imageUrl: "", title: "", subtitle: "" });
               setSelectedImage(null);
-              setImagePreview('');
+              setImagePreview("");
             }}
             className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-lg flex items-center gap-2 transition-all"
             whileHover={{ scale: 1.05 }}
@@ -320,16 +377,14 @@ export function WallpaperManagement() {
             animate={{ scale: 1, opacity: 1 }}
           >
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl text-white">
-                {editingWallpaper ? 'Edit Wallpaper' : 'Add New Wallpaper'}
-              </h3>
+              <h3 className="text-2xl text-white">{editingWallpaper ? "Edit Wallpaper" : "Add New Wallpaper"}</h3>
               <button
                 onClick={() => {
                   setShowForm(false);
                   setEditingWallpaper(null);
-                  setFormData({ imageUrl: '', title: '', subtitle: '' });
+                  setFormData({ imageUrl: "", title: "", subtitle: "" });
                   setSelectedImage(null);
-                  setImagePreview('');
+                  setImagePreview("");
                 }}
                 className="text-gray-400 hover:text-white"
               >
@@ -354,9 +409,7 @@ export function WallpaperManagement() {
                     className="flex items-center justify-center gap-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 px-4 py-3 rounded-lg cursor-pointer transition-all"
                   >
                     <Upload className="w-5 h-5 text-purple-400" />
-                    <span className="text-purple-300">
-                      {selectedImage ? selectedImage.name : 'Choose Image'}
-                    </span>
+                    <span className="text-purple-300">{selectedImage ? selectedImage.name : "Choose Image"}</span>
                   </label>
                   {imagePreview && (
                     <img
@@ -405,16 +458,16 @@ export function WallpaperManagement() {
                   disabled={isLoading || uploadingImage}
                   className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-lg disabled:opacity-50 transition-all"
                 >
-                  {isLoading || uploadingImage ? 'Saving...' : editingWallpaper ? 'Update Wallpaper' : 'Add Wallpaper'}
+                  {isLoading || uploadingImage ? "Saving..." : editingWallpaper ? "Update Wallpaper" : "Add Wallpaper"}
                 </button>
                 <button
                   type="button"
                   onClick={() => {
                     setShowForm(false);
                     setEditingWallpaper(null);
-                    setFormData({ imageUrl: '', title: '', subtitle: '' });
+                    setFormData({ imageUrl: "", title: "", subtitle: "" });
                     setSelectedImage(null);
-                    setImagePreview('');
+                    setImagePreview("");
                   }}
                   className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-all"
                 >
@@ -455,7 +508,7 @@ export function WallpaperManagement() {
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => moveWallpaper(wallpaper.id, 'up')}
+                  onClick={() => moveWallpaper(wallpaper.id, "up")}
                   disabled={index === 0}
                   className="p-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"
                   title="Move up"
@@ -463,7 +516,7 @@ export function WallpaperManagement() {
                   <ChevronUp className="w-4 h-4 text-purple-400" />
                 </button>
                 <button
-                  onClick={() => moveWallpaper(wallpaper.id, 'down')}
+                  onClick={() => moveWallpaper(wallpaper.id, "down")}
                   disabled={index === wallpapers.length - 1}
                   className="p-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed"
                   title="Move down"
