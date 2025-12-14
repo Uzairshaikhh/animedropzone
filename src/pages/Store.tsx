@@ -440,7 +440,7 @@ export function StorePage() {
                 transition={{ duration: 0.6 }}
               >
                 <h2 className="mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
-                  Featured Products
+                  Latest Products
                 </h2>
                 <p className="text-gray-400 max-w-2xl mx-auto">
                   Discover our handpicked selection of premium anime merchandise
