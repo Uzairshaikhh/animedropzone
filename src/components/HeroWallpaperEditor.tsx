@@ -153,6 +153,61 @@ export function HeroWallpaperEditor() {
         imageUrl: imageUrl,
       });
 
+      // Check if this is a default wallpaper
+      const isDefault = currentWallpaper.id.startsWith("default_wallpaper_");
+      console.log("🔍 Is default wallpaper:", isDefault);
+
+      // For default wallpapers, save locally only
+      if (isDefault) {
+        console.log("📌 Saving default wallpaper locally only");
+
+        // Update current wallpaper state
+        const updatedWallpaper = {
+          ...currentWallpaper,
+          title: editData.title,
+          subtitle: editData.subtitle,
+          imageUrl: imageUrl,
+        };
+        setCurrentWallpaper(updatedWallpaper);
+
+        // Update in localStorage cache
+        try {
+          const cached = localStorage.getItem("cached_wallpapers");
+          if (cached) {
+            const cachedWallpapers = JSON.parse(cached);
+            const updated = cachedWallpapers.map((w: Wallpaper) =>
+              w.id === currentWallpaper.id ? updatedWallpaper : w
+            );
+            localStorage.setItem("cached_wallpapers", JSON.stringify(updated));
+            console.log("💾 Updated wallpaper in localStorage cache:", updated);
+          }
+        } catch (error) {
+          console.error("❌ Error updating localStorage:", error);
+        }
+
+        // Broadcast update to other components with the updated wallpapers
+        try {
+          const channel = new BroadcastChannel("wallpapers");
+          const cached = localStorage.getItem("cached_wallpapers");
+          const wallpapers = cached ? JSON.parse(cached) : [];
+          channel.postMessage({
+            type: "wallpaper_updated",
+            wallpapers: wallpapers,
+            id: currentWallpaper.id,
+            timestamp: Date.now(),
+          });
+          setTimeout(() => channel.close(), 100);
+        } catch (error) {
+          console.log("BroadcastChannel not available");
+        }
+
+        setIsEditing(false);
+        setSelectedImage(null);
+        setSuccessMessage("✅ Hero wallpaper updated locally!");
+        setTimeout(() => setSuccessMessage(""), 3000);
+        return;
+      }
+
       const url = `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers/${currentWallpaper.id}`;
       console.log("📍 Update URL:", url);
 

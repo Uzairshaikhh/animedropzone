@@ -34,11 +34,19 @@ export function Hero({ onShopNow }: HeroProps) {
           event.data.type === "wallpaper_deleted" ||
           event.data.type === "wallpaper_added"
         ) {
-          console.log("📡 Wallpaper update received via BroadcastChannel, refetching...");
-          // Add small delay to ensure backend is updated
-          setTimeout(() => {
-            fetchWallpapers();
-          }, 500);
+          console.log("📡 Wallpaper update received via BroadcastChannel");
+
+          // If wallpapers data is included in message, use it directly
+          if (event.data.wallpapers && event.data.wallpapers.length > 0) {
+            console.log("📡 Using wallpapers from BroadcastChannel message:", event.data.wallpapers);
+            setWallpapers(event.data.wallpapers);
+          } else {
+            // Otherwise refetch from API
+            console.log("📡 Refetching wallpapers from API...");
+            setTimeout(() => {
+              fetchWallpapers();
+            }, 500);
+          }
         }
       };
     } catch (error) {
@@ -85,21 +93,41 @@ export function Hero({ onShopNow }: HeroProps) {
           if (validWallpapers.length > 0) {
             setWallpapers(validWallpapers);
           } else {
-            console.log("⚠️ No valid wallpapers, seeding defaults...");
-            await seedDefaultWallpapers();
+            console.log("⚠️ No valid wallpapers, checking cache...");
+            const cached = localStorage.getItem("cached_wallpapers");
+            if (cached) {
+              setWallpapers(JSON.parse(cached));
+            } else {
+              await seedDefaultWallpapers();
+            }
           }
         } else {
-          // Use default wallpapers if none in database
-          console.log("⚠️ No wallpapers in database, seeding defaults...");
-          await seedDefaultWallpapers();
+          // Check cache first before seeding
+          console.log("⚠️ No wallpapers in database, checking cache...");
+          const cached = localStorage.getItem("cached_wallpapers");
+          if (cached) {
+            setWallpapers(JSON.parse(cached));
+          } else {
+            await seedDefaultWallpapers();
+          }
         }
       } else {
-        console.error("❌ Failed to fetch wallpapers:", response.status);
-        setWallpapers(getDefaultWallpapers());
+        console.error("❌ Failed to fetch wallpapers, checking cache:", response.status);
+        const cached = localStorage.getItem("cached_wallpapers");
+        if (cached) {
+          setWallpapers(JSON.parse(cached));
+        } else {
+          setWallpapers(getDefaultWallpapers());
+        }
       }
     } catch (error) {
-      console.error("❌ Error fetching wallpapers:", error);
-      setWallpapers(getDefaultWallpapers());
+      console.error("❌ Error fetching wallpapers, checking cache:", error);
+      const cached = localStorage.getItem("cached_wallpapers");
+      if (cached) {
+        setWallpapers(JSON.parse(cached));
+      } else {
+        setWallpapers(getDefaultWallpapers());
+      }
     } finally {
       setIsLoading(false);
     }

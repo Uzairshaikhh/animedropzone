@@ -311,33 +311,37 @@ export function WallpaperManagement() {
       if (editingWallpaper && isDefaultWallpaper(editingWallpaper.id)) {
         console.log("📌 Editing default wallpaper - saving locally only");
 
-        // Update in local state
-        setWallpapers(
-          wallpapers.map((w) =>
-            w.id === editingWallpaper.id
-              ? {
-                  ...w,
-                  title: formData.title,
-                  subtitle: formData.subtitle,
-                  imageUrl: imageUrl,
-                }
-              : w
-          )
+        // Create updated wallpapers array
+        const updatedWallpapers = wallpapers.map((w) =>
+          w.id === editingWallpaper.id
+            ? {
+                ...w,
+                title: formData.title,
+                subtitle: formData.subtitle,
+                imageUrl: imageUrl,
+              }
+            : w
         );
 
-        // Cache updated wallpapers
-        localStorage.setItem("cached_wallpapers", JSON.stringify(wallpapers));
+        // Update in local state
+        setWallpapers(updatedWallpapers);
+
+        // Cache updated wallpapers IMMEDIATELY (not using old state)
+        localStorage.setItem("cached_wallpapers", JSON.stringify(updatedWallpapers));
+        console.log("💾 Cached updated wallpapers:", updatedWallpapers);
 
         // Broadcast update
         try {
           const channel = new BroadcastChannel("wallpapers");
           channel.postMessage({
             type: "wallpaper_updated",
+            wallpapers: updatedWallpapers,
             timestamp: Date.now(),
           });
           setTimeout(() => {
             channel.postMessage({
               type: "wallpaper_updated",
+              wallpapers: updatedWallpapers,
               timestamp: Date.now(),
             });
             channel.close();
