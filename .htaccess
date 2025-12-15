@@ -1,0 +1,21 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  
+  # Don't rewrite files or directories
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  
+  # Rewrite all other requests to index.html for client-side routing
+  RewriteRule ^(.*)$ index.html [L]
+</IfModule>
+
+# Cache busting for assets
+<FilesMatch "\.(js|css|jpg|jpeg|png|gif|ico|svg|webp|ttf|woff|woff2)$">
+  Header set Cache-Control "max-age=31536000, public"
+</FilesMatch>
+
+# Don't cache HTML
+<FilesMatch "\.html$">
+  Header set Cache-Control "max-age=0, public, must-revalidate"
+</FilesMatch>
