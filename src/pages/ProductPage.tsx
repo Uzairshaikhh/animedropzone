@@ -293,9 +293,9 @@ export function ProductPage() {
           <div className="grid md:grid-cols-2 gap-12">
             {/* Product Images */}
             <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
-              <div className="relative">
+              <div className="relative z-10">
                 <motion.div
-                  className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur-xl opacity-50"
+                  className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur-xl opacity-50 -z-10 pointer-events-none"
                   animate={{
                     opacity: [0.5, 0.7, 0.5],
                   }}
