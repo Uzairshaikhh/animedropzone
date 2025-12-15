@@ -40,6 +40,18 @@ export function WallpaperManagement() {
     }
   }, [wallpapers]);
 
+  // Sync wallpapers to localStorage whenever they change
+  useEffect(() => {
+    if (wallpapers.length > 0) {
+      try {
+        localStorage.setItem("cached_wallpapers", JSON.stringify(wallpapers));
+        console.log("💾 Wallpapers saved to localStorage");
+      } catch (error) {
+        console.error("Error saving to localStorage:", error);
+      }
+    }
+  }, [wallpapers]);
+
   const getDefaultWallpapers = (): Wallpaper[] => [
     {
       id: "1",
@@ -159,12 +171,38 @@ export function WallpaperManagement() {
       } else {
         const errorText = await response.text();
         console.error("❌ Failed to fetch wallpapers:", response.status, errorText);
-        console.log("📍 Using local default wallpapers");
+        console.log("📍 Trying to load from cache...");
+        // Try to load from localStorage
+        try {
+          const cached = localStorage.getItem("cached_wallpapers");
+          if (cached) {
+            const cachedWallpapers = JSON.parse(cached);
+            console.log("✅ Loaded wallpapers from cache:", cachedWallpapers);
+            setWallpapers(cachedWallpapers);
+            return;
+          }
+        } catch (cacheError) {
+          console.error("Error loading from cache:", cacheError);
+        }
+        console.log("📍 Using default wallpapers");
         setWallpapers(getDefaultWallpapers());
       }
     } catch (error) {
       console.error("❌ Error fetching wallpapers:", error);
-      console.log("📍 Using local default wallpapers");
+      console.log("📍 Trying to load from cache...");
+      // Try to load from localStorage
+      try {
+        const cached = localStorage.getItem("cached_wallpapers");
+        if (cached) {
+          const cachedWallpapers = JSON.parse(cached);
+          console.log("✅ Loaded wallpapers from cache:", cachedWallpapers);
+          setWallpapers(cachedWallpapers);
+          return;
+        }
+      } catch (cacheError) {
+        console.error("Error loading from cache:", cacheError);
+      }
+      console.log("📍 Using default wallpapers");
       setWallpapers(getDefaultWallpapers());
     }
   };
@@ -309,6 +347,34 @@ export function WallpaperManagement() {
           console.log("BroadcastChannel not available");
         }
 
+        // Add wallpaper to local state immediately as fallback
+        if (!editingWallpaper) {
+          console.log("💾 Adding wallpaper to local state...");
+          const newWallpaper: Wallpaper = {
+            id: `wallpaper_${Date.now()}`,
+            imageUrl: imageUrl,
+            title: formData.title,
+            subtitle: formData.subtitle,
+            order: wallpapers.length,
+          };
+          setWallpapers([...wallpapers, newWallpaper]);
+          console.log("✅ Wallpaper added to local state:", newWallpaper);
+        } else {
+          console.log("💾 Updating wallpaper in local state...");
+          setWallpapers(
+            wallpapers.map((w) =>
+              w.id === editingWallpaper.id
+                ? {
+                    ...w,
+                    title: formData.title,
+                    subtitle: formData.subtitle,
+                    imageUrl: imageUrl,
+                  }
+                : w
+            )
+          );
+        }
+
         await fetchWallpapers();
         setShowForm(false);
         setEditingWallpaper(null);
@@ -318,7 +384,26 @@ export function WallpaperManagement() {
       } else {
         const errorText = await response.text();
         console.error("❌ Failed to save wallpaper. Status:", response.status, "Error:", errorText);
-        alert(`Error: Status ${response.status} - ${errorText || "Failed to save wallpaper"}`);
+
+        // Still add to local state as fallback even if API fails
+        console.log("💾 Adding to local state as fallback...");
+        if (!editingWallpaper) {
+          const newWallpaper: Wallpaper = {
+            id: `wallpaper_${Date.now()}`,
+            imageUrl: imageUrl,
+            title: formData.title,
+            subtitle: formData.subtitle,
+            order: wallpapers.length,
+          };
+          setWallpapers([...wallpapers, newWallpaper]);
+          setShowForm(false);
+          setFormData({ imageUrl: "", title: "", subtitle: "" });
+          setSelectedImage(null);
+          setImagePreview("");
+          alert("Wallpaper saved locally (API sync failed, but your wallpaper is saved)");
+        } else {
+          alert(`Error: Status ${response.status} - ${errorText || "Failed to save wallpaper"}`);
+        }
       }
     } catch (error) {
       console.error("❌ Error saving wallpaper:", error);
