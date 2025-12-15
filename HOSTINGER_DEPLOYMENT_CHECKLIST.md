@@ -1,6 +1,7 @@
 # Hostinger Deployment Checklist - Action Items
 
 ## STATUS: Repository Cloned ✅
+
 Your code is now on Hostinger's servers. Next steps:
 
 ---
@@ -8,55 +9,69 @@ Your code is now on Hostinger's servers. Next steps:
 ## IMMEDIATE ACTIONS REQUIRED
 
 ### Step 1: Build the Application
+
 SSH into your Hostinger account and run:
+
 ```bash
 npm install
 npm run build
 ```
 
 **What this does:**
+
 - Installs all dependencies
 - Compiles React/Vite app
 - Creates production-ready `build/` folder
 - Takes ~30-60 seconds
 
 ### Step 2: Set Up Web Root
+
 Choose ONE of these options:
 
 **Option A: Move build files to public_html (Simple)**
+
 ```bash
 # After build completes
 cp -r build/* ~/public_html/
 ```
+
 - Upload `.htaccess` file to `~/public_html/`
 - Your site is live immediately
 
 **Option B: Configure public_html path (Advanced)**
+
 - In Hostinger Control Panel → Website Settings
 - Set "Document Root" to `/path/to/build`
 - Push changes via Git for auto-deploy
 
 ### Step 3: Verify Deployment
+
 After uploading, test immediately:
 
 1. **Home Page**
+
    ```
    https://yourdomain.com
    ```
+
    Should show store homepage
 
 2. **Direct Product Link**
+
    ```
    https://yourdomain.com/product/[product-id]
    ```
+
    Should load product details (no 404)
 
 3. **Page Refresh Test**
+
    - Go to any product page
    - Press F5 (hard refresh)
    - Should stay on same page (no 404)
 
 4. **Browser Console Check**
+
    - Press F12 → Console tab
    - Should have NO red errors
    - Check for missing Supabase config
@@ -71,15 +86,19 @@ After uploading, test immediately:
 ## CONFIGURATION FILES READY
 
 ### .htaccess
+
 ✅ Already in repository - handles routing
+
 - Redirects all requests to `index.html`
 - Enables proper caching
 - Must be in web root
 
 ### Environment Variables
+
 ⚠️ MUST SET IN HOSTINGER
 
 Add these in Hostinger Control Panel or .env file:
+
 ```
 VITE_SUPABASE_URL=your_actual_supabase_url
 VITE_SUPABASE_ANON_KEY=your_actual_anon_key
@@ -92,21 +111,25 @@ Without these, the app won't connect to your database!
 ## TROUBLESHOOTING DURING DEPLOYMENT
 
 **Problem:** Nothing appears, blank page
+
 - [ ] Check if `build/` folder is in web root
 - [ ] Verify `index.html` exists in root
 - [ ] Check F12 console for errors
 
 **Problem:** 404 errors on page refresh
+
 - [ ] Confirm `.htaccess` is uploaded
 - [ ] Verify `mod_rewrite` is enabled (Hostinger support)
 - [ ] Check that rewrite rule syntax is correct
 
 **Problem:** Images/CSS not loading
+
 - [ ] Open DevTools (F12)
 - [ ] Check Network tab for 404s
 - [ ] Verify asset paths in console
 
 **Problem:** "Cannot connect to database"
+
 - [ ] Set VITE_SUPABASE_URL correctly
 - [ ] Set VITE_SUPABASE_ANON_KEY correctly
 - [ ] Rebuild after setting vars: `npm run build`
