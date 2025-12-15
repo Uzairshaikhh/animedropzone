@@ -38,6 +38,7 @@ import { PaymentManagement } from "../components/PaymentManagement";
 import { AdminSupport } from "../components/AdminSupport";
 import { CategoryManagement } from "../components/CategoryManagement";
 import { WallpaperManagement } from "../components/WallpaperManagement";
+import { HeroWallpaperEditor } from "../components/HeroWallpaperEditor";
 import { AdminStorageFix } from "../components/AdminStorageFix";
 import { EmailSetup } from "../components/EmailSetup";
 import { UserManagement } from "../components/UserManagement";
@@ -1472,7 +1473,12 @@ export function AdminPage() {
                   <CategoryManagement />
                 ) : activeTab === "wallpapers" ? (
                   // Wallpaper Management
-                  <WallpaperManagement />
+                  <div className="space-y-8">
+                    <HeroWallpaperEditor />
+                    <div className="border-t border-gray-700 pt-8">
+                      <WallpaperManagement />
+                    </div>
+                  </div>
                 ) : activeTab === "email" ? (
                   // Email Setup
                   <EmailSetup />
