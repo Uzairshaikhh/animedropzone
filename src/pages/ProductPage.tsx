@@ -193,6 +193,27 @@ export function ProductPage() {
     navigate("/");
   };
 
+  const handleBack = () => {
+    const productRoute = `/product/${id}`;
+    let prevRoute: string | null = null;
+    try {
+      prevRoute = sessionStorage.getItem("prevRoute");
+    } catch {}
+
+    // Prefer stored previous route if valid and different from current product route
+    if (prevRoute && prevRoute !== productRoute) {
+      navigate(prevRoute);
+      return;
+    }
+
+    // Otherwise, use history back when possible; fallback to home
+    if (window.history.length > 2) {
+      navigate(-1);
+    } else {
+      navigate("/");
+    }
+  };
+
   const handleUpdateQuantity = (productId: string, newQuantity: number) => {
     setCartItems((prev) => prev.map((item) => (item.id === productId ? { ...item, quantity: newQuantity } : item)));
   };
@@ -257,7 +278,7 @@ export function ProductPage() {
         {/* Back Button */}
         <div className="max-w-7xl mx-auto px-4 py-6">
           <motion.button
-            onClick={() => navigate("/")}
+            onClick={handleBack}
             className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
             whileHover={{ x: -5 }}
           >

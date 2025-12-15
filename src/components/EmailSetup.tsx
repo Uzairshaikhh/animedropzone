@@ -131,7 +131,7 @@ export function EmailSetup() {
             )}
 
             {/* Setup Instructions */}
-            {(!isConfigured || showInstructions) && (
+            {!isConfigured || showInstructions ? (
               <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4 space-y-4">
                 <div>
                   <h4 className="text-white mb-3 flex items-center gap-2">
@@ -354,7 +354,7 @@ export function EmailSetup() {
                   </p>
                 </div>
               </div>
-            )}
+            ) : null}
 
             {/* Check Status Button */}
             <button
@@ -376,7 +376,7 @@ export function EmailSetup() {
             </button>
 
             {/* Send Test Email Button */}
-            {isConfigured && (
+            {isConfigured ? (
               <button
                 onClick={sendTestEmail}
                 disabled={sendingTest}
@@ -394,10 +394,10 @@ export function EmailSetup() {
                   </>
                 )}
               </button>
-            )}
+            ) : null}
 
             {/* Test Email Result */}
-            {testResult && (
+            {testResult ? (
               <div
                 className={`border rounded-lg p-4 ${
                   testResult.success ? "bg-green-900/20 border-green-500/30" : "bg-red-900/20 border-red-500/30"
@@ -413,11 +413,13 @@ export function EmailSetup() {
                     <p className={testResult.success ? "text-green-400" : "text-red-400"}>
                       {testResult.message || "Sending test email..."}
                     </p>
-                    {testResult.error && <p className="text-gray-400 text-sm mt-1">Error: {testResult.error}</p>}
+                    {testResult.error ? (
+                      <p className="text-gray-400 text-sm mt-1">Error: {testResult.error}</p>
+                    ) : null}
                   </div>
                 </div>
               </div>
-            )}
+            ) : null}
           </div>
         )}
       </div>

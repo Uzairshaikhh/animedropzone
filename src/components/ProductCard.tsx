@@ -1,6 +1,6 @@
 import { ShoppingCart, Star, Eye, Heart } from "lucide-react";
 import { motion } from "motion/react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export interface Product {
   id: string;
@@ -29,6 +29,7 @@ export function ProductCard({
   onToggleWishlist,
 }: ProductCardProps) {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const imageUrl =
     product.images?.[0] ||
@@ -36,6 +37,11 @@ export function ProductCard({
     "https://images.unsplash.com/photo-1763771757355-4c0441df34ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhbmltZSUyMG1lcmNoYW5kaXNlfGVufDF8fHx8MTc2NTE4ODk3OXww&ixlib=rb-4.1.0&q=80&w=1080";
 
   const handleViewDetails = () => {
+    try {
+      const currentPath = location.pathname + location.search;
+      // Save previous route for smarter back navigation
+      sessionStorage.setItem("prevRoute", currentPath);
+    } catch {}
     navigate(`/product/${product.id}`);
   };
 

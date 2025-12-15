@@ -515,19 +515,18 @@ export function WallpaperManagement() {
               whileHover={{ borderColor: "rgba(192, 132, 250, 0.7)" }}
             >
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                {/* Wallpaper Preview */}
                 <div className="flex-shrink-0 w-full sm:w-32">
                   <img
                     src={wallpaper.imageUrl}
                     alt={wallpaper.title}
                     className="w-full sm:w-32 h-20 object-cover rounded-lg border border-purple-500/30"
                     onError={(e) => {
-                      e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='60'%3E%3Crect fill='%23333' width='100' height='60'/%3E%3C/svg%3E";
+                      e.currentTarget.src =
+                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='60'%3E%3Crect fill='%23333' width='100' height='60'/%3E%3C/svg%3E";
                     }}
                   />
                 </div>
 
-                {/* Wallpaper Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
@@ -540,50 +539,48 @@ export function WallpaperManagement() {
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-              <div className="flex gap-2 items-center">
-                {/* Reorder Buttons */}
-                <div className="flex gap-1 border-r border-gray-600 pr-2">
-                  <button
-                    onClick={() => moveWallpaper(wallpaper.id, "up")}
-                    disabled={index === 0}
-                    className="p-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                    title="Move up in order"
+                <div className="flex gap-2 items-center">
+                  <div className="flex gap-1 border-r border-gray-600 pr-2">
+                    <button
+                      onClick={() => moveWallpaper(wallpaper.id, "up")}
+                      disabled={index === 0}
+                      className="p-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                      title="Move up in order"
+                    >
+                      <ChevronUp className="w-4 h-4 text-purple-400" />
+                    </button>
+                    <button
+                      onClick={() => moveWallpaper(wallpaper.id, "down")}
+                      disabled={index === wallpapers.length - 1}
+                      className="p-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                      title="Move down in order"
+                    >
+                      <ChevronDown className="w-4 h-4 text-purple-400" />
+                    </button>
+                  </div>
+
+                  <motion.button
+                    onClick={() => handleEdit(wallpaper)}
+                    className="flex items-center gap-2 px-3 py-2 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/50 hover:border-blue-400 rounded-lg transition-all"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="Edit this wallpaper"
                   >
-                    <ChevronUp className="w-4 h-4 text-purple-400" />
-                  </button>
-                  <button
-                    onClick={() => moveWallpaper(wallpaper.id, "down")}
-                    disabled={index === wallpapers.length - 1}
-                    className="p-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 rounded-lg disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                    title="Move down in order"
+                    <Edit2 className="w-4 h-4 text-blue-400" />
+                    <span className="text-xs text-blue-400 font-medium">Edit</span>
+                  </motion.button>
+
+                  <motion.button
+                    onClick={() => handleDelete(wallpaper.id)}
+                    className="flex items-center gap-2 px-3 py-2 bg-red-600/20 hover:bg-red-600/40 border border-red-500/50 hover:border-red-400 rounded-lg transition-all"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="Delete this wallpaper"
                   >
-                    <ChevronDown className="w-4 h-4 text-purple-400" />
-                  </button>
+                    <Trash2 className="w-4 h-4 text-red-400" />
+                    <span className="text-xs text-red-400 font-medium">Remove</span>
+                  </motion.button>
                 </div>
-                
-                {/* Edit/Delete Buttons */}
-                <motion.button
-                  onClick={() => handleEdit(wallpaper)}
-                  className="flex items-center gap-2 px-3 py-2 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/50 hover:border-blue-400 rounded-lg transition-all"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  title="Edit this wallpaper"
-                >
-                  <Edit2 className="w-4 h-4 text-blue-400" />
-                  <span className="text-xs text-blue-400 font-medium">Edit</span>
-                </motion.button>
-                
-                <motion.button
-                  onClick={() => handleDelete(wallpaper.id)}
-                  className="flex items-center gap-2 px-3 py-2 bg-red-600/20 hover:bg-red-600/40 border border-red-500/50 hover:border-red-400 rounded-lg transition-all"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  title="Delete this wallpaper"
-                >
-                  <Trash2 className="w-4 h-4 text-red-400" />
-                  <span className="text-xs text-red-400 font-medium">Remove</span>
-                </motion.button>
               </div>
             </motion.div>
           ))
