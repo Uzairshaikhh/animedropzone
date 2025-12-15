@@ -25,42 +25,50 @@ export function Hero({ onShopNow }: HeroProps) {
     fetchWallpapers();
 
     // Listen for wallpaper updates via BroadcastChannel
+    let channel: BroadcastChannel | null = null;
     try {
-      const channel = new BroadcastChannel("wallpapers");
+      channel = new BroadcastChannel("wallpapers");
       channel.onmessage = (event) => {
         if (
           event.data.type === "wallpaper_updated" ||
           event.data.type === "wallpaper_deleted" ||
           event.data.type === "wallpaper_added"
         ) {
-          console.log("📡 Wallpaper update received, refetching...");
-          fetchWallpapers();
+          console.log("📡 Wallpaper update received via BroadcastChannel, refetching...");
+          // Add small delay to ensure backend is updated
+          setTimeout(() => {
+            fetchWallpapers();
+          }, 500);
         }
       };
-
-      return () => channel.close();
     } catch (error) {
       console.log("BroadcastChannel not available, using polling only");
     }
-  }, []);
 
-  // Poll for wallpaper updates every 10 seconds as fallback
-  useEffect(() => {
+    // Poll for wallpaper updates every 5 seconds as fallback (more aggressive)
     const pollInterval = setInterval(() => {
+      console.log("🔄 Polling for wallpaper updates...");
       fetchWallpapers();
-    }, 10000);
+    }, 5000);
 
-    return () => clearInterval(pollInterval);
+    return () => {
+      if (channel) channel.close();
+      clearInterval(pollInterval);
+    };
   }, []);
 
   const fetchWallpapers = async () => {
     try {
       console.log("🔵 Fetching wallpapers from database...");
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers`, {
-        headers: {
-          Authorization: `Bearer ${publicAnonKey}`,
-        },
-      });
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers?t=${Date.now()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+            "Cache-Control": "no-cache",
+          },
+        }
+      );
 
       console.log("📡 Wallpaper fetch response status:", response.status);
 

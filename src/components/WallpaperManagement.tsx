@@ -180,14 +180,21 @@ export function WallpaperManagement() {
 
         alert("Wallpaper saved successfully! ✅");
 
-        // Broadcast wallpaper update to other components
+        // Broadcast wallpaper update to other components (multiple times for reliability)
         try {
           const channel = new BroadcastChannel("wallpapers");
           channel.postMessage({
             type: editingWallpaper ? "wallpaper_updated" : "wallpaper_added",
             timestamp: Date.now(),
           });
-          channel.close();
+          // Send message twice with small delay for reliability
+          setTimeout(() => {
+            channel.postMessage({
+              type: editingWallpaper ? "wallpaper_updated" : "wallpaper_added",
+              timestamp: Date.now(),
+            });
+            channel.close();
+          }, 100);
         } catch (error) {
           console.log("BroadcastChannel not available");
         }
@@ -237,7 +244,7 @@ export function WallpaperManagement() {
       );
 
       if (response.ok) {
-        // Broadcast wallpaper deletion to other components
+        // Broadcast wallpaper deletion to other components (multiple times for reliability)
         try {
           const channel = new BroadcastChannel("wallpapers");
           channel.postMessage({
@@ -245,7 +252,15 @@ export function WallpaperManagement() {
             id,
             timestamp: Date.now(),
           });
-          channel.close();
+          // Send message twice with small delay for reliability
+          setTimeout(() => {
+            channel.postMessage({
+              type: "wallpaper_deleted",
+              id,
+              timestamp: Date.now(),
+            });
+            channel.close();
+          }, 100);
         } catch (error) {
           console.log("BroadcastChannel not available");
         }
