@@ -319,16 +319,18 @@ export function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.9 }}
             >
-              <motion.a
-                href="#shop"
-                className="group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-8 py-4 rounded-lg flex items-center gap-2 transition-all shadow-lg shadow-purple-900/50 hover:shadow-purple-900/70"
-                onClick={scrollToShop}
+              <motion.button
+                onClick={(e) => {
+                  e.preventDefault();
+                  scrollToShop();
+                }}
+                className="group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-8 py-4 rounded-lg flex items-center gap-2 transition-all shadow-lg shadow-purple-900/50 hover:shadow-purple-900/70 cursor-pointer"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <span className="text-lg">Shop Now</span>
                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </motion.a>
+              </motion.button>
               <motion.a
                 href="#categories"
                 className="bg-white/10 hover:bg-white/20 border border-white/30 hover:border-white/50 px-8 py-4 rounded-lg transition-all backdrop-blur-sm text-lg"
