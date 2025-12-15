@@ -621,6 +621,10 @@ export function ProductPage() {
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveItem={handleRemoveItem}
         onCheckout={handleCheckout}
+        onProductClick={(product) => {
+          setIsCartOpen(false);
+          navigate(`/product/${product.id}`);
+        }}
       />
 
       <UserAuth

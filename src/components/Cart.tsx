@@ -1,6 +1,6 @@
-import { X, Plus, Minus, Trash2, CreditCard } from 'lucide-react';
-import { Product } from './ProductCard';
-import { motion, AnimatePresence } from 'motion/react';
+import { X, Plus, Minus, Trash2, CreditCard } from "lucide-react";
+import { Product } from "./ProductCard";
+import { motion, AnimatePresence } from "motion/react";
 
 interface CartItem extends Product {
   quantity: number;
@@ -13,24 +13,33 @@ interface CartProps {
   onUpdateQuantity: (id: string, quantity: number) => void;
   onRemoveItem: (id: string) => void;
   onCheckout: () => void;
+  onProductClick?: (product: Product) => void;
 }
 
-export function Cart({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem, onCheckout }: CartProps) {
+export function Cart({
+  isOpen,
+  onClose,
+  items,
+  onUpdateQuantity,
+  onRemoveItem,
+  onCheckout,
+  onProductClick,
+}: CartProps) {
   const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <motion.div 
-            className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
+          <motion.div
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             onClick={onClose}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
           ></motion.div>
-          <motion.div 
+          <motion.div
             className="relative bg-gradient-to-br from-black to-purple-900/20 border border-purple-500/30 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl shadow-purple-900/50 m-4"
             initial={{ opacity: 0, scale: 0.9, y: 50 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -39,8 +48,8 @@ export function Cart({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem, o
           >
             <div className="flex items-center justify-between p-6 border-b border-purple-500/30">
               <h2 className="text-white">Shopping Cart</h2>
-              <motion.button 
-                onClick={onClose} 
+              <motion.button
+                onClick={onClose}
                 className="text-gray-400 hover:text-white transition-colors"
                 whileHover={{ rotate: 90, scale: 1.1 }}
                 transition={{ duration: 0.3 }}
@@ -51,7 +60,7 @@ export function Cart({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem, o
 
             <div className="overflow-y-auto max-h-[calc(90vh-220px)] p-6">
               {items.length === 0 ? (
-                <motion.div 
+                <motion.div
                   className="text-center py-12"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -72,15 +81,35 @@ export function Cart({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem, o
                         transition={{ duration: 0.3, delay: index * 0.05 }}
                         layout
                       >
-                        <motion.img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-24 h-24 object-cover rounded-lg"
-                          whileHover={{ scale: 1.1, rotate: 5 }}
+                        <motion.button
+                          onClick={() => {
+                            if (onProductClick) {
+                              onProductClick(item);
+                            }
+                          }}
+                          className="flex-shrink-0 group cursor-pointer"
+                          whileHover={{ scale: 1.05 }}
                           transition={{ duration: 0.3 }}
-                        />
+                        >
+                          <motion.img
+                            src={item.image}
+                            alt={item.name}
+                            className="w-24 h-24 object-cover rounded-lg group-hover:opacity-75 transition-opacity"
+                            whileHover={{ scale: 1.1, rotate: 5 }}
+                            transition={{ duration: 0.3 }}
+                          />
+                        </motion.button>
                         <div className="flex-1">
-                          <h4 className="text-white mb-1">{item.name}</h4>
+                          <motion.button
+                            onClick={() => {
+                              if (onProductClick) {
+                                onProductClick(item);
+                              }
+                            }}
+                            className="text-white hover:text-purple-400 transition-colors mb-1 block text-left font-medium"
+                          >
+                            {item.name}
+                          </motion.button>
                           <p className="text-purple-400 mb-2">₹{item.price.toLocaleString()}</p>
                           <div className="flex items-center gap-2">
                             <motion.button
@@ -91,11 +120,11 @@ export function Cart({ isOpen, onClose, items, onUpdateQuantity, onRemoveItem, o
                             >
                               <Minus className="w-4 h-4" />
                             </motion.button>
-                            <motion.span 
+                            <motion.span
                               className="text-white w-8 text-center"
                               key={item.quantity}
-                              initial={{ scale: 1.5, color: '#ec4899' }}
-                              animate={{ scale: 1, color: '#ffffff' }}
+                              initial={{ scale: 1.5, color: "#ec4899" }}
+                              animate={{ scale: 1, color: "#ffffff" }}
                               transition={{ duration: 0.3 }}
                             >
                               {item.quantity}

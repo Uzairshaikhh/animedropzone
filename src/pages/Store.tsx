@@ -297,6 +297,9 @@ export function StorePage() {
     } else {
       showToast(`${product.name} added to cart!`, "success", 3000);
     }
+
+    // Open cart automatically to show the added product
+    setIsCartOpen(true);
   };
 
   const handleUpdateQuantity = (id: string, quantity: number) => {
@@ -632,6 +635,10 @@ export function StorePage() {
         onUpdateQuantity={handleUpdateQuantity}
         onRemoveItem={handleRemoveItem}
         onCheckout={handleCheckout}
+        onProductClick={(product) => {
+          setIsCartOpen(false);
+          navigate(`/product/${product.id}`);
+        }}
       />
 
       <Wishlist
