@@ -316,9 +316,9 @@ export function WallpaperManagement() {
         setSelectedImage(null);
         setImagePreview("");
       } else {
-        const errorData = await response.json();
-        console.error("❌ Failed to save wallpaper:", errorData);
-        alert(`Failed to save wallpaper: ${errorData.error || "Unknown error"}`);
+        const errorText = await response.text();
+        console.error("❌ Failed to save wallpaper. Status:", response.status, "Error:", errorText);
+        alert(`Error: Status ${response.status} - ${errorText || "Failed to save wallpaper"}`);
       }
     } catch (error) {
       console.error("❌ Error saving wallpaper:", error);
@@ -343,6 +343,7 @@ export function WallpaperManagement() {
     if (!confirm("Are you sure you want to delete this wallpaper?")) return;
 
     try {
+      console.log("🗑️ Deleting wallpaper:", id);
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers/${id}`,
         {
@@ -353,7 +354,10 @@ export function WallpaperManagement() {
         }
       );
 
+      console.log("📡 Delete response status:", response.status);
+
       if (response.ok) {
+        console.log("✅ Wallpaper deleted successfully!");
         // Broadcast wallpaper deletion to other components (multiple times for reliability)
         try {
           const channel = new BroadcastChannel("wallpapers");
@@ -377,11 +381,13 @@ export function WallpaperManagement() {
 
         await fetchWallpapers();
       } else {
-        alert("Failed to delete wallpaper");
+        const errorText = await response.text();
+        console.error("❌ Failed to delete wallpaper. Status:", response.status, "Error:", errorText);
+        alert(`Error: Status ${response.status} - ${errorText || "Failed to delete wallpaper"}`);
       }
     } catch (error) {
       console.error("Error deleting wallpaper:", error);
-      alert("Error deleting wallpaper");
+      alert(`Error deleting wallpaper: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
   };
 

@@ -80,6 +80,7 @@ export function HeroWallpaperEditor() {
     formDataObj.append("file", selectedImage);
 
     try {
+      console.log("📸 Uploading image:", selectedImage.name);
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/upload-wallpaper`,
         {
@@ -91,13 +92,21 @@ export function HeroWallpaperEditor() {
         }
       );
 
+      console.log("📡 Upload response status:", response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log("✅ Image uploaded successfully:", data.imageUrl);
         setEditData({ ...editData, imageUrl: data.imageUrl });
         return data.imageUrl;
+      } else {
+        const errorText = await response.text();
+        console.error("❌ Failed to upload image. Status:", response.status, "Error:", errorText);
+        alert(`Image upload failed: Status ${response.status} - ${errorText || "Unknown error"}`);
       }
     } catch (error) {
       console.error("❌ Error uploading image:", error);
+      alert(`Error uploading image: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setUploadingImage(false);
     }
@@ -118,6 +127,12 @@ export function HeroWallpaperEditor() {
         }
       }
 
+      console.log("💾 Saving wallpaper with data:", {
+        id: currentWallpaper.id,
+        title: editData.title,
+        subtitle: editData.subtitle,
+      });
+
       // Update the wallpaper
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers/${currentWallpaper.id}`,
@@ -134,6 +149,8 @@ export function HeroWallpaperEditor() {
           }),
         }
       );
+
+      console.log("📡 Update response status:", response.status);
 
       if (response.ok) {
         console.log("✅ Wallpaper updated successfully!");
@@ -162,13 +179,13 @@ export function HeroWallpaperEditor() {
         setSuccessMessage("✅ Hero wallpaper updated successfully!");
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
-        const errorData = await response.json();
-        console.error("❌ Failed to update wallpaper:", errorData);
-        alert(`Error: ${errorData.error || "Failed to update wallpaper"}`);
+        const errorText = await response.text();
+        console.error("❌ Failed to update wallpaper. Status:", response.status, "Error:", errorText);
+        alert(`Error: Status ${response.status} - ${errorText || "Failed to update wallpaper"}`);
       }
     } catch (error) {
       console.error("❌ Error saving wallpaper:", error);
-      alert("Error saving wallpaper");
+      alert(`Error saving wallpaper: ${error instanceof Error ? error.message : "Unknown error"}`);
     } finally {
       setIsSaving(false);
     }
