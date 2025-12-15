@@ -28,6 +28,8 @@ export function WallpaperManagement() {
 
   useEffect(() => {
     fetchWallpapers();
+    // Load default wallpapers immediately as fallback
+    setWallpapers(getDefaultWallpapers());
   }, []);
 
   useEffect(() => {
@@ -87,29 +89,39 @@ export function WallpaperManagement() {
       const defaults = getDefaultWallpapers();
 
       for (const wallpaper of defaults) {
-        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${publicAnonKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            imageUrl: wallpaper.imageUrl,
-            title: wallpaper.title,
-            subtitle: wallpaper.subtitle,
-          }),
-        });
+        try {
+          const response = await fetch(
+            `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${publicAnonKey}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                imageUrl: wallpaper.imageUrl,
+                title: wallpaper.title,
+                subtitle: wallpaper.subtitle,
+              }),
+            }
+          );
 
-        if (response.ok) {
-          console.log(`✅ Seeded wallpaper: ${wallpaper.title}`);
-        } else {
-          console.error(`❌ Failed to seed wallpaper: ${wallpaper.title}`);
+          if (response.ok) {
+            console.log(`✅ Seeded wallpaper: ${wallpaper.title}`);
+          } else {
+            const error = await response.text();
+            console.error(`❌ Failed to seed wallpaper: ${wallpaper.title}`, error);
+          }
+        } catch (itemError) {
+          console.error(`❌ Error seeding ${wallpaper.title}:`, itemError);
         }
       }
 
-      // Fetch again after seeding
+      // Fetch again after seeding with a delay
       console.log("🔄 Re-fetching wallpapers after seeding...");
-      await fetchWallpapers();
+      setTimeout(() => {
+        fetchWallpapers();
+      }, 1000);
     } catch (error) {
       console.error("❌ Error seeding wallpapers:", error);
     }
