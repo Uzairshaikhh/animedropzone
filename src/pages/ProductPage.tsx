@@ -11,6 +11,7 @@ import {
   CreditCard,
   ChevronDown,
   ChevronUp,
+  ImagePlus,
 } from "lucide-react";
 import { Navbar } from "../components/Navbar";
 import { FloatingParticles } from "../components/FloatingParticles";
@@ -48,6 +49,7 @@ export function ProductPage() {
   const [quantity, setQuantity] = useState(1);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [pendingCheckout, setPendingCheckout] = useState(false);
+  const [showImageSelector, setShowImageSelector] = useState(false);
   const slideTimer = useRef<number | null>(null);
 
   useEffect(() => {
@@ -356,9 +358,22 @@ export function ProductPage() {
                 </div>
                 {/* Thumbnail Gallery Slider */}
                 <div className="mt-6 pt-4 border-t border-purple-500/20">
-                  <p className="text-gray-400 text-sm mb-3">
-                    Product Images {safeGallery.length > 1 && `(${safeGallery.length} available)`}
-                  </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-gray-400 text-sm">
+                      Product Images {safeGallery.length > 1 && `(${safeGallery.length} available)`}
+                    </p>
+                    {safeGallery.length > 1 && (
+                      <motion.button
+                        onClick={() => setShowImageSelector(!showImageSelector)}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-purple-600/50 hover:bg-purple-600 border border-purple-500/50 rounded-lg text-purple-300 hover:text-white text-sm transition-all"
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        <ImagePlus className="w-4 h-4" />
+                        Select Image
+                      </motion.button>
+                    )}
+                  </div>
                   <div className="flex gap-3 overflow-x-auto pb-2">
                     {safeGallery.map((img, idx) => (
                       <button
@@ -380,6 +395,49 @@ export function ProductPage() {
                       </button>
                     ))}
                   </div>
+
+                  {/* Image Selector Dropdown */}
+                  {showImageSelector && safeGallery.length > 1 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="mt-4 p-4 bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-lg"
+                    >
+                      <p className="text-gray-300 text-sm font-semibold mb-3">Choose an image:</p>
+                      <div className="grid grid-cols-3 gap-3">
+                        {safeGallery.map((img, idx) => (
+                          <motion.button
+                            key={`selector-${idx}-${img.substring(0, 20)}`}
+                            onClick={() => {
+                              setSelectedImage(idx);
+                              setShowImageSelector(false);
+                            }}
+                            className={`relative rounded-lg overflow-hidden border-2 transition-all h-28 ${
+                              selectedImage === idx
+                                ? "border-purple-400 ring-2 ring-purple-400 scale-105"
+                                : "border-purple-500/30 hover:border-purple-400"
+                            }`}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <img src={img} alt={`Image ${idx + 1}`} className="w-full h-full object-cover" />
+                            {selectedImage === idx && (
+                              <div className="absolute inset-0 bg-purple-600/20 flex items-center justify-center">
+                                <div className="bg-purple-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+                                  ✓
+                                </div>
+                              </div>
+                            )}
+                            <div className="absolute bottom-1 right-1 bg-black/70 text-purple-300 text-xs px-2 py-1 rounded">
+                              {idx + 1}
+                            </div>
+                          </motion.button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
                 </div>
               </div>
 
