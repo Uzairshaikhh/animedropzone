@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { useToast } from "../contexts/ToastContext";
+import { useCart } from "../contexts/CartContext";
 import { Package, Swords, Sparkles, Image, Shirt, Bookmark, type LucideIcon } from "lucide-react";
 import { Navbar } from "../components/Navbar";
 import { Hero } from "../components/Hero";
@@ -97,9 +98,8 @@ export function StorePage() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const { cartItems, addToCart, removeFromCart, updateQuantity, isCartOpen, setIsCartOpen } = useCart();
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isUserAuthOpen, setIsUserAuthOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -282,32 +282,13 @@ export function StorePage() {
   };
 
   const handleAddToCart = (product: Product) => {
+    addToCart(product);
     const existing = cartItems.find((item) => item.id === product.id);
-
-    setCartItems((prev) => {
-      if (existing) {
-        return prev.map((item) => (item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item));
-      }
-      return [...prev, { ...product, quantity: 1 }];
-    });
-
-    // Show toast after state update
     if (existing) {
       showToast(`Added another ${product.name} to cart!`, "success", 3000);
     } else {
       showToast(`${product.name} added to cart!`, "success", 3000);
     }
-
-    // Open cart automatically to show the added product
-    setIsCartOpen(true);
-  };
-
-  const handleUpdateQuantity = (id: string, quantity: number) => {
-    setCartItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity } : item)));
-  };
-
-  const handleRemoveItem = (id: string) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
   };
 
   const handleCheckout = () => {
@@ -332,7 +313,7 @@ export function StorePage() {
   };
 
   const handleCheckoutSuccess = () => {
-    setCartItems([]);
+    // Cart will be cleared by checkout modal's clearCart
     setIsCheckoutOpen(false);
   };
 
@@ -632,8 +613,8 @@ export function StorePage() {
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         items={cartItems}
-        onUpdateQuantity={handleUpdateQuantity}
-        onRemoveItem={handleRemoveItem}
+        onUpdateQuantity={updateQuantity}
+        onRemoveItem={removeFromCart}
         onCheckout={handleCheckout}
         onProductClick={(product) => {
           setIsCartOpen(false);

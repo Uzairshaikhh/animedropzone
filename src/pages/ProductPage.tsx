@@ -20,12 +20,10 @@ import { UserAuth } from "../components/UserAuth";
 import { CheckoutModal } from "../components/CheckoutModal";
 import { Product } from "../components/ProductCard";
 import { ProductReviews } from "../components/ProductReviews";
+import { useToast } from "../contexts/ToastContext";
+import { useCart } from "../contexts/CartContext";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
 import { supabase } from "../utils/supabase/client";
-
-interface CartItem extends Product {
-  quantity: number;
-}
 
 interface Review {
   id: string;
@@ -40,8 +38,8 @@ export function ProductPage() {
   const navigate = useNavigate();
   const [product, setProduct] = useState<Product | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const { cartItems, addToCart, removeFromCart, updateQuantity, isCartOpen, setIsCartOpen } = useCart();
+  const { showToast } = useToast();
   const [isUserAuthOpen, setIsUserAuthOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
@@ -155,14 +153,8 @@ export function ProductPage() {
 
   const handleAddToCart = () => {
     if (!product) return;
-
-    setCartItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
-      if (existing) {
-        return prev.map((item) => (item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item));
-      }
-      return [...prev, { ...product, quantity }];
-    });
+    addToCart(product);
+    showToast(`${product.name} added to cart!`, "success", 3000);
   };
 
   const handleOrderNow = () => {
@@ -176,8 +168,7 @@ export function ProductPage() {
     }
 
     // Add to cart and immediately checkout
-    const newCartItems = [{ ...product, quantity }];
-    setCartItems(newCartItems);
+    addToCart(product);
     setIsCheckoutOpen(true);
   };
 
@@ -190,7 +181,7 @@ export function ProductPage() {
   };
 
   const handleCheckoutSuccess = () => {
-    setCartItems([]);
+    // Cart will be cleared by checkout modal
     setIsCheckoutOpen(false);
     navigate("/");
   };
@@ -214,14 +205,6 @@ export function ProductPage() {
     } else {
       navigate("/");
     }
-  };
-
-  const handleUpdateQuantity = (productId: string, newQuantity: number) => {
-    setCartItems((prev) => prev.map((item) => (item.id === productId ? { ...item, quantity: newQuantity } : item)));
-  };
-
-  const handleRemoveItem = (productId: string) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== productId));
   };
 
   const handleCheckout = () => {
@@ -618,8 +601,8 @@ export function ProductPage() {
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         items={cartItems}
-        onUpdateQuantity={handleUpdateQuantity}
-        onRemoveItem={handleRemoveItem}
+        onUpdateQuantity={updateQuantity}
+        onRemoveItem={removeFromCart}
         onCheckout={handleCheckout}
         onProductClick={(product) => {
           setIsCartOpen(false);

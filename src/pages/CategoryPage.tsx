@@ -10,12 +10,10 @@ import { UserAuth } from "../components/UserAuth";
 import { CheckoutModal } from "../components/CheckoutModal";
 import { SubcategoryModal } from "../components/SubcategoryModal";
 import { CustomClothingModal } from "../components/CustomClothingModal";
+import { useToast } from "../contexts/ToastContext";
+import { useCart } from "../contexts/CartContext";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
 import { supabase } from "../utils/supabase/client";
-
-interface CartItem extends Product {
-  quantity: number;
-}
 
 const categoryIcons: { [key: string]: any } = {
   figures: Package,
@@ -112,8 +110,8 @@ export function CategoryPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  const { cartItems, addToCart, removeFromCart, updateQuantity, isCartOpen, setIsCartOpen } = useCart();
+  const { showToast } = useToast();
   const [isUserAuthOpen, setIsUserAuthOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isSubcategoryModalOpen, setIsSubcategoryModalOpen] = useState(false);
@@ -221,21 +219,8 @@ export function CategoryPage() {
   };
 
   const handleAddToCart = (product: Product) => {
-    setCartItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
-      if (existing) {
-        return prev.map((item) => (item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item));
-      }
-      return [...prev, { ...product, quantity: 1 }];
-    });
-  };
-
-  const handleUpdateQuantity = (id: string, quantity: number) => {
-    setCartItems((prev) => prev.map((item) => (item.id === id ? { ...item, quantity } : item)));
-  };
-
-  const handleRemoveItem = (id: string) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
+    addToCart(product);
+    showToast(`${product.name} added to cart!`, "success", 3000);
   };
 
   const handleCheckout = () => {
@@ -258,7 +243,7 @@ export function CategoryPage() {
   };
 
   const handleCheckoutSuccess = () => {
-    setCartItems([]);
+    // Cart will be cleared by checkout modal
     setIsCheckoutOpen(false);
   };
 
@@ -477,8 +462,8 @@ export function CategoryPage() {
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         items={cartItems}
-        onUpdateQuantity={handleUpdateQuantity}
-        onRemoveItem={handleRemoveItem}
+        onUpdateQuantity={updateQuantity}
+        onRemoveItem={removeFromCart}
         onCheckout={handleCheckout}
         onProductClick={(product) => {
           setIsCartOpen(false);

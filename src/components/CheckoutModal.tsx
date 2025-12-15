@@ -4,6 +4,7 @@ import { Product } from "./ProductCard";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
 import { OrderSuccessModal } from "./OrderSuccessModal";
 import { useToast } from "../contexts/ToastContext";
+import { useCart } from "../contexts/CartContext";
 import { supabase } from "../utils/supabase/client";
 
 interface CartItem extends Product {
@@ -27,6 +28,7 @@ declare global {
 
 export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }: CheckoutModalProps) {
   const { success } = useToast();
+  const { clearCart } = useCart();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -115,6 +117,7 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
           isPrepaid: isPrepaid,
         });
         setShowOrderSuccessModal(true);
+        clearCart(); // Clear cart from context
         onSuccess();
         onClose();
       }
