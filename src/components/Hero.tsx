@@ -11,7 +11,11 @@ interface Wallpaper {
   order: number;
 }
 
-export function Hero() {
+interface HeroProps {
+  onShopNow?: () => void;
+}
+
+export function Hero({ onShopNow }: HeroProps) {
   const [wallpapers, setWallpapers] = useState<Wallpaper[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -202,7 +206,26 @@ export function Hero() {
   }, [wallpapers.length]);
 
   const scrollToShop = () => {
-    document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" });
+    console.log("🛍️ Shop Now clicked!");
+
+    // First, call the parent callback to ensure products are visible
+    if (onShopNow) {
+      console.log("Calling onShopNow callback");
+      onShopNow();
+    }
+
+    // Then scroll to the shop section
+    // Use setTimeout to ensure DOM has updated after state change
+    setTimeout(() => {
+      const shopElement = document.getElementById("shop");
+      console.log("Shop element found:", shopElement);
+      if (shopElement) {
+        shopElement.scrollIntoView({ behavior: "smooth" });
+        console.log("✅ Scrolling to shop section");
+      } else {
+        console.warn("❌ Shop section not found in DOM");
+      }
+    }, 100);
   };
 
   const currentWallpaper = wallpapers[currentIndex] || getDefaultWallpapers()[0];
@@ -319,18 +342,16 @@ export function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.9 }}
             >
-              <motion.button
-                onClick={(e) => {
-                  e.preventDefault();
-                  scrollToShop();
-                }}
-                className="group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-8 py-4 rounded-lg flex items-center gap-2 transition-all shadow-lg shadow-purple-900/50 hover:shadow-purple-900/70 cursor-pointer"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <span className="text-lg">Shop Now</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </motion.button>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <button
+                  type="button"
+                  onClick={scrollToShop}
+                  className="group bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-8 py-4 rounded-lg flex items-center gap-2 transition-all shadow-lg shadow-purple-900/50 hover:shadow-purple-900/70 cursor-pointer"
+                >
+                  <span className="text-lg">Shop Now</span>
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </motion.div>
               <motion.a
                 href="#categories"
                 className="bg-white/10 hover:bg-white/20 border border-white/30 hover:border-white/50 px-8 py-4 rounded-lg transition-all backdrop-blur-sm text-lg"

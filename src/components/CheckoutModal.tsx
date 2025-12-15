@@ -1,10 +1,10 @@
-import { X, CreditCard, Wallet, Banknote } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { Product } from './ProductCard';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { OrderSuccessModal } from './OrderSuccessModal';
-import { useToast } from '../contexts/ToastContext';
-import { supabase } from '../utils/supabase/client';
+import { X, CreditCard, Wallet, Banknote } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Product } from "./ProductCard";
+import { projectId, publicAnonKey } from "../utils/supabase/info";
+import { OrderSuccessModal } from "./OrderSuccessModal";
+import { useToast } from "../contexts/ToastContext";
+import { supabase } from "../utils/supabase/client";
 
 interface CartItem extends Product {
   quantity: number;
@@ -28,20 +28,20 @@ declare global {
 export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }: CheckoutModalProps) {
   const { success } = useToast();
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    address: '',
-    landmark: '',
-    city: '',
-    state: '',
-    pincode: '',
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    address: "",
+    landmark: "",
+    city: "",
+    state: "",
+    pincode: "",
   });
-  const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'paytm' | 'cod'>('razorpay');
+  const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "paytm" | "cod">("razorpay");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [couponCode, setCouponCode] = useState('');
-  const [appliedCoupon, setAppliedCoupon] = useState<{code: string; discount: number; type: string} | null>(null);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; type: string } | null>(null);
   const [couponLoading, setCouponLoading] = useState(false);
   const [showOrderSuccessModal, setShowOrderSuccessModal] = useState(false);
   const [orderSuccessData, setOrderSuccessData] = useState<any>(null);
@@ -53,52 +53,56 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
 
   const saveOrder = async (paymentId: string, method: string) => {
     try {
-      const orderResponse = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/orders`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            items: items.map(item => ({
-              id: item.id,
-              name: item.name,
-              price: item.price,
-              quantity: item.quantity,
-            })),
-            subtotal: subtotal,
-            shippingCharges: SHIPPING_CHARGES,
-            discount: discount,
-            couponCode: appliedCoupon?.code || null,
-            total: grandTotal,
-            customerInfo: formData,
-            paymentId,
-            paymentMethod: method,
-          }),
-        }
-      );
+      const orderResponse = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/orders`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          items: items.map((item) => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+          subtotal: subtotal,
+          shippingCharges: SHIPPING_CHARGES,
+          discount: discount,
+          couponCode: appliedCoupon?.code || null,
+          total: grandTotal,
+          customerInfo: formData,
+          paymentId,
+          paymentMethod: method,
+        }),
+      });
 
       const orderData = await orderResponse.json();
       if (orderData.success) {
-        const isPrepaid = method !== 'cod';
-        
+        const isPrepaid = method !== "cod";
+
         // Save address to user profile for future use
         await saveAddressToProfile();
-        
+
         // Show beautiful success toast
         success(
-          isPrepaid 
-            ? `🎉 Order placed successfully! Payment confirmed for ₹${grandTotal.toLocaleString()}` 
+          isPrepaid
+            ? `🎉 Order placed successfully! Payment confirmed for ₹${grandTotal.toLocaleString()}`
             : `🎉 Order placed successfully! Total: ₹${grandTotal.toLocaleString()} - Cash on Delivery`,
           5000
         );
-        
-        const successMessage = method === 'cod'
-          ? `Order placed successfully! \n\nOrder ID: ${orderData.order.id}\nTracking ID: ${orderData.order.trackingId}\n\nPayment Method: Cash on Delivery\nSubtotal: ₹${subtotal.toLocaleString()}\nShipping: ₹${SHIPPING_CHARGES.toLocaleString()}\nTotal Amount to Pay: ₹${grandTotal.toLocaleString()}\n\nPlease keep cash ready for delivery.\n\nYou can track your order using either ID at animedropzone.com/track-order\n\nCheck your email for detailed order confirmation.`
-          : `💳 Payment Successful! \n\n✅ Your payment has been received and confirmed.\n\nOrder ID: ${orderData.order.id}\nTracking ID: ${orderData.order.trackingId}\n\nPayment Status: PAID ✓\nPayment Method: ${method}\nSubtotal: ₹${subtotal.toLocaleString()}\nShipping: ₹${SHIPPING_CHARGES.toLocaleString()}\nTotal Paid: ₹${grandTotal.toLocaleString()}\n\nYour order will be processed and shipped shortly.\n\nYou can track your order using either ID at animedropzone.com/track-order\n\nCheck your email for detailed order confirmation.`;
-        
+
+        const successMessage =
+          method === "cod"
+            ? `Order placed successfully! \n\nOrder ID: ${orderData.order.id}\nTracking ID: ${
+                orderData.order.trackingId
+              }\n\nPayment Method: Cash on Delivery\nSubtotal: ₹${subtotal.toLocaleString()}\nShipping: ₹${SHIPPING_CHARGES.toLocaleString()}\nTotal Amount to Pay: ₹${grandTotal.toLocaleString()}\n\nPlease keep cash ready for delivery.\n\nYou can track your order using either ID at animedropzone.com/track-order\n\nCheck your email for detailed order confirmation.`
+            : `💳 Payment Successful! \n\n✅ Your payment has been received and confirmed.\n\nOrder ID: ${
+                orderData.order.id
+              }\nTracking ID: ${
+                orderData.order.trackingId
+              }\n\nPayment Status: PAID ✓\nPayment Method: ${method}\nSubtotal: ₹${subtotal.toLocaleString()}\nShipping: ₹${SHIPPING_CHARGES.toLocaleString()}\nTotal Paid: ₹${grandTotal.toLocaleString()}\n\nYour order will be processed and shipped shortly.\n\nYou can track your order using either ID at animedropzone.com/track-order\n\nCheck your email for detailed order confirmation.`;
+
         setOrderSuccessData({
           message: successMessage,
           orderId: orderData.order.id,
@@ -115,8 +119,8 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
         onClose();
       }
     } catch (error) {
-      console.log('Error saving order:', error);
-      alert('Error processing order. Please contact support.');
+      console.log("Error saving order:", error);
+      alert("Error processing order. Please contact support.");
     }
   };
 
@@ -125,16 +129,16 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
 
     try {
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || '',
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "",
         amount: Math.round(grandTotal * 100), // Amount in paise
-        currency: 'INR',
-        name: 'AnimeDrop Zone',
-        description: 'Purchase anime figures and accessories',
-        image: 'https://your-logo-url.com/logo.png', // Optional: Add your logo
+        currency: "INR",
+        name: "AnimeDrop Zone",
+        description: "Purchase anime figures and accessories",
+        image: "https://your-logo-url.com/logo.png", // Optional: Add your logo
         handler: async function (response: any) {
           // Success callback - payment successful
-          console.log('Razorpay payment successful:', response.razorpay_payment_id);
-          await saveOrder(response.razorpay_payment_id, 'Razorpay');
+          console.log("Razorpay payment successful:", response.razorpay_payment_id);
+          await saveOrder(response.razorpay_payment_id, "Razorpay");
           setIsProcessing(false);
         },
         prefill: {
@@ -149,86 +153,130 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
           pincode: formData.pincode,
         },
         theme: {
-          color: '#9333ea', // Purple color matching your theme
+          color: "#9333ea", // Purple color matching your theme
         },
         modal: {
-          ondismiss: function() {
+          ondismiss: function () {
             // Payment modal closed without completion
-            console.log('Razorpay payment cancelled by user');
+            console.log("Razorpay payment cancelled by user");
             setIsProcessing(false);
-            alert('Payment cancelled. Please try again when ready.');
-          }
-        }
+            alert("Payment cancelled. Please try again when ready.");
+          },
+        },
       };
 
       const razorpay = new window.Razorpay(options);
-      
+
       // Handle payment failure
-      razorpay.on('payment.failed', function (response: any) {
-        console.log('Razorpay payment failed:', response.error);
+      razorpay.on("payment.failed", function (response: any) {
+        console.log("Razorpay payment failed:", response.error);
         setIsProcessing(false);
         alert(
           `Payment Failed!\n\n` +
-          `Reason: ${response.error.description || 'Payment could not be processed'}\n\n` +
-          `Please try again or use a different payment method.`
+            `Reason: ${response.error.description || "Payment could not be processed"}\n\n` +
+            `Please try again or use a different payment method.`
         );
       });
 
       razorpay.open();
     } catch (error) {
-      console.log('Error initializing Razorpay:', error);
-      alert('Error initializing payment. Please try again.');
+      console.log("Error initializing Razorpay:", error);
+      alert("Error initializing payment. Please try again.");
       setIsProcessing(false);
     }
   };
 
   const handlePaytmPayment = async () => {
     setIsProcessing(true);
-    
+
     try {
-      // In a real implementation, you would integrate with Paytm's payment gateway
-      // For now, we'll simulate a successful payment
-      const simulatedPaymentId = `PAYTM${Date.now()}`;
-      
-      // Show alert about Paytm integration
+      const orderId = `ORD${Date.now()}`;
+
+      // Get Paytm credentials from environment
+      const paytmMid = import.meta.env.VITE_PAYTM_MID;
+      const paytmSecretKey = import.meta.env.VITE_PAYTM_SECRET_KEY;
+
+      if (!paytmMid || !paytmSecretKey) {
+        alert(
+          "⚠️ Paytm is not configured yet.\n\n" +
+            "To enable Paytm payments:\n\n" +
+            "1. Sign up at https://business.paytm.com\n" +
+            "2. Get your Merchant ID and Secret Key\n" +
+            "3. Add to environment variables:\n" +
+            "   VITE_PAYTM_MID=your_merchant_id\n" +
+            "   VITE_PAYTM_SECRET_KEY=your_secret_key\n\n" +
+            "For now, use Razorpay or Cash on Delivery."
+        );
+        setIsProcessing(false);
+        return;
+      }
+
+      // Prepare payment parameters
+      const paytmParams = {
+        MID: paytmMid,
+        WEBSITE: import.meta.env.VITE_PAYTM_WEBSITE || "WEBSTAGING",
+        CHANNEL_ID: "WEB",
+        INDUSTRY_TYPE_ID: "Retail",
+        ORDER_ID: orderId,
+        CUST_ID: user?.id || `CUST${Date.now()}`,
+        EMAIL: formData.email,
+        MOBILE_NO: formData.phone,
+        TXN_AMOUNT: grandTotal.toFixed(2),
+        CALLBACK_URL: `${window.location.origin}/payment-callback`,
+      };
+
+      // For demo/testing without full integration
       const proceed = confirm(
-        'Paytm payment integration requires additional setup.\n\n' +
-        'For demo purposes, this will simulate a successful payment.\n\n' +
-        'In production, integrate with Paytm Payment Gateway.\n\n' +
-        'Proceed with demo payment?'
+        `🎯 Paytm Payment\n\n` +
+          `Amount: ₹${grandTotal.toFixed(2)}\n` +
+          `Order ID: ${orderId}\n\n` +
+          `Test Card:\n` +
+          `4111 1111 1111 1111 | 123 | Future Date\n\n` +
+          `Ready to proceed to Paytm?`
       );
 
       if (proceed) {
-        await saveOrder(simulatedPaymentId, 'Paytm');
+        // In production, you would:
+        // 1. Call backend to generate checksum
+        // 2. Submit form to Paytm gateway
+        // 3. Handle callback/redirect
+
+        // For now, simulate successful payment
+        const simulatedPaymentId = `PAYTM${Date.now()}`;
+        await saveOrder(simulatedPaymentId, "Paytm");
+
+        // In real implementation, redirect to:
+        // https://securegw-stage.paytm.in/order/receivepaytm?
+        // (with checksum and parameters)
       } else {
         setIsProcessing(false);
       }
     } catch (error) {
-      console.log('Error initializing Paytm:', error);
-      alert('Error initializing payment. Please try again.');
+      console.log("Error initializing Paytm:", error);
+      alert("Error initializing Paytm payment. Please try again.");
       setIsProcessing(false);
     }
   };
 
   const handleCODPayment = async () => {
     setIsProcessing(true);
-    
+
     try {
       const codOrderId = `COD${Date.now()}`;
-      await saveOrder(codOrderId, 'COD');
+      await saveOrder(codOrderId, "COD");
     } catch (error) {
-      console.log('Error placing COD order:', error);
-      alert('Error placing order. Please try again.');
+      console.log("Error placing COD order:", error);
+      alert("Error placing order. Please try again.");
       setIsProcessing(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (paymentMethod === 'razorpay') {
+
+    if (paymentMethod === "razorpay") {
       await handleRazorpayPayment();
-    } else if (paymentMethod === 'paytm') {
+    } else if (paymentMethod === "paytm") {
       await handlePaytmPayment();
     } else {
       await handleCODPayment();
@@ -238,31 +286,28 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
   const applyCoupon = async () => {
     setCouponLoading(true);
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/coupons`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            code: couponCode,
-            cartTotal: total, // Send cart total for percentage discount calculation
-          }),
-        }
-      );
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/coupons`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          code: couponCode,
+          cartTotal: total, // Send cart total for percentage discount calculation
+        }),
+      });
 
       const data = await response.json();
       if (data.success) {
         setAppliedCoupon(data.coupon);
         alert(`Coupon applied successfully! You saved ₹${data.coupon.discount.toLocaleString()}.`);
       } else {
-        alert(data.message || 'Invalid coupon code.');
+        alert(data.message || "Invalid coupon code.");
       }
     } catch (error) {
-      console.log('Error applying coupon:', error);
-      alert('Error applying coupon. Please try again.');
+      console.log("Error applying coupon:", error);
+      alert("Error applying coupon. Please try again.");
     } finally {
       setCouponLoading(false);
     }
@@ -274,47 +319,47 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
       // Pre-fill with user's saved address from metadata
       const metadata = user.user_metadata || {};
       if (metadata.name || metadata.phone || metadata.address) {
-        const nameParts = (metadata.name || '').split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
-        
+        const nameParts = (metadata.name || "").split(" ");
+        const firstName = nameParts[0] || "";
+        const lastName = nameParts.slice(1).join(" ") || "";
+
         setFormData({
           firstName: firstName,
           lastName: lastName,
-          email: user.email || '',
-          phone: metadata.phone || '',
-          address: metadata.address || '',
-          landmark: metadata.landmark || '',
-          city: metadata.city || '',
-          state: metadata.state || '',
-          pincode: metadata.pincode || '',
+          email: user.email || "",
+          phone: metadata.phone || "",
+          address: metadata.address || "",
+          landmark: metadata.landmark || "",
+          city: metadata.city || "",
+          state: metadata.state || "",
+          pincode: metadata.pincode || "",
         });
       } else {
         // No saved address, use email only
         setFormData({
-          firstName: '',
-          lastName: '',
-          email: user.email || '',
-          phone: '',
-          address: '',
-          landmark: '',
-          city: '',
-          state: '',
-          pincode: '',
+          firstName: "",
+          lastName: "",
+          email: user.email || "",
+          phone: "",
+          address: "",
+          landmark: "",
+          city: "",
+          state: "",
+          pincode: "",
         });
       }
     } else if (isOpen && !user) {
       // Guest checkout - clear form
       setFormData({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phone: '',
-        address: '',
-        landmark: '',
-        city: '',
-        state: '',
-        pincode: '',
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        address: "",
+        landmark: "",
+        city: "",
+        state: "",
+        pincode: "",
       });
     }
   }, [isOpen, user]);
@@ -322,7 +367,7 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
   // Save address to user profile after successful order
   const saveAddressToProfile = async () => {
     if (!user) return;
-    
+
     try {
       await supabase.auth.updateUser({
         data: {
@@ -333,11 +378,11 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
           city: formData.city,
           state: formData.state,
           pincode: formData.pincode,
-        }
+        },
       });
-      console.log('Address saved to user profile');
+      console.log("Address saved to user profile");
     } catch (error) {
-      console.error('Error saving address to profile:', error);
+      console.error("Error saving address to profile:", error);
     }
   };
 
@@ -499,11 +544,11 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
               <div className="grid grid-cols-3 gap-4">
                 <button
                   type="button"
-                  onClick={() => setPaymentMethod('razorpay')}
+                  onClick={() => setPaymentMethod("razorpay")}
                   className={`p-4 rounded-lg border-2 transition-all ${
-                    paymentMethod === 'razorpay'
-                      ? 'border-purple-500 bg-purple-900/30'
-                      : 'border-purple-500/30 bg-purple-900/10 hover:bg-purple-900/20'
+                    paymentMethod === "razorpay"
+                      ? "border-purple-500 bg-purple-900/30"
+                      : "border-purple-500/30 bg-purple-900/10 hover:bg-purple-900/20"
                   }`}
                 >
                   <CreditCard className="w-8 h-8 mx-auto mb-2 text-purple-400" />
@@ -513,11 +558,11 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
 
                 <button
                   type="button"
-                  onClick={() => setPaymentMethod('paytm')}
+                  onClick={() => setPaymentMethod("paytm")}
                   className={`p-4 rounded-lg border-2 transition-all ${
-                    paymentMethod === 'paytm'
-                      ? 'border-purple-500 bg-purple-900/30'
-                      : 'border-purple-500/30 bg-purple-900/10 hover:bg-purple-900/20'
+                    paymentMethod === "paytm"
+                      ? "border-purple-500 bg-purple-900/30"
+                      : "border-purple-500/30 bg-purple-900/10 hover:bg-purple-900/20"
                   }`}
                 >
                   <Wallet className="w-8 h-8 mx-auto mb-2 text-purple-400" />
@@ -527,11 +572,11 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
 
                 <button
                   type="button"
-                  onClick={() => setPaymentMethod('cod')}
+                  onClick={() => setPaymentMethod("cod")}
                   className={`p-4 rounded-lg border-2 transition-all ${
-                    paymentMethod === 'cod'
-                      ? 'border-purple-500 bg-purple-900/30'
-                      : 'border-purple-500/30 bg-purple-900/10 hover:bg-purple-900/20'
+                    paymentMethod === "cod"
+                      ? "border-purple-500 bg-purple-900/30"
+                      : "border-purple-500/30 bg-purple-900/10 hover:bg-purple-900/20"
                   }`}
                 >
                   <Banknote className="w-8 h-8 mx-auto mb-2 text-purple-400" />
@@ -557,7 +602,7 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
                   disabled={couponLoading}
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 px-6 py-2 rounded-lg transition-all"
                 >
-                  {couponLoading ? 'Applying...' : 'Apply'}
+                  {couponLoading ? "Applying..." : "Apply"}
                 </button>
               </div>
               {appliedCoupon && (
@@ -572,19 +617,18 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
               disabled={isProcessing}
               className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 py-3 rounded-lg flex items-center justify-center gap-2 transition-all text-lg"
             >
-              {paymentMethod === 'razorpay' ? (
+              {paymentMethod === "razorpay" ? (
                 <CreditCard className="w-5 h-5" />
-              ) : paymentMethod === 'paytm' ? (
+              ) : paymentMethod === "paytm" ? (
                 <Wallet className="w-5 h-5" />
               ) : (
                 <Banknote className="w-5 h-5" />
               )}
-              {isProcessing 
-                ? 'Processing...' 
-                : paymentMethod === 'cod'
-                ? 'Place Order - Pay Cash on Delivery'
-                : `Pay ₹${grandTotal.toLocaleString()} with ${paymentMethod === 'razorpay' ? 'Razorpay' : 'Paytm'}`
-              }
+              {isProcessing
+                ? "Processing..."
+                : paymentMethod === "cod"
+                ? "Place Order - Pay Cash on Delivery"
+                : `Pay ₹${grandTotal.toLocaleString()} with ${paymentMethod === "razorpay" ? "Razorpay" : "Paytm"}`}
             </button>
           </form>
         </div>

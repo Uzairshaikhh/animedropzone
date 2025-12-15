@@ -367,7 +367,19 @@ export function StorePage() {
       />
 
       <main id="home">
-        <Hero />
+        <Hero
+          onShopNow={() => {
+            // Show all products by selecting the first category (or show all)
+            if (categories.length > 0) {
+              setSelectedCategory(categories[0].value);
+              setSelectedSubcategory("");
+            }
+            // Scroll to shop section after state updates
+            setTimeout(() => {
+              document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" });
+            }, 150);
+          }}
+        />
 
         {/* Categories Section */}
         <section id="categories" className="py-20 px-4">
