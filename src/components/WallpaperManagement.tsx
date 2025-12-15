@@ -402,12 +402,66 @@ export function WallpaperManagement() {
           setImagePreview("");
           alert("Wallpaper saved locally (API sync failed, but your wallpaper is saved)");
         } else {
-          alert(`Error: Status ${response.status} - ${errorText || "Failed to save wallpaper"}`);
+          // Also save edits locally when API fails
+          console.log("💾 Updating wallpaper in local state (API failed)...");
+          setWallpapers(
+            wallpapers.map((w) =>
+              w.id === editingWallpaper.id
+                ? {
+                    ...w,
+                    title: formData.title,
+                    subtitle: formData.subtitle,
+                    imageUrl: imageUrl,
+                  }
+                : w
+            )
+          );
+          setShowForm(false);
+          setEditingWallpaper(null);
+          setFormData({ imageUrl: "", title: "", subtitle: "" });
+          setSelectedImage(null);
+          setImagePreview("");
+          alert("Wallpaper updated locally (API sync failed, but changes are saved)");
         }
       }
     } catch (error) {
       console.error("❌ Error saving wallpaper:", error);
-      alert(`Error saving wallpaper: ${error instanceof Error ? error.message : "Unknown error"}`);
+
+      // Try to save locally on any error
+      if (!editingWallpaper) {
+        const newWallpaper: Wallpaper = {
+          id: `wallpaper_${Date.now()}`,
+          imageUrl: formData.imageUrl,
+          title: formData.title,
+          subtitle: formData.subtitle,
+          order: wallpapers.length,
+        };
+        setWallpapers([...wallpapers, newWallpaper]);
+        setShowForm(false);
+        setFormData({ imageUrl: "", title: "", subtitle: "" });
+        setSelectedImage(null);
+        setImagePreview("");
+        alert("Wallpaper saved locally (network error, but your wallpaper is saved)");
+      } else {
+        setWallpapers(
+          wallpapers.map((w) =>
+            w.id === editingWallpaper.id
+              ? {
+                  ...w,
+                  title: formData.title,
+                  subtitle: formData.subtitle,
+                  imageUrl: formData.imageUrl,
+                }
+              : w
+          )
+        );
+        setShowForm(false);
+        setEditingWallpaper(null);
+        setFormData({ imageUrl: "", title: "", subtitle: "" });
+        setSelectedImage(null);
+        setImagePreview("");
+        alert("Wallpaper updated locally (network error, but changes are saved)");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -468,11 +522,19 @@ export function WallpaperManagement() {
       } else {
         const errorText = await response.text();
         console.error("❌ Failed to delete wallpaper. Status:", response.status, "Error:", errorText);
-        alert(`Error: Status ${response.status} - ${errorText || "Failed to delete wallpaper"}`);
+
+        // Delete locally as fallback
+        console.log("💾 Deleting from local state as fallback...");
+        setWallpapers(wallpapers.filter((w) => w.id !== id));
+        alert("Wallpaper deleted locally (API sync failed, but it's removed from your list)");
       }
     } catch (error) {
       console.error("Error deleting wallpaper:", error);
-      alert(`Error deleting wallpaper: ${error instanceof Error ? error.message : "Unknown error"}`);
+
+      // Delete locally on any error
+      console.log("💾 Deleting from local state due to error...");
+      setWallpapers(wallpapers.filter((w) => w.id !== id));
+      alert("Wallpaper deleted locally (network error, but it's removed from your list)");
     }
   };
 
