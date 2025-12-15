@@ -40,7 +40,7 @@ export function Cart({
             transition={{ duration: 0.3 }}
           ></motion.div>
           <motion.div
-            className="relative bg-gradient-to-br from-black to-purple-900/20 border border-purple-500/30 rounded-l-2xl h-screen w-full max-w-lg overflow-hidden shadow-2xl shadow-purple-900/50"
+            className="relative bg-gradient-to-br from-black to-purple-900/20 border border-purple-500/30 rounded-l-2xl h-screen w-full max-w-md overflow-hidden shadow-2xl shadow-purple-900/50"
             initial={{ opacity: 0, x: 400 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 400 }}
