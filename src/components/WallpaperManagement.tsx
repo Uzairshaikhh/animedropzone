@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Image as ImageIcon, Plus, Trash2, Edit2, Upload, X, ChevronUp, ChevronDown } from "lucide-react";
+import { Image as ImageIcon, Plus, Trash2, Edit2, Upload, X, ChevronUp, ChevronDown, Sparkles } from "lucide-react";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
 import { motion } from "motion/react";
 
@@ -13,6 +13,7 @@ interface Wallpaper {
 
 export function WallpaperManagement() {
   const [wallpapers, setWallpapers] = useState<Wallpaper[]>([]);
+  const [currentWallpaper, setCurrentWallpaper] = useState<Wallpaper | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [editingWallpaper, setEditingWallpaper] = useState<Wallpaper | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -28,6 +29,14 @@ export function WallpaperManagement() {
   useEffect(() => {
     fetchWallpapers();
   }, []);
+
+  useEffect(() => {
+    // Set current wallpaper to the first one (order 0)
+    if (wallpapers.length > 0) {
+      const current = wallpapers.find((w) => w.order === 0) || wallpapers[0];
+      setCurrentWallpaper(current);
+    }
+  }, [wallpapers]);
 
   const fetchWallpapers = async () => {
     try {
@@ -313,6 +322,59 @@ export function WallpaperManagement() {
 
   return (
     <div className="space-y-6">
+      {/* Current Wallpaper Section */}
+      {currentWallpaper && (
+        <motion.div
+          className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 border border-purple-500/50 rounded-xl p-6"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Sparkles className="w-5 h-5 text-purple-400" />
+            <h3 className="text-lg font-semibold text-white">Currently Displayed Wallpaper</h3>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+            <div className="flex-shrink-0 w-full sm:w-48">
+              <img
+                src={currentWallpaper.imageUrl}
+                alt={currentWallpaper.title}
+                className="w-full sm:w-48 h-28 object-cover rounded-lg border border-purple-500/30"
+                onError={(e) => {
+                  e.currentTarget.src =
+                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='60'%3E%3Crect fill='%23333' width='100' height='60'/%3E%3C/svg%3E";
+                }}
+              />
+            </div>
+
+            <div className="flex-1">
+              <h4 className="text-white font-semibold text-lg">{currentWallpaper.title}</h4>
+              <p className="text-gray-300 text-sm mt-1">{currentWallpaper.subtitle}</p>
+              <p className="text-purple-400 text-xs mt-3">ID: {currentWallpaper.id}</p>
+            </div>
+
+            <motion.button
+              onClick={() => {
+                setEditingWallpaper(currentWallpaper);
+                setFormData({
+                  imageUrl: currentWallpaper.imageUrl,
+                  title: currentWallpaper.title,
+                  subtitle: currentWallpaper.subtitle,
+                });
+                setImagePreview(currentWallpaper.imageUrl);
+                setShowForm(true);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg transition-all whitespace-nowrap"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Edit2 className="w-5 h-5" />
+              Edit Current
+            </motion.button>
+          </div>
+        </motion.div>
+      )}
+
       <div className="flex justify-between items-start gap-6">
         <div>
           <h2 className="text-2xl text-white mb-2 flex items-center gap-2">

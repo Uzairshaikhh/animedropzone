@@ -1,4 +1,4 @@
-import { ArrowRight, Star, Zap, Shield, ShoppingBag, Edit2, X } from "lucide-react";
+import { ArrowRight, Star, Zap, Shield, ShoppingBag } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useState, useEffect } from "react";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
@@ -19,13 +19,6 @@ export function Hero({ onShopNow }: HeroProps) {
   const [wallpapers, setWallpapers] = useState<Wallpaper[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editFormData, setEditFormData] = useState({
-    imageUrl: "",
-    title: "",
-    subtitle: "",
-  });
-  const [isEditing, setIsEditing] = useState(false);
 
   // Fetch wallpapers from the database
   useEffect(() => {
@@ -245,69 +238,6 @@ export function Hero({ onShopNow }: HeroProps) {
 
   const currentWallpaper = wallpapers[currentIndex] || getDefaultWallpapers()[0];
 
-  const openEditModal = () => {
-    setEditFormData({
-      imageUrl: currentWallpaper.imageUrl,
-      title: currentWallpaper.title,
-      subtitle: currentWallpaper.subtitle,
-    });
-    setShowEditModal(true);
-  };
-
-  const handleEditSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsEditing(true);
-
-    try {
-      console.log("🔵 Updating wallpaper...");
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers/${currentWallpaper.id}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${publicAnonKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(editFormData),
-        }
-      );
-
-      if (response.ok) {
-        console.log("✅ Wallpaper updated successfully!");
-        alert("✅ Wallpaper updated successfully!");
-
-        // Broadcast update
-        try {
-          const channel = new BroadcastChannel("wallpapers");
-          channel.postMessage({
-            type: "wallpaper_updated",
-            timestamp: Date.now(),
-          });
-          setTimeout(() => {
-            channel.postMessage({
-              type: "wallpaper_updated",
-              timestamp: Date.now(),
-            });
-            channel.close();
-          }, 100);
-        } catch (error) {
-          console.log("BroadcastChannel not available");
-        }
-
-        await fetchWallpapers();
-        setShowEditModal(false);
-      } else {
-        const errorData = await response.json();
-        alert(`Error: ${errorData.error || "Failed to update wallpaper"}`);
-      }
-    } catch (error) {
-      console.error("❌ Error updating wallpaper:", error);
-      alert("Error updating wallpaper");
-    } finally {
-      setIsEditing(false);
-    }
-  };
-
   if (isLoading) {
     return <div className="h-screen bg-black"></div>;
   }
@@ -493,17 +423,6 @@ export function Hero({ onShopNow }: HeroProps) {
                   <span className="text-white text-sm">New Arrival</span>
                 </motion.div>
 
-                {/* Edit Button */}
-                <motion.button
-                  onClick={openEditModal}
-                  className="absolute top-4 left-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 p-3 rounded-full transition-all"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                  title="Edit current wallpaper"
-                >
-                  <Edit2 className="w-5 h-5 text-white" />
-                </motion.button>
-
                 {/* Bottom text */}
                 <AnimatePresence mode="wait">
                   <motion.div
@@ -559,89 +478,6 @@ export function Hero({ onShopNow }: HeroProps) {
           </defs>
         </svg>
       </div>
-
-      {/* Edit Wallpaper Modal */}
-      <AnimatePresence>
-        {showEditModal && (
-          <motion.div
-            className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowEditModal(false)}
-          >
-            <motion.div
-              className="bg-gray-900 rounded-lg p-6 max-w-md w-full border border-purple-500/50"
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-white">Edit Wallpaper</h2>
-                <button
-                  onClick={() => setShowEditModal(false)}
-                  className="text-gray-400 hover:text-white transition-colors"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-
-              <form onSubmit={handleEditSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Title</label>
-                  <input
-                    type="text"
-                    value={editFormData.title}
-                    onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
-                    className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-purple-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Subtitle</label>
-                  <input
-                    type="text"
-                    value={editFormData.subtitle}
-                    onChange={(e) => setEditFormData({ ...editFormData, subtitle: e.target.value })}
-                    className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-purple-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Image URL</label>
-                  <input
-                    type="url"
-                    value={editFormData.imageUrl}
-                    onChange={(e) => setEditFormData({ ...editFormData, imageUrl: e.target.value })}
-                    className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-purple-500"
-                    required
-                  />
-                </div>
-
-                <div className="flex gap-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowEditModal(false)}
-                    className="flex-1 bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded text-white transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isEditing}
-                    className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 px-4 py-2 rounded text-white transition-all"
-                  >
-                    {isEditing ? "Saving..." : "Save Changes"}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </section>
   );
 }
