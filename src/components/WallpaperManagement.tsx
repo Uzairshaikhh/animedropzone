@@ -38,6 +38,83 @@ export function WallpaperManagement() {
     }
   }, [wallpapers]);
 
+  const getDefaultWallpapers = (): Wallpaper[] => [
+    {
+      id: "1",
+      imageUrl:
+        "https://images.unsplash.com/photo-1668293750324-bd77c1f08ca9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZW1vbiUyMHNsYXllciUyMGFuaW1lfGVufDF8fHx8MTc2NTMwODI3OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      title: "Demon Slayer Collection",
+      subtitle: "Limited Edition Figures & Katanas",
+      order: 0,
+    },
+    {
+      id: "2",
+      imageUrl:
+        "https://images.unsplash.com/photo-1740644545217-892da8cce224?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXJ1dG8lMjBhbmltZSUyMGNoYXJhY3RlcnxlbnwxfHx8fDE3NjUzMDgyNzl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      title: "Naruto Legends",
+      subtitle: "Iconic Ninja Collection",
+      order: 1,
+    },
+    {
+      id: "3",
+      imageUrl:
+        "https://images.unsplash.com/photo-1667419674822-1a9195436f1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvbmUlMjBwaWVjZSUyMGFuaW1lfGVufDF8fHx8MTc2NTMwODI3OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      title: "One Piece Adventure",
+      subtitle: "Grand Line Treasures",
+      order: 2,
+    },
+    {
+      id: "4",
+      imageUrl:
+        "https://images.unsplash.com/photo-1709675577960-0b1e7ba55347?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhdHRhY2slMjB0aXRhbiUyMGFuaW1lfGVufDF8fHx8MTc2NTMwODI3OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      title: "Attack on Titan",
+      subtitle: "Survey Corps Collection",
+      order: 3,
+    },
+    {
+      id: "5",
+      imageUrl:
+        "https://images.unsplash.com/photo-1575540325855-4b5d285a3845?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkcmFnb24lMjBiYWxsJTIwYW5pbWV8ZW58MXx8fHwxNzY1MjE3NDA5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      title: "Dragon Ball Z",
+      subtitle: "Super Saiyan Warriors",
+      order: 4,
+    },
+  ];
+
+  const seedDefaultWallpapers = async () => {
+    try {
+      console.log("🌱 Seeding default wallpapers to database...");
+      const defaults = getDefaultWallpapers();
+
+      for (const wallpaper of defaults) {
+        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            imageUrl: wallpaper.imageUrl,
+            title: wallpaper.title,
+            subtitle: wallpaper.subtitle,
+          }),
+        });
+
+        if (response.ok) {
+          console.log(`✅ Seeded wallpaper: ${wallpaper.title}`);
+        } else {
+          console.error(`❌ Failed to seed wallpaper: ${wallpaper.title}`);
+        }
+      }
+
+      // Fetch again after seeding
+      console.log("🔄 Re-fetching wallpapers after seeding...");
+      await fetchWallpapers();
+    } catch (error) {
+      console.error("❌ Error seeding wallpapers:", error);
+    }
+  };
+
   const fetchWallpapers = async () => {
     try {
       console.log("🔵 Fetching wallpapers...");
@@ -54,17 +131,29 @@ export function WallpaperManagement() {
         console.log("✅ Wallpaper data received:", data);
 
         // Filter out any null/undefined wallpapers
-        const validWallpapers = (data.wallpapers || []).filter((w: Wallpaper | null) => w !== null && w !== undefined);
+        const validWallpapers = (data.wallpapers || [])
+          .filter((w: Wallpaper | null) => w !== null && w !== undefined)
+          .sort((a: Wallpaper, b: Wallpaper) => (a.order || 0) - (b.order || 0));
+
         console.log("✅ Valid wallpapers count:", validWallpapers.length);
         console.log("✅ Wallpapers:", validWallpapers);
 
-        setWallpapers(validWallpapers);
+        if (validWallpapers.length > 0) {
+          setWallpapers(validWallpapers);
+        } else {
+          console.log("⚠️ No wallpapers found, seeding defaults...");
+          await seedDefaultWallpapers();
+        }
       } else {
         const errorText = await response.text();
         console.error("❌ Failed to fetch wallpapers:", response.status, errorText);
+        console.log("📍 Using local default wallpapers");
+        setWallpapers(getDefaultWallpapers());
       }
     } catch (error) {
       console.error("❌ Error fetching wallpapers:", error);
+      console.log("📍 Using local default wallpapers");
+      setWallpapers(getDefaultWallpapers());
     }
   };
 
