@@ -40,12 +40,16 @@ export function HeroWallpaperEditor() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log("📋 All wallpapers data:", data);
         const wallpapers = (data.wallpapers || [])
           .filter((w: Wallpaper | null) => w !== null && w !== undefined)
           .sort((a: Wallpaper, b: Wallpaper) => (a.order || 0) - (b.order || 0));
 
+        console.log("📋 Filtered and sorted wallpapers:", wallpapers);
+
         if (wallpapers.length > 0) {
           const current = wallpapers[0];
+          console.log("✅ Current wallpaper selected:", current);
           setCurrentWallpaper(current);
           setEditData({
             title: current.title,
@@ -53,7 +57,12 @@ export function HeroWallpaperEditor() {
             imageUrl: current.imageUrl,
           });
           setImagePreview(current.imageUrl);
+        } else {
+          console.warn("⚠️ No wallpapers found!");
         }
+      } else {
+        const errorText = await response.text();
+        console.error("❌ Failed to fetch wallpapers. Status:", response.status, "Error:", errorText);
       }
     } catch (error) {
       console.error("❌ Error fetching current wallpaper:", error);
@@ -114,7 +123,16 @@ export function HeroWallpaperEditor() {
   };
 
   const handleSave = async () => {
-    if (!currentWallpaper) return;
+    if (!currentWallpaper) {
+      alert("No wallpaper selected. Please load the page again.");
+      return;
+    }
+
+    if (!currentWallpaper.id) {
+      console.error("❌ Wallpaper ID is missing:", currentWallpaper);
+      alert("Error: Wallpaper ID is missing. Please refresh the page.");
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -129,26 +147,28 @@ export function HeroWallpaperEditor() {
 
       console.log("💾 Saving wallpaper with data:", {
         id: currentWallpaper.id,
+        type: typeof currentWallpaper.id,
         title: editData.title,
         subtitle: editData.subtitle,
+        imageUrl: imageUrl,
       });
 
+      const url = `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers/${currentWallpaper.id}`;
+      console.log("📍 Update URL:", url);
+
       // Update the wallpaper
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers/${currentWallpaper.id}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${publicAnonKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            title: editData.title,
-            subtitle: editData.subtitle,
-            imageUrl: imageUrl,
-          }),
-        }
-      );
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: editData.title,
+          subtitle: editData.subtitle,
+          imageUrl: imageUrl,
+        }),
+      });
 
       console.log("📡 Update response status:", response.status);
 
