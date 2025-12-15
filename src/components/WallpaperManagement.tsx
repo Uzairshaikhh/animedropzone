@@ -54,7 +54,7 @@ export function WallpaperManagement() {
 
   const getDefaultWallpapers = (): Wallpaper[] => [
     {
-      id: "1",
+      id: `default_wallpaper_1`,
       imageUrl:
         "https://images.unsplash.com/photo-1668293750324-bd77c1f08ca9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZW1vbiUyMHNsYXllciUyMGFuaW1lfGVufDF8fHx8MTc2NTMwODI3OHww&ixlib=rb-4.1.0&q=80&w=1080",
       title: "Demon Slayer Collection",
@@ -62,7 +62,7 @@ export function WallpaperManagement() {
       order: 0,
     },
     {
-      id: "2",
+      id: `default_wallpaper_2`,
       imageUrl:
         "https://images.unsplash.com/photo-1740644545217-892da8cce224?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXJ1dG8lMjBhbmltZSUyMGNoYXJhY3RlcnxlbnwxfHx8fDE3NjUzMDgyNzl8MA&ixlib=rb-4.1.0&q=80&w=1080",
       title: "Naruto Legends",
@@ -70,7 +70,7 @@ export function WallpaperManagement() {
       order: 1,
     },
     {
-      id: "3",
+      id: `default_wallpaper_3`,
       imageUrl:
         "https://images.unsplash.com/photo-1667419674822-1a9195436f1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvbmUlMjBwaWVjZSUyMGFuaW1lfGVufDF8fHx8MTc2NTMwODI3OXww&ixlib=rb-4.1.0&q=80&w=1080",
       title: "One Piece Adventure",
@@ -78,7 +78,7 @@ export function WallpaperManagement() {
       order: 2,
     },
     {
-      id: "4",
+      id: `default_wallpaper_4`,
       imageUrl:
         "https://images.unsplash.com/photo-1709675577960-0b1e7ba55347?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhdHRhY2slMjB0aXRhbiUyMGFuaW1lfGVufDF8fHx8MTc2NTMwODI3OXww&ixlib=rb-4.1.0&q=80&w=1080",
       title: "Attack on Titan",
@@ -86,7 +86,7 @@ export function WallpaperManagement() {
       order: 3,
     },
     {
-      id: "5",
+      id: `default_wallpaper_5`,
       imageUrl:
         "https://images.unsplash.com/photo-1575540325855-4b5d285a3845?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkcmFnb24lMjBiYWxsJTIwYW5pbWV8ZW58MXx8fHwxNzY1MjE3NDA5fDA&ixlib=rb-4.1.0&q=80&w=1080",
       title: "Dragon Ball Z",
@@ -94,6 +94,10 @@ export function WallpaperManagement() {
       order: 4,
     },
   ];
+
+  const isDefaultWallpaper = (id: string): boolean => {
+    return id.startsWith("default_wallpaper_");
+  };
 
   const seedDefaultWallpapers = async () => {
     try {
@@ -302,6 +306,54 @@ export function WallpaperManagement() {
       };
 
       console.log("📦 Wallpaper data to send:", wallpaperData);
+
+      // Skip API call for default wallpapers - save locally only
+      if (editingWallpaper && isDefaultWallpaper(editingWallpaper.id)) {
+        console.log("📌 Editing default wallpaper - saving locally only");
+
+        // Update in local state
+        setWallpapers(
+          wallpapers.map((w) =>
+            w.id === editingWallpaper.id
+              ? {
+                  ...w,
+                  title: formData.title,
+                  subtitle: formData.subtitle,
+                  imageUrl: imageUrl,
+                }
+              : w
+          )
+        );
+
+        // Cache updated wallpapers
+        localStorage.setItem("cached_wallpapers", JSON.stringify(wallpapers));
+
+        // Broadcast update
+        try {
+          const channel = new BroadcastChannel("wallpapers");
+          channel.postMessage({
+            type: "wallpaper_updated",
+            timestamp: Date.now(),
+          });
+          setTimeout(() => {
+            channel.postMessage({
+              type: "wallpaper_updated",
+              timestamp: Date.now(),
+            });
+            channel.close();
+          }, 100);
+        } catch (error) {
+          console.log("BroadcastChannel not available");
+        }
+
+        setShowForm(false);
+        setEditingWallpaper(null);
+        setFormData({ imageUrl: "", title: "", subtitle: "" });
+        setSelectedImage(null);
+        setImagePreview("");
+        alert("Default wallpaper updated locally ✅");
+        return;
+      }
 
       const url = editingWallpaper
         ? `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers/${editingWallpaper.id}`
