@@ -1,5 +1,6 @@
 // Email service - SMTP2GO API relay (Supabase compatible)
 // Uses REST API instead of direct SMTP to avoid Deno compatibility issues
+// v2: Force redeploy
 
 // Email validation function
 export function isValidEmail(email: string): boolean {
