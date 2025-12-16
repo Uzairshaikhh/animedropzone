@@ -58,7 +58,7 @@ async function sendViaSMTP2GO(to: string, subject: string, html: string) {
       body: JSON.stringify({
         api_key: smtp2goApiKey,
         to: [to],
-        from: fromEmail,
+        sender: fromEmail,
         subject: subject,
         html_body: html,
       }),
