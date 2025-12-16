@@ -40,13 +40,13 @@ export function Cart({
             transition={{ duration: 0.3 }}
           ></motion.div>
           <motion.div
-            className="relative bg-gradient-to-br from-black to-purple-900/20 border border-purple-500/30 rounded-l-2xl h-screen w-full max-w-md overflow-hidden shadow-2xl shadow-purple-900/50"
+            className="relative bg-gradient-to-br from-black to-purple-900/20 border border-purple-500/30 rounded-l-2xl h-screen w-full max-w-md shadow-2xl shadow-purple-900/50 flex flex-col"
             initial={{ opacity: 0, x: 400 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 400 }}
             transition={{ duration: 0.4, type: "spring", stiffness: 300, damping: 30 }}
           >
-            <div className="flex items-center justify-between p-6 border-b border-purple-500/30">
+            <div className="flex items-center justify-between p-6 border-b border-purple-500/30 flex-shrink-0">
               <h2 className="text-white">Shopping Cart</h2>
               <motion.button
                 onClick={onClose}
@@ -58,7 +58,7 @@ export function Cart({
               </motion.button>
             </div>
 
-            <div className="overflow-y-auto max-h-[calc(100vh-220px)] p-6">
+            <div className="overflow-y-auto flex-1 p-6">
               {items.length === 0 ? (
                 <motion.div
                   className="text-center py-12"
@@ -155,7 +155,7 @@ export function Cart({
             </div>
 
             {items.length > 0 && (
-              <div className="p-6 border-t border-purple-500/30 bg-black/50">
+              <div className="p-6 border-t border-purple-500/30 bg-black/50 flex-shrink-0">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-gray-300 text-lg">Total:</span>
                   <span className="text-3xl bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
