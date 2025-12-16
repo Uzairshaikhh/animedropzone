@@ -1,7 +1,5 @@
-// Email service - Hostinger SMTP only
-// Simple, focused, production-ready
-
-const EMAIL_PROVIDER = "hostinger";
+// Email service - SMTP2GO API relay (Supabase compatible)
+// Uses REST API instead of direct SMTP to avoid Deno compatibility issues
 
 // Email validation function
 export function isValidEmail(email: string): boolean {
@@ -10,34 +8,28 @@ export function isValidEmail(email: string): boolean {
   return emailRegex.test(email.trim());
 }
 
-// Hostinger SMTP Configuration - ONLY PROVIDER
-async function sendViaHostinger(to: string, subject: string, html: string) {
-  // Get credentials from environment variables
-  const hostingerEmail = Deno.env.get("HOSTINGER_SMTP_USER"); // noreply@animedropzone.com
-  const hostingerPassword = Deno.env.get("HOSTINGER_SMTP_PASS"); // Your email password
-  const hostingerHost = Deno.env.get("HOSTINGER_SMTP_HOST") || "smtp.hostinger.com";
-  const hostingerPort = Deno.env.get("HOSTINGER_SMTP_PORT") || "465"; // 465 for SSL, 587 for TLS
+// SMTP2GO API relay function
+async function sendViaSMTP2GO(to: string, subject: string, html: string) {
+  const smtp2goApiKey = Deno.env.get("SMTP2GO_API_KEY");
 
-  if (!hostingerEmail || !hostingerPassword) {
-    console.error("❌ Hostinger credentials NOT configured");
+  if (!smtp2goApiKey) {
+    console.error("❌ SMTP2GO_API_KEY NOT configured");
     console.error("");
-    console.error("⚠️ SETUP REQUIRED - Add these to Supabase Edge Functions Secrets:");
-    console.error("");
-    console.error("1. HOSTINGER_SMTP_USER = noreply@animedropzone.com");
-    console.error("2. HOSTINGER_SMTP_PASS = your-email-password");
+    console.error("⚠️ SETUP REQUIRED - Add SMTP2GO API key to Supabase Edge Functions:");
     console.error("");
     console.error("Steps:");
-    console.error("1. Go to https://supabase.com/dashboard");
-    console.error("2. Settings ⚙️ → Edge Functions");
-    console.error("3. Click function: make-server-95a96d8e");
-    console.error("4. Click Configuration/Secrets tab");
-    console.error("5. Add the 2 variables above");
-    console.error("6. Click Save");
+    console.error("1. Sign up at https://www.smtp2go.com (free: 1000 emails/month)");
+    console.error("2. Get API key from Settings → API Tokens");
+    console.error("3. Go to https://supabase.com/dashboard");
+    console.error("4. Settings ⚙️ → Edge Functions → make-server-95a96d8e");
+    console.error("5. Click Configuration tab → Add New Secret");
+    console.error("6. Name: SMTP2GO_API_KEY");
+    console.error("7. Value: [your API key]");
+    console.error("8. Click Save and wait 2-3 minutes for redeploy");
     console.error("");
     return {
       success: false,
-      error:
-        "Hostinger SMTP credentials not configured. Please add HOSTINGER_SMTP_USER and HOSTINGER_SMTP_PASS to Supabase Edge Function secrets.",
+      error: "SMTP2GO_API_KEY not configured. Please add it to Supabase Edge Function secrets.",
     };
   }
 
@@ -47,146 +39,57 @@ async function sendViaHostinger(to: string, subject: string, html: string) {
     return { success: false, error: `Invalid recipient email format: ${to}` };
   }
 
-  if (!isValidEmail(hostingerEmail)) {
-    console.error(`❌ Invalid FROM email format: "${hostingerEmail}"`);
-    return { success: false, error: `Invalid sender email format: ${hostingerEmail}` };
-  }
+  const fromEmail = "noreply@animedropzone.com";
 
-  console.log("🔍 Hostinger SMTP Configuration:");
-  console.log("  SMTP Host:", hostingerHost);
-  console.log("  SMTP Port:", hostingerPort);
-  console.log("  From Email:", hostingerEmail);
+  console.log("🔍 SMTP2GO Configuration:");
+  console.log("  API Key: ****" + smtp2goApiKey.slice(-4));
+  console.log("  From Email:", fromEmail);
   console.log("  To Email:", to);
   console.log("  Subject:", subject);
 
   try {
-    // Use SMTP2GO relay service which has free tier and works with Supabase
-    // Relay through their REST API instead of direct SMTP
-    
-    const smtp2goApiKey = Deno.env.get("SMTP2GO_API_KEY");
-    
-    // If SMTP2GO key is available, use it as relay
-    if (smtp2goApiKey) {
-      const response = await fetch("https://api.smtp2go.com/v3/email/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          api_key: smtp2goApiKey,
-          to: [to],
-          sender: hostingerEmail,
-          subject: subject,
-          html_body: html,
-        }),
-      });
+    // Call SMTP2GO API
+    const response = await fetch("https://api.smtp2go.com/v3/email/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        api_key: smtp2goApiKey,
+        to: [to],
+        from: fromEmail,
+        subject: subject,
+        html_body: html,
+      }),
+    });
 
-      const data = await response.json();
-      
-      if (response.ok && data.data?.succeeded > 0) {
-        console.log("✅ Email sent successfully via SMTP2GO relay");
-        return { success: true };
-      } else {
-        console.error("SMTP2GO error:", data);
-        throw new Error(`SMTP2GO error: ${JSON.stringify(data)}`);
-      }
+    const responseData = await response.json();
+
+    if (response.ok && responseData.request_id) {
+      console.log("✅ Email sent successfully via SMTP2GO");
+      console.log("   Request ID:", responseData.request_id);
+      return { success: true };
+    } else {
+      console.error("❌ SMTP2GO API error:", responseData);
+      const errorMessage = responseData.error || JSON.stringify(responseData);
+      return { success: false, error: errorMessage };
     }
-
-    // Fallback: Use Brevo/Sendinblue API if available
-    const brevoApiKey = Deno.env.get("BREVO_API_KEY");
-    
-    if (brevoApiKey) {
-      const response = await fetch("https://api.brevo.com/v3/smtp/email", {
-        method: "POST",
-        headers: {
-          "api-key": brevoApiKey,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          sender: {
-            email: hostingerEmail,
-            name: "AnimeDrop Zone",
-          },
-          to: [{ email: to }],
-          subject: subject,
-          htmlContent: html,
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (response.ok) {
-        console.log("✅ Email sent successfully via Brevo relay");
-        return { success: true };
-      } else {
-        console.error("Brevo error:", data);
-        throw new Error(`Brevo error: ${JSON.stringify(data)}`);
-      }
-    }
-
-    // If no relay service available, provide helpful error
-    console.error("⚠️ NO RELAY SERVICE CONFIGURED");
-    console.error("");
-    console.error("For Supabase compatibility, use a relay service instead of direct SMTP:");
-    console.error("");
-    console.error("Option 1: SMTP2GO (Recommended - Free tier)");
-    console.error("1. Go to https://www.smtp2go.com/");
-    console.error("2. Sign up (free tier: 1000 emails/month)");
-    console.error("3. Get API key from dashboard");
-    console.error("4. Add to Supabase: SMTP2GO_API_KEY = your-key");
-    console.error("");
-    console.error("Option 2: Brevo/Sendinblue (Free tier)");
-    console.error("1. Go to https://www.brevo.com/");
-    console.error("2. Sign up (free tier: 300 emails/day)");
-    console.error("3. Get API key from settings");
-    console.error("4. Add to Supabase: BREVO_API_KEY = your-key");
-    console.error("");
-    
-    return {
-      success: false,
-      error: "No relay service configured. Please add SMTP2GO_API_KEY or BREVO_API_KEY to Supabase.",
-    };
-
   } catch (error) {
-    console.error("❌ Hostinger SMTP error:", error);
+    console.error("❌ SMTP2GO request error:", error);
     console.error("   Error details:", String(error));
     console.error("");
 
     // Provide helpful error messages based on error type
     const errorStr = String(error).toLowerCase();
 
-    if (
-      errorStr.includes("authentication") ||
-      errorStr.includes("auth") ||
-      errorStr.includes("535") ||
-      errorStr.includes("invalid")
-    ) {
-      console.error("⚠️ AUTHENTICATION FAILED:");
-      console.error("   1. Verify email address is correct:");
-      console.error("      HOSTINGER_SMTP_USER should be: noreply@animedropzone.com");
-      console.error("   2. Verify email password is correct");
-      console.error("   3. Go to Hostinger Control Panel → Email Accounts");
-      console.error("   4. Find noreply@animedropzone.com");
-      console.error("   5. Check or reset the password");
-      console.error("   6. Make sure IMAP/SMTP is ENABLED");
-      console.error("   7. Update HOSTINGER_SMTP_PASS in Supabase with correct password");
-      console.error("");
-    }
-
-    if (errorStr.includes("connection") || errorStr.includes("econnrefused") || errorStr.includes("timeout")) {
-      console.error("⚠️ CONNECTION FAILED:");
-      console.error("   1. Check SMTP host: smtp.hostinger.com");
-      console.error("   2. Check SMTP port: 465 (SSL) or 587 (TLS)");
-      console.error("   3. Verify your server can reach Hostinger SMTP");
-      console.error("   4. Check Hostinger email account is active");
-      console.error("");
-    }
-
-    if (errorStr.includes("tls")) {
-      console.error("⚠️ TLS/SSL ERROR:");
-      console.error("   1. Port 465 is for SSL (should work by default)");
-      console.error("   2. If that fails, try port 587 for TLS:");
-      console.error("      Add HOSTINGER_SMTP_PORT = 587 to Supabase");
+    if (errorStr.includes("authentication") || errorStr.includes("401") || errorStr.includes("unauthorized")) {
+      console.error("⚠️ API KEY INVALID:");
+      console.error("   1. Go to https://www.smtp2go.com/settings/tokens");
+      console.error("   2. Create a new API token or copy existing one");
+      console.error("   3. Go to Supabase Dashboard → Settings → Edge Functions");
+      console.error("   4. Find make-server-95a96d8e → Configuration tab");
+      console.error("   5. Update SMTP2GO_API_KEY with correct value");
+      console.error("   6. Wait 2-3 minutes for redeploy");
       console.error("");
     }
 
@@ -194,7 +97,7 @@ async function sendViaHostinger(to: string, subject: string, html: string) {
   }
 }
 
-// Main email sending function - routes to Hostinger only
+// Main email sending function
 export async function sendEmail(to: string, subject: string, html: string) {
   // Validate email address
   if (!isValidEmail(to)) {
@@ -204,11 +107,11 @@ export async function sendEmail(to: string, subject: string, html: string) {
     return { success: false, error: `Invalid email format: ${to}` };
   }
 
-  console.log(`📧 Sending email via HOSTINGER to: ${to}`);
+  console.log(`📧 Sending email via SMTP2GO to: ${to}`);
 
   try {
-    // Send via Hostinger (only provider)
-    const result = await sendViaHostinger(to, subject, html);
+    // Send via SMTP2GO
+    const result = await sendViaSMTP2GO(to, subject, html);
 
     if (result.success) {
       console.log(`✅ Email sent successfully to ${to}`);
