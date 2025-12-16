@@ -65,7 +65,7 @@ IF IT'S EMPTY or NOT THERE
 
 #### 5B: Add Hostinger Credentials
 
-Add these 2 new variables:
+**⚠️ CRITICAL: Use EXACTLY these variable names:**
 
 **Variable 1:**
 
@@ -83,7 +83,19 @@ Value: [YOUR EMAIL PASSWORD FROM HOSTINGER]
 Click Save
 ```
 
-⚠️ **Don't know your password?** Go to Hostinger Control Panel → Email Accounts → Your email → Reset Password
+**🚨 IMPORTANT - VARIABLE NAMES MUST BE EXACT:**
+
+- ✅ Correct: `HOSTINGER_SMTP_USER` (NOT `HOSTINGER_EMAIL`)
+- ✅ Correct: `HOSTINGER_SMTP_PASS` (NOT `HOSTINGER_PASSWORD`)
+- ❌ Wrong: `HOSTINGER_EMAIL` - will NOT work
+- ❌ Wrong: `HOSTINGER_PASSWORD` - will NOT work
+
+**Don't know your password?**
+
+- Go to Hostinger Control Panel
+- Email Accounts → noreply@animedropzone.com
+- Click "Reset Password" or view current password
+- Update `HOSTINGER_SMTP_PASS` in Supabase with the password
 
 ### STEP 6: Wait for Deployment
 
