@@ -60,36 +60,93 @@ async function sendViaHostinger(to: string, subject: string, html: string) {
   console.log("  Subject:", subject);
 
   try {
-    // Import Deno SMTP client
-    const { SmtpClient } = await import("https://deno.land/x/smtp@v0.7.0/mod.ts");
+    // Use SMTP2GO relay service which has free tier and works with Supabase
+    // Relay through their REST API instead of direct SMTP
+    
+    const smtp2goApiKey = Deno.env.get("SMTP2GO_API_KEY");
+    
+    // If SMTP2GO key is available, use it as relay
+    if (smtp2goApiKey) {
+      const response = await fetch("https://api.smtp2go.com/v3/email/send", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          api_key: smtp2goApiKey,
+          to: [to],
+          sender: hostingerEmail,
+          subject: subject,
+          html_body: html,
+        }),
+      });
 
-    const client = new SmtpClient();
+      const data = await response.json();
+      
+      if (response.ok && data.data?.succeeded > 0) {
+        console.log("✅ Email sent successfully via SMTP2GO relay");
+        return { success: true };
+      } else {
+        console.error("SMTP2GO error:", data);
+        throw new Error(`SMTP2GO error: ${JSON.stringify(data)}`);
+      }
+    }
 
-    // Connect to Hostinger SMTP with TLS
-    await client.connectTLS({
-      hostname: hostingerHost,
-      port: parseInt(hostingerPort),
-      username: hostingerEmail,
-      password: hostingerPassword,
-    });
+    // Fallback: Use Brevo/Sendinblue API if available
+    const brevoApiKey = Deno.env.get("BREVO_API_KEY");
+    
+    if (brevoApiKey) {
+      const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+        method: "POST",
+        headers: {
+          "api-key": brevoApiKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sender: {
+            email: hostingerEmail,
+            name: "AnimeDrop Zone",
+          },
+          to: [{ email: to }],
+          subject: subject,
+          htmlContent: html,
+        }),
+      });
 
-    console.log("✅ Connected to Hostinger SMTP server");
+      const data = await response.json();
+      
+      if (response.ok) {
+        console.log("✅ Email sent successfully via Brevo relay");
+        return { success: true };
+      } else {
+        console.error("Brevo error:", data);
+        throw new Error(`Brevo error: ${JSON.stringify(data)}`);
+      }
+    }
 
-    // Send email
-    await client.send({
-      from: hostingerEmail,
-      to: to,
-      subject: subject,
-      content: html,
-      html: html,
-    });
+    // If no relay service available, provide helpful error
+    console.error("⚠️ NO RELAY SERVICE CONFIGURED");
+    console.error("");
+    console.error("For Supabase compatibility, use a relay service instead of direct SMTP:");
+    console.error("");
+    console.error("Option 1: SMTP2GO (Recommended - Free tier)");
+    console.error("1. Go to https://www.smtp2go.com/");
+    console.error("2. Sign up (free tier: 1000 emails/month)");
+    console.error("3. Get API key from dashboard");
+    console.error("4. Add to Supabase: SMTP2GO_API_KEY = your-key");
+    console.error("");
+    console.error("Option 2: Brevo/Sendinblue (Free tier)");
+    console.error("1. Go to https://www.brevo.com/");
+    console.error("2. Sign up (free tier: 300 emails/day)");
+    console.error("3. Get API key from settings");
+    console.error("4. Add to Supabase: BREVO_API_KEY = your-key");
+    console.error("");
+    
+    return {
+      success: false,
+      error: "No relay service configured. Please add SMTP2GO_API_KEY or BREVO_API_KEY to Supabase.",
+    };
 
-    console.log("✅ Email sent successfully via Hostinger SMTP");
-
-    // Close connection
-    await client.close();
-
-    return { success: true };
   } catch (error) {
     console.error("❌ Hostinger SMTP error:", error);
     console.error("   Error details:", String(error));
