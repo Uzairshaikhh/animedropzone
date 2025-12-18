@@ -31,6 +31,16 @@ export function Hero({ onShopNow }: HeroProps) {
   });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Detect mobile on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Fetch wallpapers from the database
   useEffect(() => {
@@ -213,12 +223,15 @@ export function Hero({ onShopNow }: HeroProps) {
   useEffect(() => {
     if (wallpapers.length <= 1) return;
 
+    // Increase interval on mobile to reduce animation overhead
+    const slideInterval = isMobile ? 8000 : 5000; // 8s on mobile, 5s on desktop
+
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % wallpapers.length);
-    }, 5000); // Change every 5 seconds
+    }, slideInterval);
 
     return () => clearInterval(interval);
-  }, [wallpapers.length]);
+  }, [wallpapers.length, isMobile]);
 
   const scrollToShop = () => {
     console.log("🛍️ Shop Now clicked!");
@@ -247,37 +260,43 @@ export function Hero({ onShopNow }: HeroProps) {
 
   return (
     <section className="relative overflow-hidden">
-      {/* Animated Background */}
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-black to-pink-900/30"></div>
-        <div className="absolute inset-0 opacity-20">
-          <motion.div
-            className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600 rounded-full blur-3xl"
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.5, 0.8, 0.5],
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-          ></motion.div>
-          <motion.div
-            className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-600 rounded-full blur-3xl"
-            animate={{
-              scale: [1, 1.3, 1],
-              opacity: [0.5, 0.7, 0.5],
-            }}
-            transition={{
-              duration: 5,
-              repeat: Infinity,
-              ease: "easeInOut",
-              delay: 1,
-            }}
-          ></motion.div>
+      {/* Animated Background - Disabled on mobile for performance */}
+      {!isMobile && (
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 via-black to-pink-900/30"></div>
+          <div className="absolute inset-0 opacity-20">
+            <motion.div
+              className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600 rounded-full blur-3xl"
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.5, 0.8, 0.5],
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            ></motion.div>
+            <motion.div
+              className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-600 rounded-full blur-3xl"
+              animate={{
+                scale: [1, 1.3, 1],
+                opacity: [0.5, 0.7, 0.5],
+              }}
+              transition={{
+                duration: 5,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 1,
+              }}
+            ></motion.div>
+          </div>
         </div>
-      </div>
+      )}
+      {/* Mobile background - simple solid gradient */}
+      {isMobile && (
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-black to-pink-900/20"></div>
+      )}
 
       <div className="relative max-w-7xl mx-auto px-4 py-20">
         <div className="grid md:grid-cols-2 gap-12 items-center">
@@ -286,14 +305,14 @@ export function Hero({ onShopNow }: HeroProps) {
               className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-900/50 to-pink-900/50 border border-purple-500/50 rounded-full mb-6 backdrop-blur-sm"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: isMobile ? 0.3 : 0.6 }}
             >
               <motion.div
                 animate={{
-                  rotate: [0, 360],
+                  rotate: isMobile ? [0, 180] : [0, 360], // Half rotation on mobile
                 }}
                 transition={{
-                  duration: 3,
+                  duration: isMobile ? 2 : 3,
                   repeat: Infinity,
                   ease: "linear",
                 }}
@@ -307,7 +326,7 @@ export function Hero({ onShopNow }: HeroProps) {
               className="mb-6 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent leading-tight"
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
+              transition={{ duration: isMobile ? 0.5 : 0.8, delay: 0.2 }}
             >
               Embrace Your Inner Demon
             </motion.h1>
@@ -316,7 +335,7 @@ export function Hero({ onShopNow }: HeroProps) {
               className="mb-4 text-gray-300 text-lg"
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
+              transition={{ duration: isMobile ? 0.5 : 0.8, delay: 0.4 }}
             >
               Step into the world of anime with our exclusive collection of premium figures, authentic katanas, and rare
               collectibles.
@@ -326,7 +345,7 @@ export function Hero({ onShopNow }: HeroProps) {
               className="flex flex-wrap gap-6 mb-8"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
+              transition={{ duration: isMobile ? 0.5 : 0.8, delay: 0.6 }}
             >
               {[
                 { icon: Zap, text: "Fast Shipping" },
@@ -338,8 +357,8 @@ export function Hero({ onShopNow }: HeroProps) {
                   className="flex items-center gap-2"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.7 + index * 0.1 }}
-                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: isMobile ? 0.3 : 0.5, delay: 0.7 + index * 0.05 }}
+                  whileHover={!isMobile ? { scale: 1.05 } : {}}
                 >
                   <item.icon className={`w-5 h-5 text-purple-400 ${item.filled ? "fill-purple-400" : ""}`} />
                   <span className="text-gray-300">{item.text}</span>
@@ -351,9 +370,9 @@ export function Hero({ onShopNow }: HeroProps) {
               className="flex flex-wrap gap-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.9 }}
+              transition={{ duration: isMobile ? 0.5 : 0.8, delay: 0.9 }}
             >
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div whileHover={!isMobile ? { scale: 1.05 } : {}} whileTap={{ scale: 0.95 }}>
                 <button
                   type="button"
                   onClick={scrollToShop}
@@ -366,7 +385,7 @@ export function Hero({ onShopNow }: HeroProps) {
               <motion.a
                 href="#categories"
                 className="bg-white/10 hover:bg-white/20 border border-white/30 hover:border-white/50 px-8 py-4 rounded-lg transition-all backdrop-blur-sm text-lg"
-                whileHover={{ scale: 1.05 }}
+                whileHover={!isMobile ? { scale: 1.05 } : {}}
                 whileTap={{ scale: 0.95 }}
               >
                 Explore Categories
@@ -378,47 +397,57 @@ export function Hero({ onShopNow }: HeroProps) {
           <motion.div
             className="relative z-10"
             initial={{ opacity: 0, scale: 0.8, rotateY: 20 }}
-            animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-            transition={{ duration: 1, delay: 0.3 }}
+            animate={{ opacity: 1, scale: 1, rotateY: isMobile ? 0 : 0 }}
+            transition={{ duration: isMobile ? 0.6 : 1, delay: 0.3 }}
           >
             <div className="relative group">
-              {/* Glow effect */}
-              <motion.div
-                className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity"
-                animate={{
-                  opacity: [0.5, 0.7, 0.5],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                }}
-              ></motion.div>
+              {/* Glow effect - Disabled on mobile */}
+              {!isMobile && (
+                <motion.div
+                  className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity"
+                  animate={{
+                    opacity: [0.5, 0.7, 0.5],
+                  }}
+                  transition={{
+                    duration: 2,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }}
+                ></motion.div>
+              )}
 
               {/* Main image container */}
               <div className="relative rounded-2xl overflow-hidden border-2 border-purple-500/50 shadow-2xl shadow-purple-900/50">
                 <AnimatePresence mode="wait">
                   <motion.img
                     key={currentIndex}
-                    src={currentWallpaper.imageUrl}
+                    src={
+                      isMobile
+                        ? `${currentWallpaper.imageUrl}&w=600&q=75` // Mobile: smaller, lower quality
+                        : `${currentWallpaper.imageUrl}&w=1080&q=85` // Desktop: larger, higher quality
+                    }
                     alt={currentWallpaper.title}
                     loading="lazy"
                     decoding="async"
                     className="w-full h-auto"
-                    initial={{ opacity: 0, scale: 1.1 }}
+                    initial={{ opacity: 0, scale: 1.05 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.7 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: isMobile ? 0.4 : 0.7 }}
                   />
                 </AnimatePresence>
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
 
-                {/* Badge */}
+                {/* Badge - Disabled animation on mobile */}
                 <motion.div
                   className="absolute top-4 right-4 bg-gradient-to-r from-red-600 to-orange-600 px-4 py-2 rounded-full"
-                  animate={{
-                    scale: [1, 1.1, 1],
-                  }}
+                  animate={
+                    isMobile
+                      ? {}
+                      : {
+                          scale: [1, 1.1, 1],
+                        }
+                  }
                   transition={{
                     duration: 2,
                     repeat: Infinity,
