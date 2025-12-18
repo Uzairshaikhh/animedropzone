@@ -18,11 +18,13 @@ import { ToastProvider } from "./contexts/ToastContext";
 import { CartProvider } from "./contexts/CartContext";
 import { Favicon } from "./components/Favicon";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { Preloader } from "./components/Preloader";
 
 export default function App() {
   return (
     <ToastProvider>
       <CartProvider>
+        <Preloader />
         <Favicon />
         <Router>
           <Routes>

@@ -681,4 +681,41 @@ The customer will be notified via email.`))try{const lt=await(await fetch(`https
           fill="url(#inner-gradient)"
         />
       </svg>
-    `,t=new Blob([e],{type:"image/svg+xml"}),r=URL.createObjectURL(t);document.querySelectorAll('link[rel*="icon"]').forEach(l=>l.remove());const i=document.createElement("link");i.rel="icon",i.type="image/svg+xml",i.href=r,document.head.appendChild(i);const s=document.createElement("link");if(s.rel="apple-touch-icon",s.href=r,document.head.appendChild(s),(document.title===""||document.title==="Vite + React + TS")&&(document.title="AnimeDropZone - Anime Figures & Accessories Store"),!document.querySelector('meta[name="theme-color"]')){const l=document.createElement("meta");l.name="theme-color",l.content="#9333ea",document.head.appendChild(l)}return()=>{URL.revokeObjectURL(r)}},[]),null}function FR(){return a.jsx(dS,{children:a.jsxs(pS,{children:[a.jsx(BR,{}),a.jsx(pN,{children:a.jsxs(hN,{children:[a.jsx(et,{path:"/",element:a.jsx(Pf,{})}),a.jsx(et,{path:"/secret-admin-panel-7b2cbf",element:a.jsx(wR,{})}),a.jsx(et,{path:"/admin",element:a.jsx(Pf,{})}),a.jsx(et,{path:"/track-order",element:a.jsx(SR,{})}),a.jsx(et,{path:"/my-orders",element:a.jsx(CR,{})}),a.jsx(et,{path:"/my-profile",element:a.jsx(TR,{})}),a.jsx(et,{path:"/product/:id",element:a.jsx(OR,{})}),a.jsx(et,{path:"/category/:category",element:a.jsx(_R,{})}),a.jsx(et,{path:"/approve-quote/:id",element:a.jsx(ER,{})}),a.jsx(et,{path:"/test-quote-email",element:a.jsx($R,{})}),a.jsx(et,{path:"/forgot-password",element:a.jsx(IR,{})}),a.jsx(et,{path:"/reset-password",element:a.jsx(MR,{})}),a.jsx(et,{path:"/server-test",element:a.jsx(DR,{})}),a.jsx(et,{path:"/email-test",element:a.jsx(RR,{})}),a.jsx(et,{path:"/privacy-policy",element:a.jsx(LR,{})}),a.jsx(et,{path:"/terms-of-service",element:a.jsx(qR,{})})]})})]})})}gN.createRoot(document.getElementById("root")).render(a.jsx(FR,{}));
+    `,t=new Blob([e],{type:"image/svg+xml"}),r=URL.createObjectURL(t);document.querySelectorAll('link[rel*="icon"]').forEach(l=>l.remove());const i=document.createElement("link");i.rel="icon",i.type="image/svg+xml",i.href=r,document.head.appendChild(i);const s=document.createElement("link");if(s.rel="apple-touch-icon",s.href=r,document.head.appendChild(s),(document.title===""||document.title==="Vite + React + TS")&&(document.title="AnimeDropZone - Anime Figures & Accessories Store"),!document.querySelector('meta[name="theme-color"]')){const l=document.createElement("meta");l.name="theme-color",l.content="#9333ea",document.head.appendChild(l)}return()=>{URL.revokeObjectURL(r)}},[]),null}function FR(){const[e,t]=S.useState(!0);return S.useEffect(()=>{const r=setTimeout(()=>{document.readyState==="complete"&&t(!1)},300),n=setTimeout(()=>{t(!1)},3e3),i=()=>{t(!1)};return window.addEventListener("load",i),()=>{clearTimeout(r),clearTimeout(n),window.removeEventListener("load",i)}},[]),e?a.jsxs("div",{style:{position:"fixed",top:0,left:0,right:0,bottom:0,display:"flex",alignItems:"center",justifyContent:"center",background:"linear-gradient(135deg, #000 0%, #1a0033 50%, #000 100%)",zIndex:9999,animation:"fadeOut 0.5s ease-out forwards",animationDelay:"0.3s"},children:[a.jsx("style",{children:`
+        @keyframes fadeOut {
+          from {
+            opacity: 1;
+            visibility: visible;
+          }
+          to {
+            opacity: 0;
+            visibility: hidden;
+          }
+        }
+
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        @keyframes pulse {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.5;
+          }
+        }
+
+        .preloader-spinner {
+          animation: spin 1s linear infinite;
+        }
+
+        .preloader-text {
+          animation: pulse 1.5s ease-in-out infinite;
+        }
+      `}),a.jsxs("div",{style:{textAlign:"center"},children:[a.jsx("div",{className:"preloader-spinner",style:{width:"60px",height:"60px",border:"4px solid rgba(168, 85, 247, 0.2)",borderTop:"4px solid #a855f7",borderRadius:"50%",margin:"0 auto 20px"}}),a.jsx("div",{className:"preloader-text",style:{color:"#a855f7",fontSize:"16px",fontWeight:"600",letterSpacing:"2px",marginBottom:"10px"},children:"LOADING"}),a.jsxs("div",{style:{color:"#a855f7",fontSize:"20px",height:"20px",display:"flex",alignItems:"center",justifyContent:"center"},children:[a.jsx("span",{style:{animation:"pulse 0.6s ease-in-out infinite"},children:"."}),a.jsx("span",{style:{animation:"pulse 0.6s ease-in-out infinite 0.2s"},children:"."}),a.jsx("span",{style:{animation:"pulse 0.6s ease-in-out infinite 0.4s"},children:"."})]}),a.jsx("div",{style:{marginTop:"30px",fontSize:"12px",color:"#999",letterSpacing:"1px"},children:"animedropzone"})]})]}):null}function zR(){return a.jsx(dS,{children:a.jsxs(pS,{children:[a.jsx(FR,{}),a.jsx(BR,{}),a.jsx(pN,{children:a.jsxs(hN,{children:[a.jsx(et,{path:"/",element:a.jsx(Pf,{})}),a.jsx(et,{path:"/secret-admin-panel-7b2cbf",element:a.jsx(wR,{})}),a.jsx(et,{path:"/admin",element:a.jsx(Pf,{})}),a.jsx(et,{path:"/track-order",element:a.jsx(SR,{})}),a.jsx(et,{path:"/my-orders",element:a.jsx(CR,{})}),a.jsx(et,{path:"/my-profile",element:a.jsx(TR,{})}),a.jsx(et,{path:"/product/:id",element:a.jsx(OR,{})}),a.jsx(et,{path:"/category/:category",element:a.jsx(_R,{})}),a.jsx(et,{path:"/approve-quote/:id",element:a.jsx(ER,{})}),a.jsx(et,{path:"/test-quote-email",element:a.jsx($R,{})}),a.jsx(et,{path:"/forgot-password",element:a.jsx(IR,{})}),a.jsx(et,{path:"/reset-password",element:a.jsx(MR,{})}),a.jsx(et,{path:"/server-test",element:a.jsx(DR,{})}),a.jsx(et,{path:"/email-test",element:a.jsx(RR,{})}),a.jsx(et,{path:"/privacy-policy",element:a.jsx(LR,{})}),a.jsx(et,{path:"/terms-of-service",element:a.jsx(qR,{})})]})})]})})}gN.createRoot(document.getElementById("root")).render(a.jsx(zR,{}));

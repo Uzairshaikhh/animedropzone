@@ -8,6 +8,65 @@
   <meta name="description" content="Premium anime figures, katanas, and collectibles" />
   <meta name="theme-color" content="#000000" />
 
+  <!-- Critical inline CSS for preloader (loads instantly) -->
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #000 0%, #1a0033 50%, #000 100%);
+    }
+
+    #preloader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #000 0%, #1a0033 50%, #000 100%);
+      z-index: 9999;
+    }
+
+    #preloader.hidden {
+      display: none;
+    }
+
+    .preloader-spinner {
+      width: 60px;
+      height: 60px;
+      border: 4px solid rgba(168, 85, 247, 0.2);
+      border-top: 4px solid #a855f7;
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+    }
+  </style>
+
   <!-- DNS Prefetch for external APIs -->
   <link rel="dns-prefetch" href="//images.unsplash.com" />
   <link rel="dns-prefetch" href="//checkout.razorpay.com" />
@@ -19,7 +78,7 @@
   <link rel="prefetch" href="/assets/framer.js" />
 
   <title>animedropzone</title>
-  <script type="module" crossorigin src="/assets/index-BITsfmva.js"></script>
+  <script type="module" crossorigin src="/assets/index-kxyZ8Ygo.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/vendor-C9CPltO_.js">
   <link rel="modulepreload" crossorigin href="/assets/framer-BDcWIEj2.js">
   <link rel="modulepreload" crossorigin href="/assets/supabase-DjonBxN0.js">
@@ -27,7 +86,41 @@
 </head>
 
 <body>
+  <!-- Preloader HTML (shows before React loads) -->
+  <div id="preloader">
+    <div class="preloader-content">
+      <div class="preloader-spinner"></div>
+      <div
+        style="color: #a855f7; font-size: 16px; font-weight: 600; letter-spacing: 2px; margin-bottom: 10px; animation: pulse 1.5s ease-in-out infinite;">
+        LOADING</div>
+      <div style="color: #a855f7; font-size: 20px;">
+        <span style="animation: pulse 0.6s ease-in-out infinite;">.</span>
+        <span style="animation: pulse 0.6s ease-in-out infinite 0.2s;">.</span>
+        <span style="animation: pulse 0.6s ease-in-out infinite 0.4s;">.</span>
+      </div>
+      <div style="margin-top: 30px; font-size: 12px; color: #999; letter-spacing: 1px;">animedropzone</div>
+    </div>
+  </div>
+
   <div id="root"></div>
+
+  <script>
+    // Hide preloader when page fully loads
+    window.addEventListener('load', function () {
+      const preloader = document.getElementById('preloader');
+      if (preloader) {
+        preloader.classList.add('hidden');
+      }
+    });
+
+    // Hide preloader after max 3 seconds (safety net)
+    setTimeout(function () {
+      const preloader = document.getElementById('preloader');
+      if (preloader) {
+        preloader.classList.add('hidden');
+      }
+    }, 3000);
+  </script>
 </body>
 
 </html>
