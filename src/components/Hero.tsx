@@ -53,11 +53,11 @@ export function Hero({ onShopNow }: HeroProps) {
       console.log("BroadcastChannel not available, using polling only");
     }
 
-    // Poll for wallpaper updates every 5 seconds as fallback (more aggressive)
+    // Poll for wallpaper updates every 30 seconds (reduced from 5s for better performance)
     const pollInterval = setInterval(() => {
       console.log("🔄 Polling for wallpaper updates...");
       fetchWallpapers();
-    }, 5000);
+    }, 30000);
 
     return () => {
       if (channel) channel.close();
@@ -68,15 +68,11 @@ export function Hero({ onShopNow }: HeroProps) {
   const fetchWallpapers = async () => {
     try {
       console.log("🔵 Fetching wallpapers from database...");
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers?t=${Date.now()}`,
-        {
-          headers: {
-            Authorization: `Bearer ${publicAnonKey}`,
-            "Cache-Control": "no-cache",
-          },
-        }
-      );
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers`, {
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`,
+        },
+      });
 
       console.log("📡 Wallpaper fetch response status:", response.status);
 
@@ -92,6 +88,8 @@ export function Hero({ onShopNow }: HeroProps) {
           console.log("✅ Valid wallpapers:", validWallpapers);
           if (validWallpapers.length > 0) {
             setWallpapers(validWallpapers);
+            // Cache the wallpapers
+            localStorage.setItem("cached_wallpapers", JSON.stringify(validWallpapers));
           } else {
             console.log("⚠️ No valid wallpapers, checking cache...");
             const cached = localStorage.getItem("cached_wallpapers");
