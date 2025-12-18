@@ -92,7 +92,7 @@ export function Hero({ onShopNow }: HeroProps) {
     try {
       console.log("🔵 Fetching wallpapers in background...");
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 2000); // 2s timeout for faster fallback
 
       const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers`, {
         headers: {
@@ -224,7 +224,7 @@ export function Hero({ onShopNow }: HeroProps) {
     if (wallpapers.length <= 1) return;
 
     // Increase interval on mobile to reduce animation overhead
-    const slideInterval = isMobile ? 8000 : 5000; // 8s on mobile, 5s on desktop
+    const slideInterval = isMobile ? 10000 : 6000; // 10s on mobile, 6s on desktop
 
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % wallpapers.length);

@@ -1,6 +1,7 @@
 import { ShoppingCart, Star, Eye, Heart } from "lucide-react";
 import { motion } from "motion/react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { memo } from "react";
 
 export interface Product {
   id: string;
@@ -21,7 +22,7 @@ interface ProductCardProps {
   onToggleWishlist?: (product: Product) => void;
 }
 
-export function ProductCard({
+export const ProductCard = memo(function ProductCard({
   product,
   onAddToCart,
   onViewDetails,
@@ -50,8 +51,8 @@ export function ProductCard({
       className="group bg-gradient-to-br from-black to-purple-900/20 border border-purple-500/30 rounded-xl overflow-hidden hover:border-purple-500 transition-all hover:shadow-lg hover:shadow-purple-900/50 cursor-pointer relative"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      whileHover={{ y: -8, transition: { duration: 0.3 } }}
+      transition={{ duration: 0.25 }}
+      whileHover={{ y: -5 }}
       onClick={handleViewDetails}
     >
       {/* Wishlist Heart Button */}
@@ -75,8 +76,10 @@ export function ProductCard({
 
       <div className="relative overflow-hidden aspect-square bg-black/50">
         <motion.img
-          src={imageUrl}
+          src={`${imageUrl}&w=400&q=70`}
           alt={product.name}
+          loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover"
           whileHover={{ scale: 1.1 }}
           transition={{ duration: 0.3 }}
@@ -145,4 +148,4 @@ export function ProductCard({
       </div>
     </motion.div>
   );
-}
+});

@@ -183,11 +183,17 @@ export function StorePage() {
 
   const fetchCategories = async () => {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+
       const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/categories`, {
         headers: {
           Authorization: `Bearer ${publicAnonKey}`,
         },
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const data = await response.json();
@@ -289,11 +295,18 @@ export function StorePage() {
 
   const fetchProducts = async () => {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+
       const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/products`, {
         headers: {
           Authorization: `Bearer ${publicAnonKey}`,
         },
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
+
       const data = await response.json();
       if (data.success) {
         setProducts(data.products);
