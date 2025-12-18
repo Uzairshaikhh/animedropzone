@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { useToast } from "../contexts/ToastContext";
@@ -17,15 +17,21 @@ import { SubcategoryModal } from "../components/SubcategoryModal";
 import { ProductDetailModal } from "../components/ProductDetailModal";
 import { CustomClothingModal } from "../components/CustomClothingModal";
 import { ProductRecommendations } from "../components/ProductRecommendations";
-import { FloatingParticles } from "../components/FloatingParticles";
 import { AboutUs } from "../components/AboutUs";
 import { ContactUs } from "../components/ContactUs";
 import { NewsletterSubscribe } from "../components/NewsletterSubscribe";
 import { Logo } from "../components/Logo";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
 import { supabase } from "../utils/supabase/client";
-import { CherryBlossomTree } from "../components/CherryBlossomTree";
 import { Link } from "react-router-dom";
+
+// Lazy load heavy animation components
+const FloatingParticles = lazy(() =>
+  import("../components/FloatingParticles").then((m) => ({ default: m.FloatingParticles }))
+);
+const CherryBlossomTree = lazy(() =>
+  import("../components/CherryBlossomTree").then((m) => ({ default: m.CherryBlossomTree }))
+);
 
 interface CartItem extends Product {
   quantity: number;
@@ -98,6 +104,9 @@ export function StorePage() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
+  const [productsPerPage] = useState(12);
+  const [currentPage, setCurrentPage] = useState(1);
   const { cartItems, addToCart, removeFromCart, updateQuantity, isCartOpen, setIsCartOpen } = useCart();
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
@@ -251,7 +260,20 @@ export function StorePage() {
     }
 
     setFilteredProducts(filtered);
-  }, [selectedCategory, selectedSubcategory, products]);
+    setCurrentPage(1); // Reset to first page when filters change
+
+    // Paginate the filtered results
+    const startIdx = (1 - 1) * productsPerPage;
+    const endIdx = startIdx + productsPerPage;
+    setDisplayedProducts(filtered.slice(startIdx, endIdx));
+  }, [selectedCategory, selectedSubcategory, products, productsPerPage]);
+
+  // Handle page changes
+  useEffect(() => {
+    const startIdx = (currentPage - 1) * productsPerPage;
+    const endIdx = startIdx + productsPerPage;
+    setDisplayedProducts(filteredProducts.slice(startIdx, endIdx));
+  }, [currentPage, filteredProducts, productsPerPage]);
 
   const checkUser = async () => {
     const { data } = await supabase.auth.getSession();
@@ -335,10 +357,15 @@ export function StorePage() {
       {/* Load Razorpay script */}
       <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
-      {/* Cherry Blossom Tree Animation */}
-      <CherryBlossomTree />
+      {/* Cherry Blossom Tree Animation - Lazy loaded */}
+      <Suspense fallback={null}>
+        <CherryBlossomTree />
+      </Suspense>
 
-      <FloatingParticles />
+      {/* Floating Particles - Lazy loaded */}
+      <Suspense fallback={null}>
+        <FloatingParticles />
+      </Suspense>
 
       <Navbar
         cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
@@ -517,14 +544,14 @@ export function StorePage() {
                 </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {filteredProducts.length === 0 ? (
+                {displayedProducts.length === 0 ? (
                   <div className="col-span-full text-center py-20">
                     <p className="text-gray-400 text-lg mb-4">
                       {products.length === 0 ? "No products available yet." : "No products found in this category."}
                     </p>
                   </div>
                 ) : (
-                  filteredProducts.map((product) => (
+                  displayedProducts.map((product) => (
                     <ProductCard
                       key={product.id}
                       product={product}
@@ -539,6 +566,27 @@ export function StorePage() {
                   ))
                 )}
               </div>
+
+              {/* Pagination */}
+              {filteredProducts.length > productsPerPage && (
+                <div className="mt-12 flex justify-center gap-2">
+                  {Array.from({ length: Math.ceil(filteredProducts.length / productsPerPage) }, (_, i) => i + 1).map(
+                    (page) => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-4 py-2 rounded-lg transition-all ${
+                          currentPage === page
+                            ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                            : "bg-white/10 text-gray-300 hover:bg-white/20"
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
+                </div>
+              )}
             </div>
           </section>
         )}

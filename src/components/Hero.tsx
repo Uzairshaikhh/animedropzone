@@ -80,7 +80,7 @@ export function Hero({ onShopNow }: HeroProps) {
     const pollInterval = setInterval(() => {
       console.log("🔄 Polling for wallpaper updates...");
       fetchWallpapersInBackground();
-    }, 60000);
+    }, 120000); // Increased from 60s to 120s to reduce network requests
 
     return () => {
       if (channel) channel.close();
