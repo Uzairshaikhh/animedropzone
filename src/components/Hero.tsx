@@ -31,16 +31,29 @@ export function Hero({ onShopNow }: HeroProps) {
   });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile] = useState(() => window.innerWidth < 768);
+  const [showCTA, setShowCTA] = useState(!isMobile); // Show CTA instantly on mobile
 
   // Detect mobile on window resize
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+      const newIsMobile = window.innerWidth < 768;
+      // On first load transition from mobile to showing CTA
+      if (newIsMobile && !showCTA) {
+        setTimeout(() => setShowCTA(true), 100);
+      }
     };
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [showCTA]);
+
+  // Show CTA buttons immediately on mobile (300ms) for instant feedback
+  useEffect(() => {
+    if (isMobile && !showCTA) {
+      const timer = setTimeout(() => setShowCTA(true), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isMobile, showCTA]);
 
   // Fetch wallpapers from the database
   useEffect(() => {
@@ -326,7 +339,7 @@ export function Hero({ onShopNow }: HeroProps) {
               className="mb-6 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent leading-tight"
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: isMobile ? 0.5 : 0.8, delay: 0.2 }}
+              transition={{ duration: isMobile ? 0.3 : 0.8, delay: isMobile ? 0 : 0.2 }}
             >
               Embrace Your Inner Demon
             </motion.h1>
@@ -335,7 +348,7 @@ export function Hero({ onShopNow }: HeroProps) {
               className="mb-4 text-gray-300 text-lg"
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: isMobile ? 0.5 : 0.8, delay: 0.4 }}
+              transition={{ duration: isMobile ? 0.3 : 0.8, delay: isMobile ? 0.1 : 0.4 }}
             >
               Step into the world of anime with our exclusive collection of premium figures, authentic katanas, and rare
               collectibles.
@@ -343,9 +356,9 @@ export function Hero({ onShopNow }: HeroProps) {
 
             <motion.div
               className="flex flex-wrap gap-6 mb-8"
-              initial={{ opacity: 0 }}
+              initial={isMobile ? { opacity: 1 } : { opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: isMobile ? 0.5 : 0.8, delay: 0.6 }}
+              transition={{ duration: isMobile ? 0 : 0.8, delay: isMobile ? 0.2 : 0.6 }}
             >
               {[
                 { icon: Zap, text: "Fast Shipping" },
@@ -368,9 +381,9 @@ export function Hero({ onShopNow }: HeroProps) {
 
             <motion.div
               className="flex flex-wrap gap-4"
-              initial={{ opacity: 0, y: 20 }}
+              initial={isMobile ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: isMobile ? 0.5 : 0.8, delay: 0.9 }}
+              transition={{ duration: isMobile ? 0 : 0.8, delay: isMobile ? 0 : 0.9 }}
             >
               <motion.div whileHover={!isMobile ? { scale: 1.05 } : {}} whileTap={{ scale: 0.95 }}>
                 <button
@@ -438,21 +451,26 @@ export function Hero({ onShopNow }: HeroProps) {
                 </AnimatePresence>
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
 
-                {/* Badge - Disabled animation on mobile */}
+                {/* Badge - Disabled animation on mobile, instant load */}
                 <motion.div
                   className="absolute top-4 right-4 bg-gradient-to-r from-red-600 to-orange-600 px-4 py-2 rounded-full"
+                  initial={isMobile ? { scale: 1 } : {}}
                   animate={
                     isMobile
-                      ? {}
+                      ? { scale: 1 }
                       : {
                           scale: [1, 1.1, 1],
                         }
                   }
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
+                  transition={
+                    isMobile
+                      ? {}
+                      : {
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }
+                  }
                 >
                   <span className="text-white text-sm">New Arrival</span>
                 </motion.div>
