@@ -192,35 +192,35 @@ export function Hero({ onShopNow }: HeroProps) {
   const getDefaultWallpapers = (): Wallpaper[] => [
     {
       id: "1",
-      imageUrl: "https://via.placeholder.com/1920x1080/1a0033/a855f7?text=Demon+Slayer+Collection",
+      imageUrl: "https://picsum.photos/1920/1080?random=1",
       title: "Demon Slayer Collection",
       subtitle: "Limited Edition Figures & Katanas",
       order: 0,
     },
     {
       id: "2",
-      imageUrl: "https://via.placeholder.com/1920x1080/1a0033/a855f7?text=Naruto+Legends",
+      imageUrl: "https://picsum.photos/1920/1080?random=2",
       title: "Naruto Legends",
       subtitle: "Iconic Ninja Collection",
       order: 1,
     },
     {
       id: "3",
-      imageUrl: "https://via.placeholder.com/1920x1080/1a0033/a855f7?text=One+Piece+Adventure",
+      imageUrl: "https://picsum.photos/1920/1080?random=3",
       title: "One Piece Adventure",
       subtitle: "Grand Line Treasures",
       order: 2,
     },
     {
       id: "4",
-      imageUrl: "https://via.placeholder.com/1920x1080/1a0033/a855f7?text=Attack+on+Titan",
+      imageUrl: "https://picsum.photos/1920/1080?random=4",
       title: "Attack on Titan",
       subtitle: "Survey Corps Collection",
       order: 3,
     },
     {
       id: "5",
-      imageUrl: "https://via.placeholder.com/1920x1080/1a0033/a855f7?text=Dragon+Ball+Z",
+      imageUrl: "https://picsum.photos/1920/1080?random=5",
       title: "Dragon Ball Z",
       subtitle: "Super Saiyan Warriors",
       order: 4,
@@ -230,6 +230,12 @@ export function Hero({ onShopNow }: HeroProps) {
   // Auto-slide wallpapers
   useEffect(() => {
     if (wallpapers.length <= 1) return;
+
+    // Preload all wallpaper images
+    wallpapers.forEach((wallpaper) => {
+      const img = new Image();
+      img.src = wallpaper.imageUrl;
+    });
 
     // Increase interval on mobile to reduce animation overhead
     const slideInterval = isMobile ? 10000 : 6000; // 10s on mobile, 6s on desktop
