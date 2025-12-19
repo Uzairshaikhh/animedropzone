@@ -51,32 +51,41 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
 
   // Wait for Razorpay script to load
   useEffect(() => {
-    // Dynamically load Razorpay script
+    // Check if script already exists
+    if (window.Razorpay) {
+      console.log("✅ Razorpay already loaded");
+      setRazorpayLoaded(true);
+      return;
+    }
+
+    // Create and load script
     const script = document.createElement("script");
+    script.id = "razorpay-checkout";
     script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
+
     script.onload = () => {
-      console.log("✅ Razorpay script loaded successfully");
-      setRazorpayLoaded(true);
+      // Wait a bit for the script to fully initialize
+      setTimeout(() => {
+        if (window.Razorpay) {
+          console.log("✅ Razorpay script loaded successfully");
+          setRazorpayLoaded(true);
+        }
+      }, 100);
     };
+
     script.onerror = () => {
-      console.error("❌ Failed to load Razorpay script");
-      // Try fallback CDN
-      const fallbackScript = document.createElement("script");
-      fallbackScript.src = "https://cdn.jsdelivr.net/npm/razorpay-js@1.0.0/dist/checkout.js";
-      fallbackScript.async = true;
-      fallbackScript.onload = () => {
-        console.log("✅ Razorpay script loaded from fallback CDN");
-        setRazorpayLoaded(true);
-      };
-      document.body.appendChild(fallbackScript);
+      console.error("❌ Failed to load Razorpay from checkout.razorpay.com");
+      setRazorpayLoaded(false);
     };
-    document.body.appendChild(script);
+
+    document.head.appendChild(script);
 
     return () => {
       // Cleanup
-      if (script.parentNode) {
-        script.parentNode.removeChild(script);
+      const existingScript = document.getElementById("razorpay-checkout");
+      if (existingScript) {
+        existingScript.remove();
       }
     };
   }, []);
