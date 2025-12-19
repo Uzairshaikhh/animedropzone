@@ -10,12 +10,33 @@
   RewriteRule ^(.*)$ index.html [L]
 </IfModule>
 
-# Cache busting for assets
-<FilesMatch "\.(js|css|jpg|jpeg|png|gif|ico|svg|webp|ttf|woff|woff2)$">
-  Header set Cache-Control "max-age=31536000, public"
+# Don't cache main JavaScript bundles (they have hashes for versioning)
+<FilesMatch "^/assets/index-.*\.js$">
+  Header set Cache-Control "max-age=0, public, must-revalidate"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
 </FilesMatch>
 
-# Don't cache HTML
+# Cache vendor and library chunks (they're stable)
+<FilesMatch "^/assets/(vendor|framer|supabase|radix|CherryBlossomTree)-.*\.js$">
+  Header set Cache-Control "max-age=31536000, public, immutable"
+</FilesMatch>
+
+# Don't cache CSS either
+<FilesMatch "^/assets/index-.*\.css$">
+  Header set Cache-Control "max-age=0, public, must-revalidate"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
+</FilesMatch>
+
+# Cache static assets (images, fonts, etc)
+<FilesMatch "\.(jpg|jpeg|png|gif|ico|svg|webp|ttf|woff|woff2)$">
+  Header set Cache-Control "max-age=31536000, public, immutable"
+</FilesMatch>
+
+# Never cache HTML
 <FilesMatch "\.html$">
   Header set Cache-Control "max-age=0, public, must-revalidate"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
 </FilesMatch>
