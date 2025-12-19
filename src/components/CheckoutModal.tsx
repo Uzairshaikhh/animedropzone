@@ -29,6 +29,7 @@ declare global {
 export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }: CheckoutModalProps) {
   const { success } = useToast();
   const { clearCart } = useCart();
+  const [razorpayLoaded, setRazorpayLoaded] = useState(false);
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -47,6 +48,18 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
   const [couponLoading, setCouponLoading] = useState(false);
   const [showOrderSuccessModal, setShowOrderSuccessModal] = useState(false);
   const [orderSuccessData, setOrderSuccessData] = useState<any>(null);
+
+  // Wait for Razorpay script to load
+  useEffect(() => {
+    const checkRazorpay = () => {
+      if (window.Razorpay) {
+        setRazorpayLoaded(true);
+      } else {
+        setTimeout(checkRazorpay, 100);
+      }
+    };
+    checkRazorpay();
+  }, []);
 
   const SHIPPING_CHARGES = 100;
   const subtotal = total;
@@ -132,9 +145,9 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
 
     try {
       // Check if Razorpay script is loaded
-      if (!window.Razorpay) {
+      if (!window.Razorpay || !razorpayLoaded) {
         console.error("Razorpay script not loaded");
-        alert("Payment gateway is not available. Please refresh the page and try again.");
+        alert("Payment gateway is loading. Please wait a moment and try again.");
         setIsProcessing(false);
         return;
       }
@@ -562,15 +575,16 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
                 <button
                   type="button"
                   onClick={() => setPaymentMethod("razorpay")}
+                  disabled={!razorpayLoaded}
                   className={`p-4 rounded-lg border-2 transition-all ${
                     paymentMethod === "razorpay"
                       ? "border-purple-500 bg-purple-900/30"
                       : "border-purple-500/30 bg-purple-900/10 hover:bg-purple-900/20"
-                  }`}
+                  } ${!razorpayLoaded ? "opacity-50 cursor-not-allowed" : ""}`}
                 >
                   <CreditCard className="w-8 h-8 mx-auto mb-2 text-purple-400" />
                   <div className="text-white text-sm">Razorpay</div>
-                  <div className="text-gray-400 text-xs">Cards, UPI, Wallet</div>
+                  <div className="text-gray-400 text-xs">{razorpayLoaded ? "Cards, UPI, Wallet" : "Loading..."}</div>
                 </button>
 
                 <button
