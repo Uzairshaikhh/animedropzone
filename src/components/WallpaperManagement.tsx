@@ -56,7 +56,7 @@ export function WallpaperManagement() {
     {
       id: `default_wallpaper_1`,
       imageUrl:
-        "https://images.unsplash.com/photo-1668293750324-bd77c1f08ca9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZW1vbiUyMHNsYXllciUyMGFuaW1lfGVufDF8fHx8MTc2NTMwODI3OHww&ixlib=rb-4.1.0&q=80&w=1080",
+        "https://images.pexels.com/photos/18613634/pexels-photo-18613634/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
       title: "Demon Slayer Collection",
       subtitle: "Limited Edition Figures & Katanas",
       order: 0,
@@ -64,7 +64,7 @@ export function WallpaperManagement() {
     {
       id: `default_wallpaper_2`,
       imageUrl:
-        "https://images.unsplash.com/photo-1740644545217-892da8cce224?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXJ1dG8lMjBhbmltZSUyMGNoYXJhY3RlcnxlbnwxfHx8fDE3NjUzMDgyNzl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+        "https://images.pexels.com/photos/19091613/pexels-photo-19091613/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
       title: "Naruto Legends",
       subtitle: "Iconic Ninja Collection",
       order: 1,
@@ -72,7 +72,7 @@ export function WallpaperManagement() {
     {
       id: `default_wallpaper_3`,
       imageUrl:
-        "https://images.unsplash.com/photo-1667419674822-1a9195436f1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvbmUlMjBwaWVjZSUyMGFuaW1lfGVufDF8fHx8MTc2NTMwODI3OXww&ixlib=rb-4.1.0&q=80&w=1080",
+        "https://images.pexels.com/photos/17696732/pexels-photo-17696732/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
       title: "One Piece Adventure",
       subtitle: "Grand Line Treasures",
       order: 2,
@@ -80,7 +80,7 @@ export function WallpaperManagement() {
     {
       id: `default_wallpaper_4`,
       imageUrl:
-        "https://images.unsplash.com/photo-1709675577960-0b1e7ba55347?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhdHRhY2slMjB0aXRhbiUyMGFuaW1lfGVufDF8fHx8MTc2NTMwODI3OXww&ixlib=rb-4.1.0&q=80&w=1080",
+        "https://images.pexels.com/photos/16615635/pexels-photo-16615635/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
       title: "Attack on Titan",
       subtitle: "Survey Corps Collection",
       order: 3,
@@ -88,7 +88,7 @@ export function WallpaperManagement() {
     {
       id: `default_wallpaper_5`,
       imageUrl:
-        "https://images.unsplash.com/photo-1575540325855-4b5d285a3845?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkcmFnb24lMjBiYWxsJTIwYW5pbWV8ZW58MXx8fHwxNzY1MjE3NDA5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+        "https://images.pexels.com/photos/15582104/pexels-photo-15582104/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
       title: "Dragon Ball Z",
       subtitle: "Super Saiyan Warriors",
       order: 4,
