@@ -51,14 +51,34 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
 
   // Wait for Razorpay script to load
   useEffect(() => {
-    const checkRazorpay = () => {
-      if (window.Razorpay) {
+    // Dynamically load Razorpay script
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    script.onload = () => {
+      console.log("✅ Razorpay script loaded successfully");
+      setRazorpayLoaded(true);
+    };
+    script.onerror = () => {
+      console.error("❌ Failed to load Razorpay script");
+      // Try fallback CDN
+      const fallbackScript = document.createElement("script");
+      fallbackScript.src = "https://cdn.jsdelivr.net/npm/razorpay-js@1.0.0/dist/checkout.js";
+      fallbackScript.async = true;
+      fallbackScript.onload = () => {
+        console.log("✅ Razorpay script loaded from fallback CDN");
         setRazorpayLoaded(true);
-      } else {
-        setTimeout(checkRazorpay, 100);
+      };
+      document.body.appendChild(fallbackScript);
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      // Cleanup
+      if (script.parentNode) {
+        script.parentNode.removeChild(script);
       }
     };
-    checkRazorpay();
   }, []);
 
   const SHIPPING_CHARGES = 100;
