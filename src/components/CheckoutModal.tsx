@@ -277,6 +277,12 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Prevent COD for orders above 3000 rupees
+    if (paymentMethod === "cod" && grandTotal > 3000) {
+      alert("❌ Cash on Delivery is not available for orders above ₹3000.\nPlease select Razorpay or Paytm.");
+      return;
+    }
+
     if (paymentMethod === "razorpay") {
       await handleRazorpayPayment();
     } else if (paymentMethod === "paytm") {
@@ -575,18 +581,30 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
 
                 <button
                   type="button"
-                  onClick={() => setPaymentMethod("cod")}
+                  onClick={() => {
+                    if (grandTotal > 3000) {
+                      alert("❌ Cash on Delivery is not available for orders above ₹3000");
+                      return;
+                    }
+                    setPaymentMethod("cod");
+                  }}
+                  disabled={grandTotal > 3000}
                   className={`p-4 rounded-lg border-2 transition-all ${
-                    paymentMethod === "cod"
+                    grandTotal > 3000
+                      ? "opacity-50 cursor-not-allowed border-gray-500/30 bg-gray-900/10"
+                      : paymentMethod === "cod"
                       ? "border-purple-500 bg-purple-900/30"
                       : "border-purple-500/30 bg-purple-900/10 hover:bg-purple-900/20"
                   }`}
                 >
                   <Banknote className="w-8 h-8 mx-auto mb-2 text-purple-400" />
                   <div className="text-white text-sm">Cash on Delivery</div>
-                  <div className="text-gray-400 text-xs">Pay at doorstep</div>
+                  <div className="text-gray-400 text-xs">{grandTotal > 3000 ? "Not available" : "Pay at doorstep"}</div>
                 </button>
               </div>
+              {grandTotal > 3000 && (
+                <p className="text-red-400 text-sm mt-2">⚠️ Cash on Delivery is not available for orders above ₹3000</p>
+              )}
             </div>
 
             <div className="mt-4">
