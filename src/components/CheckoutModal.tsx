@@ -131,6 +131,14 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
     setIsProcessing(true);
 
     try {
+      // Check if Razorpay script is loaded
+      if (!window.Razorpay) {
+        console.error("Razorpay script not loaded");
+        alert("Payment gateway is not available. Please refresh the page and try again.");
+        setIsProcessing(false);
+        return;
+      }
+
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID || "",
         amount: Math.round(grandTotal * 100), // Amount in paise
