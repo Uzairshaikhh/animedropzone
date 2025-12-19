@@ -192,40 +192,35 @@ export function Hero({ onShopNow }: HeroProps) {
   const getDefaultWallpapers = (): Wallpaper[] => [
     {
       id: "1",
-      imageUrl:
-        "https://images.unsplash.com/photo-1668293750324-bd77c1f08ca9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkZW1vbiUyMHNsYXllciUyMGFuaW1lfGVufDF8fHx8MTc2NTMwODI3OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      imageUrl: "https://via.placeholder.com/1920x1080/1a0033/a855f7?text=Demon+Slayer+Collection",
       title: "Demon Slayer Collection",
       subtitle: "Limited Edition Figures & Katanas",
       order: 0,
     },
     {
       id: "2",
-      imageUrl:
-        "https://images.unsplash.com/photo-1740644545217-892da8cce224?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxuYXJ1dG8lMjBhbmltZSUyMGNoYXJhY3RlcnxlbnwxfHx8fDE3NjUzMDgyNzl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      imageUrl: "https://via.placeholder.com/1920x1080/1a0033/a855f7?text=Naruto+Legends",
       title: "Naruto Legends",
       subtitle: "Iconic Ninja Collection",
       order: 1,
     },
     {
       id: "3",
-      imageUrl:
-        "https://images.unsplash.com/photo-1667419674822-1a9195436f1c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxvbmUlMjBwaWVjZSUyMGFuaW1lfGVufDF8fHx8MTc2NTMwODI3OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      imageUrl: "https://via.placeholder.com/1920x1080/1a0033/a855f7?text=One+Piece+Adventure",
       title: "One Piece Adventure",
       subtitle: "Grand Line Treasures",
       order: 2,
     },
     {
       id: "4",
-      imageUrl:
-        "https://images.unsplash.com/photo-1709675577960-0b1e7ba55347?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhdHRhY2slMjB0aXRhbiUyMGFuaW1lfGVufDF8fHx8MTc2NTMwODI3OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      imageUrl: "https://via.placeholder.com/1920x1080/1a0033/a855f7?text=Attack+on+Titan",
       title: "Attack on Titan",
       subtitle: "Survey Corps Collection",
       order: 3,
     },
     {
       id: "5",
-      imageUrl:
-        "https://images.unsplash.com/photo-1575540325855-4b5d285a3845?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkcmFnb24lMjBiYWxsJTIwYW5pbWV8ZW58MXx8fHwxNzY1MjE3NDA5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      imageUrl: "https://via.placeholder.com/1920x1080/1a0033/a855f7?text=Dragon+Ball+Z",
       title: "Dragon Ball Z",
       subtitle: "Super Saiyan Warriors",
       order: 4,
@@ -434,11 +429,7 @@ export function Hero({ onShopNow }: HeroProps) {
                 <AnimatePresence mode="wait">
                   <motion.img
                     key={currentIndex}
-                    src={
-                      isMobile
-                        ? `${currentWallpaper.imageUrl}&w=600&q=75` // Mobile: smaller, lower quality
-                        : `${currentWallpaper.imageUrl}&w=1080&q=85` // Desktop: larger, higher quality
-                    }
+                    src={currentWallpaper.imageUrl}
                     alt={currentWallpaper.title}
                     loading="lazy"
                     decoding="async"
