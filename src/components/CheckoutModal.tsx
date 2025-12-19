@@ -41,7 +41,7 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
     state: "",
     pincode: "",
   });
-  const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "paytm" | "cod">("razorpay");
+  const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "paytm" | "cod">("cod");
   const [isProcessing, setIsProcessing] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; type: string } | null>(null);
