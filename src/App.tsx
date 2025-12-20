@@ -28,9 +28,4 @@ export default function App() {
     </ToastProvider>
   );
 }
-          </Routes>
-        </Router>
-      </CartProvider>
-    </ToastProvider>
-  );
 }
