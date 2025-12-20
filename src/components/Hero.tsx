@@ -15,6 +15,50 @@ interface HeroProps {
   onShopNow?: () => void;
 }
 
+// Define this OUTSIDE the component to avoid initialization order issues
+const getDefaultWallpapers = (): Wallpaper[] => [
+  {
+    id: "default_wallpaper_1",
+    imageUrl:
+      "https://images.pexels.com/photos/18613634/pexels-photo-18613634/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
+    title: "Demon Slayer Collection",
+    subtitle: "Limited Edition Figures & Katanas",
+    order: 0,
+  },
+  {
+    id: "default_wallpaper_2",
+    imageUrl:
+      "https://images.pexels.com/photos/19091613/pexels-photo-19091613/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
+    title: "Naruto Legends",
+    subtitle: "Iconic Ninja Collection",
+    order: 1,
+  },
+  {
+    id: "default_wallpaper_3",
+    imageUrl:
+      "https://images.pexels.com/photos/17696732/pexels-photo-17696732/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
+    title: "One Piece Adventure",
+    subtitle: "Grand Line Treasures",
+    order: 2,
+  },
+  {
+    id: "default_wallpaper_4",
+    imageUrl:
+      "https://images.pexels.com/photos/16615635/pexels-photo-16615635/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
+    title: "Attack on Titan",
+    subtitle: "Survey Corps Collection",
+    order: 3,
+  },
+  {
+    id: "default_wallpaper_5",
+    imageUrl:
+      "https://images.pexels.com/photos/15582104/pexels-photo-15582104/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
+    title: "Dragon Ball Z",
+    subtitle: "Super Saiyan Warriors",
+    order: 4,
+  },
+];
+
 export function Hero({ onShopNow }: HeroProps) {
   const [wallpapers, setWallpapers] = useState<Wallpaper[]>(() => {
     // Load from cache immediately on mount (instant load)
@@ -188,49 +232,6 @@ export function Hero({ onShopNow }: HeroProps) {
       setWallpapers(getDefaultWallpapers());
     }
   };
-
-  const getDefaultWallpapers = (): Wallpaper[] => [
-    {
-      id: "default_wallpaper_1",
-      imageUrl:
-        "https://images.pexels.com/photos/18613634/pexels-photo-18613634/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
-      title: "Demon Slayer Collection",
-      subtitle: "Limited Edition Figures & Katanas",
-      order: 0,
-    },
-    {
-      id: "default_wallpaper_2",
-      imageUrl:
-        "https://images.pexels.com/photos/19091613/pexels-photo-19091613/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
-      title: "Naruto Legends",
-      subtitle: "Iconic Ninja Collection",
-      order: 1,
-    },
-    {
-      id: "default_wallpaper_3",
-      imageUrl:
-        "https://images.pexels.com/photos/17696732/pexels-photo-17696732/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
-      title: "One Piece Adventure",
-      subtitle: "Grand Line Treasures",
-      order: 2,
-    },
-    {
-      id: "default_wallpaper_4",
-      imageUrl:
-        "https://images.pexels.com/photos/16615635/pexels-photo-16615635/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
-      title: "Attack on Titan",
-      subtitle: "Survey Corps Collection",
-      order: 3,
-    },
-    {
-      id: "default_wallpaper_5",
-      imageUrl:
-        "https://images.pexels.com/photos/15582104/pexels-photo-15582104/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
-      title: "Dragon Ball Z",
-      subtitle: "Super Saiyan Warriors",
-      order: 4,
-    },
-  ];
 
   // Auto-slide wallpapers
   useEffect(() => {
