@@ -94,10 +94,8 @@
   <link rel="dns-prefetch" href="//checkout.razorpay.com" />
   <link rel="dns-prefetch" href="//api.smtp2go.com" />
 
-  <!-- Preload critical resources -->
-  <link rel="preload" as="script" href="/src/main.tsx" />
-  <link rel="prefetch" href="/assets/vendor.js" />
-  <link rel="prefetch" href="/assets/framer.js" />
+  <!-- Preload critical resources - will be injected by Vite during build -->
+  <!-- Do NOT manually add script preloads here, Vite handles this automatically -->
 
   <title>animedropzone</title>
 </head>
