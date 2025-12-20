@@ -1,4 +1,4 @@
-import { X, CreditCard, Wallet, Banknote } from "lucide-react";
+import { X, CreditCard, Banknote } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Product } from "./ProductCard";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
@@ -41,7 +41,7 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
     state: "",
     pincode: "",
   });
-  const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "paytm" | "cod">("cod");
+  const [paymentMethod, setPaymentMethod] = useState<"razorpay" | "cod">("cod");
   const [isProcessing, setIsProcessing] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; type: string } | null>(null);
@@ -241,78 +241,6 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
     }
   };
 
-  const handlePaytmPayment = async () => {
-    setIsProcessing(true);
-
-    try {
-      const orderId = `ORD${Date.now()}`;
-
-      // Get Paytm credentials from environment
-      const paytmMid = import.meta.env.VITE_PAYTM_MID;
-      const paytmSecretKey = import.meta.env.VITE_PAYTM_SECRET_KEY;
-
-      if (!paytmMid || !paytmSecretKey) {
-        alert(
-          "⚠️ Paytm is not configured yet.\n\n" +
-            "To enable Paytm payments:\n\n" +
-            "1. Sign up at https://business.paytm.com\n" +
-            "2. Get your Merchant ID and Secret Key\n" +
-            "3. Add to environment variables:\n" +
-            "   VITE_PAYTM_MID=your_merchant_id\n" +
-            "   VITE_PAYTM_SECRET_KEY=your_secret_key\n\n" +
-            "For now, use Razorpay or Cash on Delivery."
-        );
-        setIsProcessing(false);
-        return;
-      }
-
-      // Prepare payment parameters
-      const paytmParams = {
-        MID: paytmMid,
-        WEBSITE: import.meta.env.VITE_PAYTM_WEBSITE || "WEBSTAGING",
-        CHANNEL_ID: "WEB",
-        INDUSTRY_TYPE_ID: "Retail",
-        ORDER_ID: orderId,
-        CUST_ID: user?.id || `CUST${Date.now()}`,
-        EMAIL: formData.email,
-        MOBILE_NO: formData.phone,
-        TXN_AMOUNT: grandTotal.toFixed(2),
-        CALLBACK_URL: `${window.location.origin}/payment-callback`,
-      };
-
-      // For demo/testing without full integration
-      const proceed = confirm(
-        `🎯 Paytm Payment\n\n` +
-          `Amount: ₹${grandTotal.toFixed(2)}\n` +
-          `Order ID: ${orderId}\n\n` +
-          `Test Card:\n` +
-          `4111 1111 1111 1111 | 123 | Future Date\n\n` +
-          `Ready to proceed to Paytm?`
-      );
-
-      if (proceed) {
-        // In production, you would:
-        // 1. Call backend to generate checksum
-        // 2. Submit form to Paytm gateway
-        // 3. Handle callback/redirect
-
-        // For now, simulate successful payment
-        const simulatedPaymentId = `PAYTM${Date.now()}`;
-        await saveOrder(simulatedPaymentId, "Paytm");
-
-        // In real implementation, redirect to:
-        // https://securegw-stage.paytm.in/order/receivepaytm?
-        // (with checksum and parameters)
-      } else {
-        setIsProcessing(false);
-      }
-    } catch (error) {
-      console.log("Error initializing Paytm:", error);
-      alert("Error initializing Paytm payment. Please try again.");
-      setIsProcessing(false);
-    }
-  };
-
   const handleCODPayment = async () => {
     setIsProcessing(true);
 
@@ -331,14 +259,12 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
 
     // Prevent COD for orders above 3000 rupees
     if (paymentMethod === "cod" && grandTotal > 3000) {
-      alert("❌ Cash on Delivery is not available for orders above ₹3000.\nPlease select Razorpay or Paytm.");
+      alert("❌ Cash on Delivery is not available for orders above ₹3000.\nPlease select Razorpay.");
       return;
     }
 
     if (paymentMethod === "razorpay") {
       await handleRazorpayPayment();
-    } else if (paymentMethod === "paytm") {
-      await handlePaytmPayment();
     } else {
       await handleCODPayment();
     }
@@ -602,7 +528,7 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
 
             <div>
               <label className="block text-gray-300 mb-3">Payment Method</label>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <button
                   type="button"
                   onClick={() => setPaymentMethod("razorpay")}
@@ -616,20 +542,6 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
                   <CreditCard className="w-8 h-8 mx-auto mb-2 text-purple-400" />
                   <div className="text-white text-sm">Razorpay</div>
                   <div className="text-gray-400 text-xs">{razorpayLoaded ? "Cards, UPI, Wallet" : "Loading..."}</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setPaymentMethod("paytm")}
-                  className={`p-4 rounded-lg border-2 transition-all ${
-                    paymentMethod === "paytm"
-                      ? "border-purple-500 bg-purple-900/30"
-                      : "border-purple-500/30 bg-purple-900/10 hover:bg-purple-900/20"
-                  }`}
-                >
-                  <Wallet className="w-8 h-8 mx-auto mb-2 text-purple-400" />
-                  <div className="text-white text-sm">Paytm</div>
-                  <div className="text-gray-400 text-xs">Wallet & Payment</div>
                 </button>
 
                 <button
