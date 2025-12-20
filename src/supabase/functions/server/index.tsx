@@ -3409,71 +3409,30 @@ app.get("/make-server-95a96d8e/kv-status", async (c) => {
   }
 });
 
-// Get all wallpapers
+// Get all wallpapers (using Postgres)
 app.get("/make-server-95a96d8e/wallpapers", async (c) => {
   try {
-    console.log("🔵 GET /wallpapers - Fetching wallpapers from KV...");
+    console.log("🔵 GET /wallpapers - Fetching from Postgres...");
     
-    let wallpapers: any[] = [];
+    const { data, error } = await supabase
+      .from("wallpapers")
+      .select("*")
+      .order("order", { ascending: true });
 
-    // Method 1: Try combined array FIRST (most reliable)
-    console.log("🔍 Checking combined array (wallpapers_array)...");
-    try {
-      const combined = await kv.get("wallpapers_array");
-      console.log("✅ Combined array fetch attempt, got:", combined ? "value" : "null");
-      
-      if (combined && Array.isArray(combined)) {
-        console.log("✅ Found wallpapers_array with", combined.length, "items");
-        wallpapers = combined.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
-        console.log("✅ Using combined array, returning", wallpapers.length, "wallpapers");
-        return c.json({ success: true, wallpapers });
-      }
-    } catch (error) {
-      console.error("❌ Error fetching combined array:", error);
+    if (error) {
+      console.error("❌ Error fetching from Postgres:", error);
+      return c.json({ success: false, error: error.message, wallpapers: [] }, 500);
     }
 
-    // Method 2: Fallback to getByPrefix if combined array not found
-    console.log("⚠️ Combined array not found, trying getByPrefix...");
-    try {
-      const wallpaperKeys = await kv.getByPrefix("wallpaper:");
-      console.log("📦 getByPrefix found:", wallpaperKeys.length, "items");
-      
-      if (wallpaperKeys.length > 0) {
-        wallpapers = wallpaperKeys
-          .filter((item: any) => item && item.value)
-          .map((item: any) => {
-            try {
-              if (typeof item.value === "string") {
-                return JSON.parse(item.value);
-              }
-              return item.value;
-            } catch (e) {
-              console.error("❌ Failed to parse:", item.key);
-              return null;
-            }
-          })
-          .filter((item: any) => item !== null && item !== undefined)
-          .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
-        
-        if (wallpapers.length > 0) {
-          console.log("✅ Found", wallpapers.length, "wallpapers via getByPrefix");
-          return c.json({ success: true, wallpapers });
-        }
-      }
-    } catch (error) {
-      console.error("❌ getByPrefix error:", error);
-    }
-
-    // No wallpapers found
-    console.log("⚠️ No wallpapers found in either storage method");
-    return c.json({ success: true, wallpapers: [] });
+    console.log("✅ Fetched", data.length, "wallpapers from Postgres");
+    return c.json({ success: true, wallpapers: data || [] });
   } catch (error) {
-    console.error("❌ Error fetching wallpapers:", error);
+    console.error("❌ Error:", error);
     return c.json({ success: false, error: String(error), wallpapers: [] }, 500);
   }
 });
 
-// Add a new wallpaper
+// Add a new wallpaper (using Postgres)
 app.post("/make-server-95a96d8e/wallpapers", async (c) => {
   try {
     const { imageUrl, title, subtitle } = await c.req.json();
@@ -3482,43 +3441,41 @@ app.post("/make-server-95a96d8e/wallpapers", async (c) => {
       return c.json({ success: false, error: "Missing required fields" }, 400);
     }
 
-    // Get all existing wallpapers to determine the next order
-    const wallpaperKeys = await kv.getByPrefix("wallpaper:");
-    console.log("📊 Current wallpapers in KV:", wallpaperKeys.length);
+    // Get max order from Postgres
+    const { data: maxData } = await supabase
+      .from("wallpapers")
+      .select("order")
+      .order("order", { ascending: false })
+      .limit(1);
 
-    const maxOrder = wallpaperKeys.reduce((max: number, item: any) => {
-      if (!item || !item.value) return max;
-      return Math.max(max, item.value.order || 0);
-    }, -1);
+    const maxOrder = (maxData && maxData.length > 0) ? (maxData[0].order || 0) : -1;
 
-    const wallpaperId = `wallpaper:${Date.now()}`;
     const wallpaper = {
-      id: wallpaperId,
       imageUrl,
       title,
       subtitle,
       order: maxOrder + 1,
-      createdAt: new Date().toISOString(),
+      created_at: new Date().toISOString(),
     };
 
-    console.log("💾 Saving wallpaper to KV:", { key: wallpaperId, order: maxOrder + 1 });
-    await kv.set(wallpaperId, wallpaper);
-    console.log("✅ Wallpaper saved successfully:", wallpaperId);
+    console.log("💾 Saving wallpaper to Postgres:", { title, order: maxOrder + 1 });
+    const { data, error } = await supabase
+      .from("wallpapers")
+      .insert([wallpaper])
+      .select();
 
-    // Also update the combined wallpapers array
-    try {
-      let wallpapers = [];
-      const combined = await kv.get("wallpapers_array");
-      if (Array.isArray(combined)) {
-        wallpapers = combined;
-      }
-      wallpapers.push(wallpaper);
-      wallpapers.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
-      await kv.set("wallpapers_array", wallpapers);
-      console.log("✅ Combined wallpapers array updated:", wallpapers.length);
-    } catch (arrayError) {
-      console.error("⚠️ Could not update combined array:", arrayError);
+    if (error) {
+      console.error("❌ Error saving to Postgres:", error);
+      return c.json({ success: false, error: error.message }, 500);
     }
+
+    console.log("✅ Wallpaper saved to Postgres:", data?.[0]);
+    return c.json({ success: true, wallpaper: data?.[0] });
+  } catch (error) {
+    console.error("❌ Error adding wallpaper:", error);
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
         message: "Default wallpaper updated locally",
       });
     }
