@@ -27,9 +27,9 @@ export function WallpaperManagement() {
   const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
+    // Immediately fetch from server on component mount
+    console.log("🚀 Initial fetch from server on WallpaperManagement mount");
     fetchWallpapers();
-    // Load default wallpapers immediately as fallback
-    setWallpapers(getDefaultWallpapers());
   }, []);
 
   useEffect(() => {
@@ -153,18 +153,25 @@ export function WallpaperManagement() {
 
   const fetchWallpapers = async () => {
     try {
-      console.log("🔵 Fetching wallpapers...");
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers`, {
-        headers: {
-          Authorization: `Bearer ${publicAnonKey}`,
-        },
-      });
+      console.log("🔵 Fetching wallpapers from server (source of truth)...");
+      const cacheKey = `?t=${Date.now()}`;
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers${cacheKey}`,
+        {
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+            Expires: "0",
+          },
+        }
+      );
 
       console.log("📡 Wallpaper fetch response status:", response.status);
 
       if (response.ok) {
         const data = await response.json();
-        console.log("✅ Wallpaper data received:", data);
+        console.log("✅ Wallpaper data received from server:", data);
 
         // Filter out any null/undefined wallpapers
         const validWallpapers = (data.wallpapers || [])
@@ -172,12 +179,14 @@ export function WallpaperManagement() {
           .sort((a: Wallpaper, b: Wallpaper) => (a.order || 0) - (b.order || 0));
 
         console.log("✅ Valid wallpapers count:", validWallpapers.length);
-        console.log("✅ Wallpapers:", validWallpapers);
+        console.log("✅ Wallpapers from server:", validWallpapers);
 
         if (validWallpapers.length > 0) {
           setWallpapers(validWallpapers);
+          // Cache for offline fallback
+          localStorage.setItem("cached_wallpapers", JSON.stringify(validWallpapers));
         } else {
-          console.log("⚠️ No wallpapers found, seeding defaults...");
+          console.log("⚠️ No wallpapers found on server, seeding defaults...");
           await seedDefaultWallpapers();
         }
       } else {
@@ -196,7 +205,7 @@ export function WallpaperManagement() {
         } catch (cacheError) {
           console.error("Error loading from cache:", cacheError);
         }
-        console.log("📍 Using default wallpapers");
+        console.log("📍 No cache available, will show defaults");
         setWallpapers(getDefaultWallpapers());
       }
     } catch (error) {
@@ -214,7 +223,7 @@ export function WallpaperManagement() {
       } catch (cacheError) {
         console.error("Error loading from cache:", cacheError);
       }
-      console.log("📍 Using default wallpapers");
+      console.log("📍 No cache available, will show defaults");
       setWallpapers(getDefaultWallpapers());
     }
   };

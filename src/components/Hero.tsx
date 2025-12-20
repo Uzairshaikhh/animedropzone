@@ -60,19 +60,7 @@ const getDefaultWallpapers = (): Wallpaper[] => [
 ];
 
 export function Hero({ onShopNow }: HeroProps) {
-  const [wallpapers, setWallpapers] = useState<Wallpaper[]>(() => {
-    // Load from cache immediately on mount (instant load)
-    try {
-      const cached = localStorage.getItem("cached_wallpapers");
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        if (parsed.length > 0) return parsed;
-      }
-    } catch (e) {
-      console.log("Cache read error");
-    }
-    return getDefaultWallpapers();
-  });
+  const [wallpapers, setWallpapers] = useState<Wallpaper[]>(getDefaultWallpapers());
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : false;
@@ -101,8 +89,13 @@ export function Hero({ onShopNow }: HeroProps) {
 
   // Fetch wallpapers from the database
   useEffect(() => {
-    // Don't wait for fetch, update in background only
-    fetchWallpapersInBackground();
+    // Immediately fetch on component mount - don't wait
+    const initialFetch = async () => {
+      console.log("🚀 Initial wallpaper fetch on component mount...");
+      await fetchWallpapersInBackground();
+    };
+
+    initialFetch();
 
     // Listen for wallpaper updates via BroadcastChannel
     let channel: BroadcastChannel | null = null;
@@ -133,17 +126,17 @@ export function Hero({ onShopNow }: HeroProps) {
       console.log("BroadcastChannel not available, using polling only");
     }
 
-    // Poll for wallpaper updates every 30 seconds on first load, then every 120 seconds
+    // Poll for wallpaper updates - very frequently to catch changes across devices
     let pollCount = 0;
     const pollInterval = setInterval(() => {
       pollCount++;
-      // More frequent polling in first 5 minutes, then slower
-      const shouldPoll = pollCount < 10 || pollCount % 4 === 0;
+      // More frequent polling in first 10 minutes, then slower
+      const shouldPoll = pollCount < 20 || pollCount % 8 === 0;
       if (shouldPoll) {
         console.log(`🔄 Polling for wallpaper updates... (check ${pollCount})`);
         fetchWallpapersInBackground();
       }
-    }, 30000); // Check every 30 seconds (fast check, slow updates)
+    }, 15000); // Check every 15 seconds for faster cross-device sync
 
     return () => {
       if (channel) channel.close();
@@ -153,7 +146,7 @@ export function Hero({ onShopNow }: HeroProps) {
 
   const fetchWallpapersInBackground = async () => {
     try {
-      console.log("🔵 Fetching wallpapers from server (priority: fresh data)...");
+      console.log("🔵 Fetching wallpapers from server (source of truth)...");
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 4000); // 4s timeout
 
@@ -184,17 +177,16 @@ export function Hero({ onShopNow }: HeroProps) {
             .sort((a: Wallpaper, b: Wallpaper) => (a.order || 0) - (b.order || 0));
 
           if (validWallpapers.length > 0) {
-            console.log("✅ Updating state with server wallpapers:", validWallpapers.length);
+            console.log("✅ Updating state with fresh server wallpapers:", validWallpapers.length);
             setWallpapers(validWallpapers);
-            // Update cache with fresh data
+            // Update cache with fresh data for offline fallback ONLY
             localStorage.setItem("cached_wallpapers", JSON.stringify(validWallpapers));
             localStorage.setItem("wallpapers_sync_time", Date.now().toString());
-            localStorage.setItem("wallpapers_sync_count", String((data.wallpapers || []).length));
             return;
           }
         }
 
-        console.log("⚠️ No valid wallpapers from server, checking fallback...");
+        console.log("⚠️ No wallpapers from server yet, seeding defaults...");
       } else {
         console.log("⚠️ Wallpaper fetch failed with status:", response.status);
       }
@@ -206,7 +198,7 @@ export function Hero({ onShopNow }: HeroProps) {
     try {
       const cached = localStorage.getItem("cached_wallpapers");
       if (cached) {
-        console.log("📦 Falling back to cached wallpapers");
+        console.log("📦 Falling back to cached wallpapers (server offline)");
         const cachedWallpapers = JSON.parse(cached);
         if (cachedWallpapers.length > 0) {
           setWallpapers(cachedWallpapers);
