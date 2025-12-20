@@ -165,6 +165,14 @@ export function AdminPage() {
   const galleryImages = formData.images || [];
   const pendingPreviews = imagePreviews || [];
 
+  // Check if user was previously logged in
+  useEffect(() => {
+    const wasLoggedIn = localStorage.getItem("adminLoggedIn") === "true";
+    if (wasLoggedIn) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
   useEffect(() => {
     if (isLoggedIn) {
       fetchProducts();
@@ -180,23 +188,17 @@ export function AdminPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/admin/login`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${publicAnonKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userId, password }),
-      });
+      // Simple client-side authentication
+      // Password is: admin123
+      const correctPassword = "admin123";
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (password === correctPassword) {
         setIsLoggedIn(true);
         setUserId("");
         setPassword("");
+        localStorage.setItem("adminLoggedIn", "true");
       } else {
-        setError("Invalid credentials. Please try again.");
+        setError("Invalid password. Please try again.");
       }
     } catch (error) {
       console.log("Login error:", error);
@@ -210,6 +212,7 @@ export function AdminPage() {
     setIsLoggedIn(false);
     setShowForm(false);
     setEditingProduct(null);
+    localStorage.removeItem("adminLoggedIn");
   };
 
   const fetchProducts = async () => {
