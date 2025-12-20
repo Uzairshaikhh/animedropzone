@@ -3377,6 +3377,7 @@ app.delete("/make-server-95a96d8e/categories/:categoryId", async (c) => {
 });
 
 // ==================== WALLPAPER ROUTES ====================
+// Deployed: 2025-12-20 (Default wallpaper fix)
 
 // Get all wallpapers
 app.get("/make-server-95a96d8e/wallpapers", async (c) => {
