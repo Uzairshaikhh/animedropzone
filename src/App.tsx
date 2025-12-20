@@ -24,9 +24,9 @@ export default function App() {
   return (
     <ToastProvider>
       <CartProvider>
-        <Preloader />
-        <Favicon />
         <Router>
+          <Preloader />
+          <Favicon />
           <Routes>
             <Route path="/" element={<StorePage />} />
             <Route path="/secret-admin-panel-7b2cbf" element={<AdminPage />} />
