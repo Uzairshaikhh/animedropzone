@@ -4869,6 +4869,86 @@ app.get("/make-server-95a96d8e/newsletter-subscribers", async (c) => {
   }
 });
 
+// Subscribe to newsletter
+app.post("/make-server-95a96d8e/newsletter/subscribe", async (c) => {
+  try {
+    const { email } = await c.req.json();
+
+    if (!email || !email.includes("@")) {
+      return c.json({ success: false, message: "Invalid email address" }, 400);
+    }
+
+    // Store subscriber in KV storage with email as unique identifier
+    const subscriberId = `subscriber:${email.toLowerCase()}`;
+    const subscriber = {
+      id: subscriberId,
+      email: email.toLowerCase(),
+      subscribedAt: new Date().toISOString(),
+      status: "active",
+    };
+
+    await kv.set(subscriberId, subscriber);
+
+    // Optional: Send confirmation email
+    try {
+      const confirmationSubject = "✨ Welcome to AnimeDropZone Newsletter!";
+      const confirmationBody = `
+        <div style="font-family: Arial, sans-serif; background: linear-gradient(135deg, #1f2937 0%, #111827 100%); padding: 40px 20px; min-height: 100vh;">
+          <div style="max-width: 600px; margin: 0 auto; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(147, 51, 234, 0.3); border-radius: 12px; overflow: hidden;">
+            <div style="background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); padding: 30px; text-align: center;">
+              <h1 style="margin: 0; color: white; font-size: 28px; font-weight: bold;">AnimeDropZone</h1>
+              <p style="margin: 10px 0 0 0; color: rgba(255, 255, 255, 0.9); font-size: 14px;">Official Newsletter</p>
+            </div>
+            <div style="padding: 40px 30px;">
+              <h2 style="color: #a855f7; margin-top: 0; font-size: 20px;">Welcome to Our Newsletter! 🎉</h2>
+              <p style="color: #d1d5db; line-height: 1.6; font-size: 14px;">
+                Thank you for subscribing to the AnimeDropZone newsletter! We're excited to have you on board.
+              </p>
+              <p style="color: #d1d5db; line-height: 1.6; font-size: 14px;">
+                You'll now receive:
+              </p>
+              <ul style="color: #d1d5db; line-height: 1.8; font-size: 14px;">
+                <li>🎁 Exclusive discounts and promotions</li>
+                <li>📦 New product arrivals and collections</li>
+                <li>🎊 Special events and sales announcements</li>
+                <li>💌 Tips and updates from our community</li>
+              </ul>
+              <p style="color: #9ca3af; line-height: 1.6; font-size: 12px; margin-top: 30px;">
+                If you wish to unsubscribe from our newsletter, you can do so at any time by replying with "unsubscribe".
+              </p>
+            </div>
+            <div style="background: rgba(0, 0, 0, 0.4); padding: 30px; text-align: center; border-top: 1px solid rgba(147, 51, 234, 0.3);">
+              <p style="margin: 0 0 10px 0; color: #a855f7; font-size: 20px; font-weight: bold;">AnimeDropZone</p>
+              <p style="margin: 0 0 15px 0; color: #9ca3af; font-size: 14px;">Your Trusted Source for Premium Anime Merchandise</p>
+              <p style="margin: 15px 0 0 0; color: #6b7280; font-size: 12px;">© 2025 AnimeDropZone. All rights reserved.</p>
+            </div>
+          </div>
+        </div>
+      `;
+
+      await sendEmail(email, confirmationSubject, confirmationBody);
+      console.log(`✅ Subscription confirmation sent to ${email}`);
+    } catch (emailError) {
+      console.error("⚠️ Failed to send confirmation email, but subscription saved:", emailError);
+      // Don't fail the request if email fails - subscriber is already saved
+    }
+
+    return c.json({
+      success: true,
+      message: "Successfully subscribed to newsletter! Check your email for confirmation.",
+    });
+  } catch (error) {
+    console.error("Error subscribing to newsletter:", error);
+    return c.json(
+      {
+        success: false,
+        message: "Failed to subscribe. Please try again later.",
+      },
+      500
+    );
+  }
+});
+
 // Create newsletter
 app.post("/make-server-95a96d8e/newsletters", async (c) => {
   try {
