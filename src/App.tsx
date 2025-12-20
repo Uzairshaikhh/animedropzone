@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, Suspense } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Suspense } from "react";
 import { StorePage } from "./pages/Store";
 import { ToastProvider } from "./contexts/ToastContext";
 import { CartProvider } from "./contexts/CartContext";
