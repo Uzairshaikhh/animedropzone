@@ -93,7 +93,9 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
   const SHIPPING_CHARGES = 100;
   const subtotal = total;
   const discount = appliedCoupon ? appliedCoupon.discount : 0;
-  const grandTotal = subtotal + SHIPPING_CHARGES - discount;
+  // No shipping charges for Razorpay, ₹100 for COD and Paytm
+  const shippingCharges = paymentMethod === "razorpay" ? 0 : SHIPPING_CHARGES;
+  const grandTotal = subtotal + shippingCharges - discount;
 
   const saveOrder = async (paymentId: string, method: string) => {
     try {
@@ -478,7 +480,7 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
               </div>
               <div className="flex justify-between text-gray-300">
                 <span>Shipping Charges:</span>
-                <span>₹{SHIPPING_CHARGES.toLocaleString()}</span>
+                <span>{shippingCharges === 0 ? "Free ✅" : `₹${shippingCharges.toLocaleString()}`}</span>
               </div>
               {appliedCoupon && (
                 <div className="border-t border-purple-500/30 pt-3 mt-2">
