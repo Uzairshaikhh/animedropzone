@@ -3379,6 +3379,36 @@ app.delete("/make-server-95a96d8e/categories/:categoryId", async (c) => {
 // ==================== WALLPAPER ROUTES ====================
 // Deployed: 2025-12-20 (Default wallpaper fix)
 
+// Debug KV storage status
+app.get("/make-server-95a96d8e/kv-status", async (c) => {
+  try {
+    console.log("🔧 KV Status Check...");
+    
+    // Check combined array
+    const combined = await kv.get("wallpapers_array");
+    console.log("✅ wallpapers_array:", combined ? `${Array.isArray(combined) ? combined.length : "not-array"} items` : "null");
+    
+    // Check individual wallpapers
+    const individual = await kv.getByPrefix("wallpaper:");
+    console.log("✅ wallpaper: prefix count:", individual.length);
+    
+    // Check subscriber count (from newsletter)
+    const subscribers = await kv.getByPrefix("subscriber:");
+    console.log("✅ subscriber: prefix count:", subscribers.length);
+    
+    return c.json({
+      success: true,
+      kv_status: {
+        combined_array: combined ? (Array.isArray(combined) ? combined.length : "exists-not-array") : "null",
+        individual_wallpapers: individual.length,
+        subscribers: subscribers.length,
+      }
+    });
+  } catch (error) {
+    return c.json({ success: false, error: String(error) }, 500);
+  }
+});
+
 // Get all wallpapers
 app.get("/make-server-95a96d8e/wallpapers", async (c) => {
   try {
