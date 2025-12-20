@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 export function Preloader() {
   const [isVisible, setIsVisible] = useState(true);
-  const [isMobile] = useState(() => window.innerWidth < 768);
+  const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : false;
 
   useEffect(() => {
     // Detect if mobile for faster timeout
