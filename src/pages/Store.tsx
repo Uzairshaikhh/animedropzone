@@ -100,6 +100,7 @@ const defaultCategories = [
 // Featured Products Section - Only show when no category selected
 
 export function StorePage() {
+  const { cartItems, addToCart, removeFromCart, updateQuantity, isCartOpen, setIsCartOpen } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -107,7 +108,6 @@ export function StorePage() {
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [productsPerPage] = useState(12);
   const [currentPage, setCurrentPage] = useState(1);
-  const { cartItems, addToCart, removeFromCart, updateQuantity, isCartOpen, setIsCartOpen } = useCart();
   const [wishlistItems, setWishlistItems] = useState<Product[]>([]);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
   const [isUserAuthOpen, setIsUserAuthOpen] = useState(false);
