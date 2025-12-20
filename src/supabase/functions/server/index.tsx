@@ -3441,12 +3441,39 @@ app.post("/make-server-95a96d8e/wallpapers", async (c) => {
 // Update a wallpaper
 app.put("/make-server-95a96d8e/wallpapers/:wallpaperId", async (c) => {
   try {
-    const wallpaperId = c.req.param("wallpaperId");
+    let wallpaperId = c.req.param("wallpaperId");
     const { imageUrl, title, subtitle } = await c.req.json();
 
+    // Debug logging
+    console.log("📝 UPDATE request for wallpaperId:", wallpaperId);
+
+    // Ensure the wallpaperId has the proper prefix
+    if (!wallpaperId.startsWith("wallpaper:") && !wallpaperId.startsWith("default_wallpaper_")) {
+      wallpaperId = `wallpaper:${wallpaperId}`;
+    }
+
+    console.log("🔍 Looking up wallpaper with key:", wallpaperId);
     const existingWallpaper = await kv.get(wallpaperId);
     if (!existingWallpaper) {
-      return c.json({ success: false, error: "Wallpaper not found" }, 404);
+      console.log("❌ Wallpaper not found for key:", wallpaperId);
+      // Try to find by ID in case the format is different
+      const allWallpapers = await kv.getByPrefix("wallpaper:");
+      const found = allWallpapers.find((item: any) => item.value?.id === wallpaperId);
+      if (!found) {
+        return c.json({ success: false, error: "Wallpaper not found" }, 404);
+      }
+      // Use the actual key found
+      const foundWallpaper = found.value;
+      const updatedWallpaper = {
+        ...foundWallpaper,
+        imageUrl: imageUrl || foundWallpaper.imageUrl,
+        title: title || foundWallpaper.title,
+        subtitle: subtitle || foundWallpaper.subtitle,
+        updatedAt: new Date().toISOString(),
+      };
+      await kv.set(found.key, updatedWallpaper);
+      console.log("✅ Wallpaper updated by search:", found.key);
+      return c.json({ success: true, wallpaper: updatedWallpaper });
     }
 
     const updatedWallpaper = {
@@ -3458,7 +3485,7 @@ app.put("/make-server-95a96d8e/wallpapers/:wallpaperId", async (c) => {
     };
 
     await kv.set(wallpaperId, updatedWallpaper);
-    console.log("Wallpaper updated:", wallpaperId);
+    console.log("✅ Wallpaper updated:", wallpaperId);
 
     return c.json({ success: true, wallpaper: updatedWallpaper });
   } catch (error) {
@@ -3470,23 +3497,45 @@ app.put("/make-server-95a96d8e/wallpapers/:wallpaperId", async (c) => {
 // Delete a wallpaper
 app.delete("/make-server-95a96d8e/wallpapers/:wallpaperId", async (c) => {
   try {
-    const wallpaperId = c.req.param("wallpaperId");
+    let wallpaperId = c.req.param("wallpaperId");
+
+    // Debug logging
+    console.log("🗑️ DELETE request for wallpaperId:", wallpaperId);
+
+    // Ensure the wallpaperId has the proper prefix
+    if (!wallpaperId.startsWith("wallpaper:") && !wallpaperId.startsWith("default_wallpaper_")) {
+      wallpaperId = `wallpaper:${wallpaperId}`;
+    }
+
+    console.log("🔍 Looking up wallpaper with key:", wallpaperId);
     const wallpaper = await kv.get(wallpaperId);
 
     if (!wallpaper) {
-      return c.json({ success: false, error: "Wallpaper not found" }, 404);
+      console.log("❌ Wallpaper not found for key:", wallpaperId);
+      // Try to find by ID in case the format is different
+      const allWallpapers = await kv.getByPrefix("wallpaper:");
+      const found = allWallpapers.find((item: any) => item.value?.id === wallpaperId);
+      if (!found) {
+        return c.json({ success: false, error: "Wallpaper not found" }, 404);
+      }
+      // Use the actual key found
+      await kv.del(found.key);
+      console.log("✅ Wallpaper deleted by search:", found.key);
+    } else {
+      await kv.del(wallpaperId);
+      console.log("✅ Wallpaper deleted:", wallpaperId);
     }
-
-    await kv.del(wallpaperId);
-    console.log("Wallpaper deleted:", wallpaperId);
 
     // Reorder remaining wallpapers
     const wallpaperKeys = await kv.getByPrefix("wallpaper:");
-    const sortedWallpapers = wallpaperKeys.map((item) => item.value).sort((a: any, b: any) => a.order - b.order);
+    const sortedWallpapers = wallpaperKeys
+      .map((item) => item.value)
+      .filter((v: any) => v !== null && v !== undefined)
+      .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
 
     for (let i = 0; i < sortedWallpapers.length; i++) {
       const wp = sortedWallpapers[i];
-      if (wp.order !== i) {
+      if (wp && wp.order !== i) {
         await kv.set(wp.id, { ...wp, order: i });
       }
     }
@@ -3501,16 +3550,35 @@ app.delete("/make-server-95a96d8e/wallpapers/:wallpaperId", async (c) => {
 // Reorder wallpapers
 app.put("/make-server-95a96d8e/wallpapers/:wallpaperId/reorder", async (c) => {
   try {
-    const wallpaperId = c.req.param("wallpaperId");
+    let wallpaperId = c.req.param("wallpaperId");
     const { direction } = await c.req.json();
 
-    const wallpaper = await kv.get(wallpaperId);
+    // Debug logging
+    console.log("🔄 REORDER request for wallpaperId:", wallpaperId, "direction:", direction);
+
+    // Ensure the wallpaperId has the proper prefix
+    if (!wallpaperId.startsWith("wallpaper:") && !wallpaperId.startsWith("default_wallpaper_")) {
+      wallpaperId = `wallpaper:${wallpaperId}`;
+    }
+
+    let wallpaper = await kv.get(wallpaperId);
     if (!wallpaper) {
-      return c.json({ success: false, error: "Wallpaper not found" }, 404);
+      console.log("❌ Wallpaper not found for key:", wallpaperId);
+      // Try to find by ID in case the format is different
+      const allWallpapers = await kv.getByPrefix("wallpaper:");
+      const found = allWallpapers.find((item: any) => item.value?.id === wallpaperId);
+      if (!found) {
+        return c.json({ success: false, error: "Wallpaper not found" }, 404);
+      }
+      wallpaper = found.value;
+      wallpaperId = found.key;
     }
 
     const wallpaperKeys = await kv.getByPrefix("wallpaper:");
-    const sortedWallpapers = wallpaperKeys.map((item) => item.value).sort((a: any, b: any) => a.order - b.order);
+    const sortedWallpapers = wallpaperKeys
+      .map((item) => item.value)
+      .filter((v: any) => v !== null && v !== undefined)
+      .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
 
     const currentIndex = sortedWallpapers.findIndex((wp: any) => wp.id === wallpaperId);
 
