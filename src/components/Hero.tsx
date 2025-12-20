@@ -437,7 +437,7 @@ export function Hero({ onShopNow }: HeroProps) {
               )}
 
               {/* Main image container */}
-              <div className="relative rounded-2xl overflow-hidden border-2 border-purple-500/50 shadow-2xl shadow-purple-900/50">
+              <div className="relative rounded-2xl overflow-hidden border-2 border-purple-500/50 shadow-2xl shadow-purple-900/50 bg-gradient-to-br from-purple-900 via-black to-pink-900 min-h-96">
                 <AnimatePresence mode="wait">
                   <motion.img
                     key={currentIndex}
