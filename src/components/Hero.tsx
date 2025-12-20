@@ -149,39 +149,67 @@ export function Hero({ onShopNow }: HeroProps) {
     try {
       console.log("🔵 Fetching wallpapers in background...");
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000); // 2s timeout for faster fallback
+      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
 
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers`, {
-        headers: {
-          Authorization: `Bearer ${publicAnonKey}`,
-        },
-        signal: controller.signal,
-      });
+      // Add cache-busting query parameter to force fresh data
+      const cacheKey = `?t=${Date.now()}`;
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers${cacheKey}`,
+        {
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            Pragma: "no-cache",
+          },
+          signal: controller.signal,
+        }
+      );
 
       clearTimeout(timeoutId);
 
       if (response.ok) {
         const data = await response.json();
+        console.log("✅ Wallpapers fetched from server:", data.wallpapers?.length || 0);
+
         if (data.wallpapers && data.wallpapers.length > 0) {
           const validWallpapers = data.wallpapers
             .filter((w: Wallpaper | null) => w !== null && w !== undefined)
             .sort((a: Wallpaper, b: Wallpaper) => (a.order || 0) - (b.order || 0));
 
           if (validWallpapers.length > 0) {
+            console.log("✅ Setting wallpapers from server:", validWallpapers.length);
             setWallpapers(validWallpapers);
+            // Update cache with fresh data
             localStorage.setItem("cached_wallpapers", JSON.stringify(validWallpapers));
+            localStorage.setItem("wallpapers_sync_time", Date.now().toString());
+            return;
           }
         }
+
+        console.log("⚠️ No valid wallpapers from server, using cache");
       } else {
-        console.log("⚠️ Wallpaper endpoint returned non-200 status:", response.status);
+        console.log("⚠️ Wallpaper endpoint returned status:", response.status);
       }
     } catch (error) {
-      console.log("Background fetch failed, using default wallpapers:", error);
-      // Use default wallpapers as fallback
-      const defaults = getDefaultWallpapers();
-      setWallpapers(defaults);
-      localStorage.setItem("cached_wallpapers", JSON.stringify(defaults));
+      console.log("Background fetch failed:", error instanceof Error ? error.message : String(error));
     }
+
+    // Fallback: use cached wallpapers or defaults
+    try {
+      const cached = localStorage.getItem("cached_wallpapers");
+      if (cached) {
+        console.log("📦 Loading wallpapers from cache");
+        const cachedWallpapers = JSON.parse(cached);
+        setWallpapers(cachedWallpapers);
+        return;
+      }
+    } catch (parseError) {
+      console.log("Error parsing cached wallpapers:", parseError);
+    }
+
+    console.log("📍 Using default wallpapers as final fallback");
+    const defaults = getDefaultWallpapers();
+    setWallpapers(defaults);
   };
 
   const seedDefaultWallpapers = async () => {

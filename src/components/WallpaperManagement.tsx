@@ -695,6 +695,69 @@ export function WallpaperManagement() {
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           {wallpapers.length > 0 && (
+            <>
+              <motion.button
+                onClick={async () => {
+                  console.log("🔄 Refreshing wallpapers from server...");
+                  setIsLoading(true);
+                  try {
+                    // Force refresh from server with cache-busting
+                    const response = await fetch(
+                      `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers?t=${Date.now()}`,
+                      {
+                        headers: {
+                          Authorization: `Bearer ${publicAnonKey}`,
+                          "Cache-Control": "no-cache, no-store, must-revalidate",
+                        },
+                      }
+                    );
+
+                    if (response.ok) {
+                      const data = await response.json();
+                      const validWallpapers = (data.wallpapers || [])
+                        .filter((w: Wallpaper | null) => w !== null && w !== undefined)
+                        .sort((a: Wallpaper, b: Wallpaper) => (a.order || 0) - (b.order || 0));
+
+                      if (validWallpapers.length > 0) {
+                        setWallpapers(validWallpapers);
+                        localStorage.setItem("cached_wallpapers", JSON.stringify(validWallpapers));
+                        localStorage.setItem("wallpapers_sync_time", Date.now().toString());
+
+                        // Broadcast to other tabs/windows
+                        try {
+                          const channel = new BroadcastChannel("wallpapers");
+                          channel.postMessage({
+                            type: "wallpaper_refreshed",
+                            wallpapers: validWallpapers,
+                            timestamp: Date.now(),
+                          });
+                          channel.close();
+                        } catch (error) {
+                          console.log("BroadcastChannel not available");
+                        }
+
+                        alert(`✅ Refreshed! Found ${validWallpapers.length} wallpapers`);
+                      }
+                    }
+                  } catch (error) {
+                    console.error("Error refreshing wallpapers:", error);
+                    alert("Failed to refresh wallpapers");
+                  } finally {
+                    setIsLoading(false);
+                  }
+                }}
+                className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg flex items-center gap-2 transition-all whitespace-nowrap"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                title="Refresh wallpapers from server"
+              >
+                <Sparkles className="w-5 h-5" />
+                <span className="hidden sm:inline">Refresh</span>
+                <span className="sm:hidden">↻</span>
+              </motion.button>
+            </>
+          )}
+          {wallpapers.length > 0 && (
             <motion.button
               onClick={async () => {
                 if (
