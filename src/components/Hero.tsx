@@ -31,7 +31,7 @@ export function Hero({ onShopNow }: HeroProps) {
   });
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
-  const [isMobile] = useState(typeof window !== "undefined" ? window.innerWidth < 768 : false);
+  const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : false;
   const [showCTA, setShowCTA] = useState(!isMobile); // Show CTA instantly on mobile
 
   // Detect mobile on window resize
