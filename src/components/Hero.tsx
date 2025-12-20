@@ -446,6 +446,10 @@ export function Hero({ onShopNow }: HeroProps) {
                     loading="lazy"
                     decoding="async"
                     className="w-full h-auto"
+                    onError={(e) => {
+                      console.error("❌ Image failed to load:", currentWallpaper.imageUrl);
+                      console.error("Error:", e);
+                    }}
                     initial={{ opacity: 0, scale: 1.05 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
