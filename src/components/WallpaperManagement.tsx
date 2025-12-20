@@ -56,7 +56,7 @@ export function WallpaperManagement() {
     {
       id: `default_wallpaper_1`,
       imageUrl:
-        "https://images.pexels.com/photos/18613634/pexels-photo-18613634/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0%' y1='0%' x2='100%' y2='100%'%3E%3Cstop offset='0%' style='stop-color:%23ff6b6b;stop-opacity:1'/%3E%3Cstop offset='100%' style='stop-color:%238b0000;stop-opacity:1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23g1)' width='1920' height='1080'/%3E%3Ctext x='960' y='540' font-size='120' fill='white' text-anchor='middle' dominant-baseline='middle' font-weight='bold'%3E⚔️ Demon Slayer%3C/text%3E%3C/svg%3E",
       title: "Demon Slayer Collection",
       subtitle: "Limited Edition Figures & Katanas",
       order: 0,
@@ -64,7 +64,7 @@ export function WallpaperManagement() {
     {
       id: `default_wallpaper_2`,
       imageUrl:
-        "https://images.pexels.com/photos/19091613/pexels-photo-19091613/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Cdefs%3E%3ClinearGradient id='g2' x1='0%' y1='0%' x2='100%' y2='100%'%3E%3Cstop offset='0%' style='stop-color:%23ff9500;stop-opacity:1'/%3E%3Cstop offset='100%' style='stop-color:%23e65100;stop-opacity:1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23g2)' width='1920' height='1080'/%3E%3Ctext x='960' y='540' font-size='120' fill='white' text-anchor='middle' dominant-baseline='middle' font-weight='bold'%3E🥷 Naruto%3C/text%3E%3C/svg%3E",
       title: "Naruto Legends",
       subtitle: "Iconic Ninja Collection",
       order: 1,
@@ -72,7 +72,7 @@ export function WallpaperManagement() {
     {
       id: `default_wallpaper_3`,
       imageUrl:
-        "https://images.pexels.com/photos/17696732/pexels-photo-17696732/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Cdefs%3E%3ClinearGradient id='g3' x1='0%' y1='0%' x2='100%' y2='100%'%3E%3Cstop offset='0%' style='stop-color:%234a90e2;stop-opacity:1'/%3E%3Cstop offset='100%' style='stop-color:%231a237e;stop-opacity:1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23g3)' width='1920' height='1080'/%3E%3Ctext x='960' y='540' font-size='120' fill='white' text-anchor='middle' dominant-baseline='middle' font-weight='bold'%3E🏴‍☠️ One Piece%3C/text%3E%3C/svg%3E",
       title: "One Piece Adventure",
       subtitle: "Grand Line Treasures",
       order: 2,
@@ -80,7 +80,7 @@ export function WallpaperManagement() {
     {
       id: `default_wallpaper_4`,
       imageUrl:
-        "https://images.pexels.com/photos/16615635/pexels-photo-16615635/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Cdefs%3E%3ClinearGradient id='g4' x1='0%' y1='0%' x2='100%' y2='100%'%3E%3Cstop offset='0%' style='stop-color:%237e57c2;stop-opacity:1'/%3E%3Cstop offset='100%' style='stop-color:%233f2c70;stop-opacity:1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23g4)' width='1920' height='1080'/%3E%3Ctext x='960' y='540' font-size='120' fill='white' text-anchor='middle' dominant-baseline='middle' font-weight='bold'%3E🧗 Attack on Titan%3C/text%3E%3C/svg%3E",
       title: "Attack on Titan",
       subtitle: "Survey Corps Collection",
       order: 3,
@@ -88,7 +88,7 @@ export function WallpaperManagement() {
     {
       id: `default_wallpaper_5`,
       imageUrl:
-        "https://images.pexels.com/photos/15582104/pexels-photo-15582104/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
+        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Cdefs%3E%3ClinearGradient id='g5' x1='0%' y1='0%' x2='100%' y2='100%'%3E%3Cstop offset='0%' style='stop-color:%23ff8a00;stop-opacity:1'/%3E%3Cstop offset='100%' style='stop-color:%23ffc000;stop-opacity:1'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23g5)' width='1920' height='1080'/%3E%3Ctext x='960' y='540' font-size='120' fill='white' text-anchor='middle' dominant-baseline='middle' font-weight='bold'%3E💥 Dragon Ball Z%3C/text%3E%3C/svg%3E",
       title: "Dragon Ball Z",
       subtitle: "Super Saiyan Warriors",
       order: 4,
@@ -103,9 +103,12 @@ export function WallpaperManagement() {
     try {
       console.log("🌱 Seeding default wallpapers to database...");
       const defaults = getDefaultWallpapers();
+      let successCount = 0;
+      let failureCount = 0;
 
       for (const wallpaper of defaults) {
         try {
+          console.log(`📤 Posting wallpaper: ${wallpaper.title}`);
           const response = await fetch(
             `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers`,
             {
@@ -122,22 +125,27 @@ export function WallpaperManagement() {
             }
           );
 
-          if (response.ok) {
-            console.log(`✅ Seeded wallpaper: ${wallpaper.title}`);
+          const data = await response.json();
+          if (response.ok && data.success) {
+            console.log(`✅ Seeded wallpaper: ${wallpaper.title}`, data);
+            successCount++;
           } else {
-            const error = await response.text();
-            console.error(`❌ Failed to seed wallpaper: ${wallpaper.title}`, error);
+            console.error(`❌ Failed to seed wallpaper: ${wallpaper.title}`, data);
+            failureCount++;
           }
         } catch (itemError) {
           console.error(`❌ Error seeding ${wallpaper.title}:`, itemError);
+          failureCount++;
         }
       }
 
-      // Fetch again after seeding with a delay
+      console.log(`📊 Seeding complete: ${successCount} succeeded, ${failureCount} failed`);
+
+      // Fetch again after seeding with a longer delay to ensure data is persisted
+      console.log("⏳ Waiting before re-fetching wallpapers...");
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       console.log("🔄 Re-fetching wallpapers after seeding...");
-      setTimeout(() => {
-        fetchWallpapers();
-      }, 1000);
+      await fetchWallpapers();
     } catch (error) {
       console.error("❌ Error seeding wallpapers:", error);
     }
