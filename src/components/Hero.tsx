@@ -209,61 +209,84 @@ export function Hero({ onShopNow }: HeroProps) {
       console.log("Error reading cache:", parseError);
     }
 
-    // Final fallback: defaults (but this shouldn't happen if server/cache work)
-    console.log("⚠️ Using default wallpapers (no server or cache available)");
-    setWallpapers(getDefaultWallpapers());
+    // Final fallback: seed defaults to server so all devices get them
+    console.log("⚠️ No server data available, seeding defaults to server...");
+    await seedDefaultWallpapers();
   };
 
   const seedDefaultWallpapers = async () => {
     try {
-      console.log("🌱 Seeding default wallpapers...");
+      console.log("🌱 Seeding default wallpapers to server...");
       const defaults = getDefaultWallpapers();
+      let successCount = 0;
 
       for (const wallpaper of defaults) {
-        const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${publicAnonKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            imageUrl: wallpaper.imageUrl,
-            title: wallpaper.title,
-            subtitle: wallpaper.subtitle,
-          }),
-        });
+        try {
+          const response = await fetch(
+            `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${publicAnonKey}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                imageUrl: wallpaper.imageUrl,
+                title: wallpaper.title,
+                subtitle: wallpaper.subtitle,
+              }),
+            }
+          );
 
-        if (response.ok) {
-          console.log(`✅ Seeded wallpaper: ${wallpaper.title}`);
-        } else {
-          console.error(`❌ Failed to seed wallpaper: ${wallpaper.title}`);
+          if (response.ok) {
+            console.log(`✅ Seeded wallpaper: ${wallpaper.title}`);
+            successCount++;
+          } else {
+            console.error(`❌ Failed to seed wallpaper: ${wallpaper.title}`);
+          }
+        } catch (error) {
+          console.error(`❌ Error seeding ${wallpaper.title}:`, error);
         }
       }
 
-      // Fetch again after seeding
-      console.log("🔄 Re-fetching wallpapers after seeding...");
-      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers`, {
-        headers: {
-          Authorization: `Bearer ${publicAnonKey}`,
-        },
-      });
+      console.log(`📊 Seeding complete: ${successCount}/${defaults.length} seeded`);
+
+      // Wait then fetch from server
+      console.log("⏳ Waiting before fetching seeded wallpapers...");
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      console.log("🔄 Fetching wallpapers after seeding...");
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/wallpapers?t=${Date.now()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+          },
+        }
+      );
 
       if (response.ok) {
         const data = await response.json();
-        const validWallpapers = (data.wallpapers || [])
-          .filter((w: Wallpaper | null) => w !== null && w !== undefined)
-          .sort((a: Wallpaper, b: Wallpaper) => (a.order || 0) - (b.order || 0));
+        if (data.wallpapers && data.wallpapers.length > 0) {
+          const validWallpapers = data.wallpapers
+            .filter((w: Wallpaper | null) => w !== null && w !== undefined)
+            .sort((a: Wallpaper, b: Wallpaper) => (a.order || 0) - (b.order || 0));
 
-        if (validWallpapers.length > 0) {
-          console.log("✅ Wallpapers seeded and fetched successfully!");
-          setWallpapers(validWallpapers);
-        } else {
-          console.log("ℹ️ Using local default wallpapers");
-          setWallpapers(getDefaultWallpapers());
+          if (validWallpapers.length > 0) {
+            console.log("✅ Seeded wallpapers fetched from server:", validWallpapers.length);
+            setWallpapers(validWallpapers);
+            localStorage.setItem("cached_wallpapers", JSON.stringify(validWallpapers));
+            return;
+          }
         }
       }
+
+      // If fetch failed, use defaults locally as last resort
+      console.log("⚠️ Seed fetch failed, using defaults locally");
+      setWallpapers(getDefaultWallpapers());
     } catch (error) {
-      console.error("❌ Error seeding wallpapers:", error);
+      console.error("❌ Error in seedDefaultWallpapers:", error);
       setWallpapers(getDefaultWallpapers());
     }
   };
