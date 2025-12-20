@@ -3382,24 +3382,66 @@ app.delete("/make-server-95a96d8e/categories/:categoryId", async (c) => {
 // Get all wallpapers
 app.get("/make-server-95a96d8e/wallpapers", async (c) => {
   try {
-    console.log("🔵 GET /wallpapers - Fetching wallpapers...");
-    const wallpaperKeys = await kv.getByPrefix("wallpaper:");
-    console.log('📦 Found keys with prefix "wallpaper:":', wallpaperKeys.length);
-    console.log(
-      "📋 Keys:",
-      wallpaperKeys.map((k) => ({ key: k.key, hasValue: !!k.value }))
-    );
+    console.log("🔵 GET /wallpapers - Fetching wallpapers from KV...");
 
-    const wallpapers = wallpaperKeys
-      .map((item) => item.value)
-      .filter((item) => item !== null && item !== undefined)
+    // Try to fetch using getByPrefix
+    let wallpaperKeys = [];
+    try {
+      wallpaperKeys = await kv.getByPrefix("wallpaper:");
+      console.log("📦 getByPrefix found:", wallpaperKeys.length, "items");
+      if (wallpaperKeys.length > 0) {
+        console.log(
+          "📋 Sample keys:",
+          wallpaperKeys.slice(0, 2).map((k: any) => ({ key: k.key, hasValue: !!k.value }))
+        );
+      }
+    } catch (error) {
+      console.error("❌ getByPrefix error:", error);
+      wallpaperKeys = [];
+    }
+
+    // Filter and map wallpapers
+    let wallpapers = wallpaperKeys
+      .filter((item: any) => item && item.value)
+      .map((item: any) => {
+        try {
+          // If value is a string, parse it
+          if (typeof item.value === "string") {
+            return JSON.parse(item.value);
+          }
+          return item.value;
+        } catch (e) {
+          console.error("❌ Failed to parse wallpaper:", item.key, e);
+          return null;
+        }
+      })
+      .filter((item: any) => item !== null && item !== undefined)
       .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
 
-    console.log("✅ Processed wallpapers:", wallpapers.length);
+    console.log("✅ Processed wallpapers count:", wallpapers.length);
+
+    // Fallback: check if wallpapers are stored as combined array
+    if (wallpapers.length === 0) {
+      console.log("⚠️ No individual wallpapers found, checking combined array...");
+      try {
+        const combined = await kv.get("wallpapers_array");
+        if (combined) {
+          console.log("✅ Found wallpapers_array");
+          if (Array.isArray(combined)) {
+            wallpapers = combined.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+            console.log("✅ Using combined array with", wallpapers.length, "wallpapers");
+          }
+        }
+      } catch (error) {
+        console.error("❌ combined array fetch error:", error);
+      }
+    }
+
+    console.log("✅ Wallpapers:", wallpapers);
     return c.json({ success: true, wallpapers });
   } catch (error) {
-    console.error("Error fetching wallpapers:", error);
-    return c.json({ success: false, error: String(error) }, 500);
+    console.error("❌ Error fetching wallpapers:", error);
+    return c.json({ success: false, error: String(error), wallpapers: [] }, 500);
   }
 });
 
@@ -3414,6 +3456,8 @@ app.post("/make-server-95a96d8e/wallpapers", async (c) => {
 
     // Get all existing wallpapers to determine the next order
     const wallpaperKeys = await kv.getByPrefix("wallpaper:");
+    console.log("📊 Current wallpapers in KV:", wallpaperKeys.length);
+
     const maxOrder = wallpaperKeys.reduce((max: number, item: any) => {
       if (!item || !item.value) return max;
       return Math.max(max, item.value.order || 0);
@@ -3429,40 +3473,24 @@ app.post("/make-server-95a96d8e/wallpapers", async (c) => {
       createdAt: new Date().toISOString(),
     };
 
+    console.log("💾 Saving wallpaper to KV:", { key: wallpaperId, order: maxOrder + 1 });
     await kv.set(wallpaperId, wallpaper);
-    console.log("Wallpaper added:", wallpaperId);
+    console.log("✅ Wallpaper saved successfully:", wallpaperId);
 
-    return c.json({ success: true, wallpaper });
-  } catch (error) {
-    console.error("Error adding wallpaper:", error);
-    return c.json({ success: false, error: String(error) }, 500);
-  }
-});
-
-// Update a wallpaper
-app.put("/make-server-95a96d8e/wallpapers/:wallpaperId", async (c) => {
-  try {
-    let wallpaperId = c.req.param("wallpaperId");
-    const { imageUrl, title, subtitle } = await c.req.json();
-
-    // Debug logging
-    console.log("📝 UPDATE request for wallpaperId:", wallpaperId);
-
-    // Check if this is a default wallpaper (frontend-only, not in database)
-    if (wallpaperId.startsWith("default_wallpaper_")) {
-      console.log("ℹ️ Default wallpaper update requested (frontend-only):", wallpaperId);
-      // Return success with the updated data to allow frontend to update
-      const updatedWallpaper = {
-        id: wallpaperId,
-        imageUrl: imageUrl,
-        title: title,
-        subtitle: subtitle,
-        order: 0,
-        updatedAt: new Date().toISOString(),
-      };
-      return c.json({
-        success: true,
-        wallpaper: updatedWallpaper,
+    // Also update the combined wallpapers array
+    try {
+      let wallpapers = [];
+      const combined = await kv.get("wallpapers_array");
+      if (Array.isArray(combined)) {
+        wallpapers = combined;
+      }
+      wallpapers.push(wallpaper);
+      wallpapers.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+      await kv.set("wallpapers_array", wallpapers);
+      console.log("✅ Combined wallpapers array updated:", wallpapers.length);
+    } catch (arrayError) {
+      console.error("⚠️ Could not update combined array:", arrayError);
+    }
         message: "Default wallpaper updated locally",
       });
     }
@@ -3569,6 +3597,14 @@ app.delete("/make-server-95a96d8e/wallpapers/:wallpaperId", async (c) => {
       if (wp && wp.order !== i) {
         await kv.set(wp.id, { ...wp, order: i });
       }
+    }
+    
+    // Update combined array
+    try {
+      await kv.set("wallpapers_array", sortedWallpapers);
+      console.log("✅ Combined wallpapers array updated after delete");
+    } catch (arrayError) {
+      console.error("⚠️ Could not update combined array:", arrayError);
     }
 
     return c.json({ success: true });
