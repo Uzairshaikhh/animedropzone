@@ -6,6 +6,10 @@
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   
-  # Rewrite all other requests to index.html
+  # Rewrite all other requests to index.html (SPA routing)
   RewriteRule ^(.*)$ index.html [L]
 </IfModule>
+
+<FilesMatch "\.js$|\.css$|\.woff|\.woff2">
+Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+</FilesMatch>
