@@ -3383,62 +3383,60 @@ app.delete("/make-server-95a96d8e/categories/:categoryId", async (c) => {
 app.get("/make-server-95a96d8e/wallpapers", async (c) => {
   try {
     console.log("🔵 GET /wallpapers - Fetching wallpapers from KV...");
+    
+    let wallpapers: any[] = [];
 
-    // Try to fetch using getByPrefix
-    let wallpaperKeys = [];
+    // Method 1: Try combined array FIRST (most reliable)
+    console.log("🔍 Checking combined array (wallpapers_array)...");
     try {
-      wallpaperKeys = await kv.getByPrefix("wallpaper:");
+      const combined = await kv.get("wallpapers_array");
+      console.log("✅ Combined array fetch attempt, got:", combined ? "value" : "null");
+      
+      if (combined && Array.isArray(combined)) {
+        console.log("✅ Found wallpapers_array with", combined.length, "items");
+        wallpapers = combined.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+        console.log("✅ Using combined array, returning", wallpapers.length, "wallpapers");
+        return c.json({ success: true, wallpapers });
+      }
+    } catch (error) {
+      console.error("❌ Error fetching combined array:", error);
+    }
+
+    // Method 2: Fallback to getByPrefix if combined array not found
+    console.log("⚠️ Combined array not found, trying getByPrefix...");
+    try {
+      const wallpaperKeys = await kv.getByPrefix("wallpaper:");
       console.log("📦 getByPrefix found:", wallpaperKeys.length, "items");
+      
       if (wallpaperKeys.length > 0) {
-        console.log(
-          "📋 Sample keys:",
-          wallpaperKeys.slice(0, 2).map((k: any) => ({ key: k.key, hasValue: !!k.value }))
-        );
+        wallpapers = wallpaperKeys
+          .filter((item: any) => item && item.value)
+          .map((item: any) => {
+            try {
+              if (typeof item.value === "string") {
+                return JSON.parse(item.value);
+              }
+              return item.value;
+            } catch (e) {
+              console.error("❌ Failed to parse:", item.key);
+              return null;
+            }
+          })
+          .filter((item: any) => item !== null && item !== undefined)
+          .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+        
+        if (wallpapers.length > 0) {
+          console.log("✅ Found", wallpapers.length, "wallpapers via getByPrefix");
+          return c.json({ success: true, wallpapers });
+        }
       }
     } catch (error) {
       console.error("❌ getByPrefix error:", error);
-      wallpaperKeys = [];
     }
 
-    // Filter and map wallpapers
-    let wallpapers = wallpaperKeys
-      .filter((item: any) => item && item.value)
-      .map((item: any) => {
-        try {
-          // If value is a string, parse it
-          if (typeof item.value === "string") {
-            return JSON.parse(item.value);
-          }
-          return item.value;
-        } catch (e) {
-          console.error("❌ Failed to parse wallpaper:", item.key, e);
-          return null;
-        }
-      })
-      .filter((item: any) => item !== null && item !== undefined)
-      .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
-
-    console.log("✅ Processed wallpapers count:", wallpapers.length);
-
-    // Fallback: check if wallpapers are stored as combined array
-    if (wallpapers.length === 0) {
-      console.log("⚠️ No individual wallpapers found, checking combined array...");
-      try {
-        const combined = await kv.get("wallpapers_array");
-        if (combined) {
-          console.log("✅ Found wallpapers_array");
-          if (Array.isArray(combined)) {
-            wallpapers = combined.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
-            console.log("✅ Using combined array with", wallpapers.length, "wallpapers");
-          }
-        }
-      } catch (error) {
-        console.error("❌ combined array fetch error:", error);
-      }
-    }
-
-    console.log("✅ Wallpapers:", wallpapers);
-    return c.json({ success: true, wallpapers });
+    // No wallpapers found
+    console.log("⚠️ No wallpapers found in either storage method");
+    return c.json({ success: true, wallpapers: [] });
   } catch (error) {
     console.error("❌ Error fetching wallpapers:", error);
     return c.json({ success: false, error: String(error), wallpapers: [] }, 500);
