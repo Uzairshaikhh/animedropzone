@@ -3447,8 +3447,27 @@ app.put("/make-server-95a96d8e/wallpapers/:wallpaperId", async (c) => {
     // Debug logging
     console.log("📝 UPDATE request for wallpaperId:", wallpaperId);
 
+    // Check if this is a default wallpaper (frontend-only, not in database)
+    if (wallpaperId.startsWith("default_wallpaper_")) {
+      console.log("ℹ️ Default wallpaper update requested (frontend-only):", wallpaperId);
+      // Return success with the updated data to allow frontend to update
+      const updatedWallpaper = {
+        id: wallpaperId,
+        imageUrl: imageUrl,
+        title: title,
+        subtitle: subtitle,
+        order: 0,
+        updatedAt: new Date().toISOString(),
+      };
+      return c.json({
+        success: true,
+        wallpaper: updatedWallpaper,
+        message: "Default wallpaper updated locally",
+      });
+    }
+
     // Ensure the wallpaperId has the proper prefix
-    if (!wallpaperId.startsWith("wallpaper:") && !wallpaperId.startsWith("default_wallpaper_")) {
+    if (!wallpaperId.startsWith("wallpaper:")) {
       wallpaperId = `wallpaper:${wallpaperId}`;
     }
 
@@ -3502,8 +3521,19 @@ app.delete("/make-server-95a96d8e/wallpapers/:wallpaperId", async (c) => {
     // Debug logging
     console.log("🗑️ DELETE request for wallpaperId:", wallpaperId);
 
+    // Check if this is a default wallpaper (frontend-only, not in database)
+    if (wallpaperId.startsWith("default_wallpaper_")) {
+      console.log("ℹ️ Default wallpaper deletion requested (frontend-only):", wallpaperId);
+      // Default wallpapers only exist in frontend localStorage, not in backend
+      // Return success to allow frontend to remove from UI
+      return c.json({
+        success: true,
+        message: "Default wallpaper removed from frontend",
+      });
+    }
+
     // Ensure the wallpaperId has the proper prefix
-    if (!wallpaperId.startsWith("wallpaper:") && !wallpaperId.startsWith("default_wallpaper_")) {
+    if (!wallpaperId.startsWith("wallpaper:")) {
       wallpaperId = `wallpaper:${wallpaperId}`;
     }
 
@@ -3556,8 +3586,17 @@ app.put("/make-server-95a96d8e/wallpapers/:wallpaperId/reorder", async (c) => {
     // Debug logging
     console.log("🔄 REORDER request for wallpaperId:", wallpaperId, "direction:", direction);
 
+    // Check if this is a default wallpaper (frontend-only, cannot reorder in backend)
+    if (wallpaperId.startsWith("default_wallpaper_")) {
+      console.log("ℹ️ Default wallpaper reorder requested (frontend-only):", wallpaperId);
+      return c.json({
+        success: true,
+        message: "Default wallpaper reorder handled locally",
+      });
+    }
+
     // Ensure the wallpaperId has the proper prefix
-    if (!wallpaperId.startsWith("wallpaper:") && !wallpaperId.startsWith("default_wallpaper_")) {
+    if (!wallpaperId.startsWith("wallpaper:")) {
       wallpaperId = `wallpaper:${wallpaperId}`;
     }
 
