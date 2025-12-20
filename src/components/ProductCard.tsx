@@ -37,6 +37,9 @@ export const ProductCard = memo(function ProductCard({
     product.image ||
     "https://images.unsplash.com/photo-1763771757355-4c0441df34ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhbmltZSUyMG1lcmNoYW5kaXNlfGVufDF8fHx8MTc2NTE4ODk3OXww&ixlib=rb-4.1.0&q=80&w=1080";
 
+  // Only append query params to Unsplash URLs, don't modify Supabase or other URLs
+  const finalImageUrl = imageUrl.includes("unsplash.com") ? `${imageUrl}&w=400&q=70` : imageUrl;
+
   const handleViewDetails = () => {
     try {
       const currentPath = location.pathname + location.search;
@@ -76,7 +79,7 @@ export const ProductCard = memo(function ProductCard({
 
       <div className="relative overflow-hidden aspect-square bg-black/50">
         <motion.img
-          src={`${imageUrl}&w=400&q=70`}
+          src={finalImageUrl}
           alt={product.name}
           loading="lazy"
           decoding="async"
