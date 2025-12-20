@@ -133,11 +133,17 @@ export function Hero({ onShopNow }: HeroProps) {
       console.log("BroadcastChannel not available, using polling only");
     }
 
-    // Poll for wallpaper updates every 60 seconds (reduced frequency)
+    // Poll for wallpaper updates every 30 seconds on first load, then every 120 seconds
+    let pollCount = 0;
     const pollInterval = setInterval(() => {
-      console.log("🔄 Polling for wallpaper updates...");
-      fetchWallpapersInBackground();
-    }, 120000); // Increased from 60s to 120s to reduce network requests
+      pollCount++;
+      // More frequent polling in first 5 minutes, then slower
+      const shouldPoll = pollCount < 10 || pollCount % 4 === 0;
+      if (shouldPoll) {
+        console.log(`🔄 Polling for wallpaper updates... (check ${pollCount})`);
+        fetchWallpapersInBackground();
+      }
+    }, 30000); // Check every 30 seconds (fast check, slow updates)
 
     return () => {
       if (channel) channel.close();
@@ -147,9 +153,9 @@ export function Hero({ onShopNow }: HeroProps) {
 
   const fetchWallpapersInBackground = async () => {
     try {
-      console.log("🔵 Fetching wallpapers in background...");
+      console.log("🔵 Fetching wallpapers from server (priority: fresh data)...");
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
+      const timeoutId = setTimeout(() => controller.abort(), 4000); // 4s timeout
 
       // Add cache-busting query parameter to force fresh data
       const cacheKey = `?t=${Date.now()}`;
@@ -160,6 +166,7 @@ export function Hero({ onShopNow }: HeroProps) {
             Authorization: `Bearer ${publicAnonKey}`,
             "Cache-Control": "no-cache, no-store, must-revalidate",
             Pragma: "no-cache",
+            Expires: "0",
           },
           signal: controller.signal,
         }
@@ -169,7 +176,7 @@ export function Hero({ onShopNow }: HeroProps) {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("✅ Wallpapers fetched from server:", data.wallpapers?.length || 0);
+        console.log("✅ Fresh wallpapers fetched from server:", data.wallpapers?.length || 0);
 
         if (data.wallpapers && data.wallpapers.length > 0) {
           const validWallpapers = data.wallpapers
@@ -177,39 +184,42 @@ export function Hero({ onShopNow }: HeroProps) {
             .sort((a: Wallpaper, b: Wallpaper) => (a.order || 0) - (b.order || 0));
 
           if (validWallpapers.length > 0) {
-            console.log("✅ Setting wallpapers from server:", validWallpapers.length);
+            console.log("✅ Updating state with server wallpapers:", validWallpapers.length);
             setWallpapers(validWallpapers);
             // Update cache with fresh data
             localStorage.setItem("cached_wallpapers", JSON.stringify(validWallpapers));
             localStorage.setItem("wallpapers_sync_time", Date.now().toString());
+            localStorage.setItem("wallpapers_sync_count", String((data.wallpapers || []).length));
             return;
           }
         }
 
-        console.log("⚠️ No valid wallpapers from server, using cache");
+        console.log("⚠️ No valid wallpapers from server, checking fallback...");
       } else {
-        console.log("⚠️ Wallpaper endpoint returned status:", response.status);
+        console.log("⚠️ Wallpaper fetch failed with status:", response.status);
       }
     } catch (error) {
-      console.log("Background fetch failed:", error instanceof Error ? error.message : String(error));
+      console.log("❌ Server fetch failed:", error instanceof Error ? error.message : String(error));
     }
 
-    // Fallback: use cached wallpapers or defaults
+    // Fallback: use cached wallpapers only if server failed
     try {
       const cached = localStorage.getItem("cached_wallpapers");
       if (cached) {
-        console.log("📦 Loading wallpapers from cache");
+        console.log("📦 Falling back to cached wallpapers");
         const cachedWallpapers = JSON.parse(cached);
-        setWallpapers(cachedWallpapers);
-        return;
+        if (cachedWallpapers.length > 0) {
+          setWallpapers(cachedWallpapers);
+          return;
+        }
       }
     } catch (parseError) {
-      console.log("Error parsing cached wallpapers:", parseError);
+      console.log("Error reading cache:", parseError);
     }
 
-    console.log("📍 Using default wallpapers as final fallback");
-    const defaults = getDefaultWallpapers();
-    setWallpapers(defaults);
+    // Final fallback: defaults (but this shouldn't happen if server/cache work)
+    console.log("⚠️ Using default wallpapers (no server or cache available)");
+    setWallpapers(getDefaultWallpapers());
   };
 
   const seedDefaultWallpapers = async () => {
