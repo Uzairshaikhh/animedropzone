@@ -77,16 +77,26 @@ export const ProductCard = memo(function ProductCard({
         </motion.button>
       )}
 
-      <div className="relative overflow-hidden aspect-square bg-black/50">
+      <div className="relative overflow-hidden aspect-square bg-gradient-to-br from-purple-900 via-black to-pink-900">
         <motion.img
           src={finalImageUrl}
           alt={product.name}
           loading="lazy"
           decoding="async"
           className="w-full h-full object-cover"
+          onError={(e) => {
+            console.warn("Product image failed to load:", finalImageUrl);
+            // Image failed - the gradient background will show through
+            (e.target as HTMLImageElement).style.display = "none";
+          }}
           whileHover={{ scale: 1.1 }}
           transition={{ duration: 0.3 }}
         />
+        {/* Fallback content when image fails */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 opacity-50">
+          <div className="text-2xl mb-2">📦</div>
+          <p className="text-xs text-gray-300">{product.name}</p>
+        </div>
         {product.stock === 0 && (
           <motion.div
             className="absolute inset-0 bg-black/80 flex items-center justify-center"
