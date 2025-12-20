@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { useToast } from "../contexts/ToastContext";
@@ -24,14 +24,6 @@ import { Logo } from "../components/Logo";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
 import { supabase } from "../utils/supabase/client";
 import { Link } from "react-router-dom";
-
-// Lazy load heavy animation components
-const FloatingParticles = lazy(() =>
-  import("../components/FloatingParticles").then((m) => ({ default: m.FloatingParticles }))
-);
-const CherryBlossomTree = lazy(() =>
-  import("../components/CherryBlossomTree").then((m) => ({ default: m.CherryBlossomTree }))
-);
 
 interface CartItem extends Product {
   quantity: number;
@@ -369,16 +361,6 @@ export function StorePage() {
     <div className="min-h-screen bg-black relative overflow-hidden">
       {/* Load Razorpay script */}
       <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-
-      {/* Cherry Blossom Tree Animation - Lazy loaded */}
-      <Suspense fallback={null}>
-        <CherryBlossomTree />
-      </Suspense>
-
-      {/* Floating Particles - Lazy loaded */}
-      <Suspense fallback={null}>
-        <FloatingParticles />
-      </Suspense>
 
       <Navbar
         cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
