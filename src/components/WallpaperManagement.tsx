@@ -652,43 +652,45 @@ export function WallpaperManagement() {
             <h3 className="text-lg font-semibold text-white">Currently Displayed Wallpaper</h3>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
-            <div className="flex-shrink-0 w-full sm:w-48">
+          <div className="flex gap-4">
+            <div className="flex-shrink-0">
               <img
                 src={currentWallpaper.imageUrl}
                 alt={currentWallpaper.title}
-                className="w-full sm:w-48 h-28 object-cover rounded-lg border border-purple-500/30"
+                className="w-32 h-32 object-cover rounded-lg border border-purple-500/30"
                 onError={(e) => {
                   e.currentTarget.src =
-                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='60'%3E%3Crect fill='%23333' width='100' height='60'/%3E%3C/svg%3E";
+                    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23333' width='100' height='100'/%3E%3C/svg%3E";
                 }}
               />
             </div>
 
-            <div className="flex-1">
-              <h4 className="text-white font-semibold text-lg">{currentWallpaper.title}</h4>
-              <p className="text-gray-300 text-sm mt-1">{currentWallpaper.subtitle}</p>
-              <p className="text-purple-400 text-xs mt-3">ID: {currentWallpaper.id}</p>
+            <div className="flex-1 flex flex-col justify-between">
+              <div>
+                <h4 className="text-white font-semibold text-base">{currentWallpaper.title}</h4>
+                <p className="text-gray-300 text-sm mt-1">{currentWallpaper.subtitle}</p>
+              </div>
+              <div className="flex gap-2 items-center">
+                <motion.button
+                  onClick={() => {
+                    setEditingWallpaper(currentWallpaper);
+                    setFormData({
+                      imageUrl: currentWallpaper.imageUrl,
+                      title: currentWallpaper.title,
+                      subtitle: currentWallpaper.subtitle,
+                    });
+                    setImagePreview(currentWallpaper.imageUrl);
+                    setShowForm(true);
+                  }}
+                  className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg transition-all whitespace-nowrap text-sm"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Edit2 className="w-4 h-4" />
+                  Edit
+                </motion.button>
+              </div>
             </div>
-
-            <motion.button
-              onClick={() => {
-                setEditingWallpaper(currentWallpaper);
-                setFormData({
-                  imageUrl: currentWallpaper.imageUrl,
-                  title: currentWallpaper.title,
-                  subtitle: currentWallpaper.subtitle,
-                });
-                setImagePreview(currentWallpaper.imageUrl);
-                setShowForm(true);
-              }}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg transition-all whitespace-nowrap"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Edit2 className="w-5 h-5" />
-              Edit Current
-            </motion.button>
           </div>
         </motion.div>
       )}
@@ -972,32 +974,32 @@ export function WallpaperManagement() {
               transition={{ delay: index * 0.05 }}
               whileHover={{ borderColor: "rgba(192, 132, 250, 0.7)" }}
             >
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div className="flex-shrink-0 w-full sm:w-32">
-                  <img
-                    src={wallpaper.imageUrl}
-                    alt={wallpaper.title}
-                    className="w-full sm:w-32 h-20 object-cover rounded-lg border border-purple-500/30"
-                    onError={(e) => {
-                      e.currentTarget.src =
-                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='60'%3E%3Crect fill='%23333' width='100' height='60'/%3E%3C/svg%3E";
-                    }}
-                  />
-                </div>
+              <div className="flex flex-col gap-3">
+                {/* Top: Image and Title/Subtitle */}
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0">
+                    <img
+                      src={wallpaper.imageUrl}
+                      alt={wallpaper.title}
+                      className="w-24 h-24 object-cover rounded-lg border border-purple-500/30"
+                      onError={(e) => {
+                        e.currentTarget.src =
+                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect fill='%23333' width='100' height='100'/%3E%3C/svg%3E";
+                      }}
+                    />
+                  </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-white font-medium truncate">{wallpaper.title}</h4>
-                      <p className="text-gray-400 text-sm truncate">{wallpaper.subtitle}</p>
-                      <p className="text-purple-400 text-xs mt-2">
-                        Position: <span className="font-semibold">#{wallpaper.order + 1}</span> of {wallpapers.length}
-                      </p>
-                    </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-white font-medium truncate text-sm">{wallpaper.title}</h4>
+                    <p className="text-gray-400 text-xs truncate">{wallpaper.subtitle}</p>
+                    <p className="text-purple-400 text-xs mt-2">
+                      Position: <span className="font-semibold">#{wallpaper.order + 1}</span> of {wallpapers.length}
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex gap-2 items-center">
+                {/* Bottom: Action Buttons */}
+                <div className="flex flex-wrap gap-2">
                   <div className="flex gap-1 border-r border-gray-600 pr-2">
                     <button
                       onClick={() => moveWallpaper(wallpaper.id, "up")}
@@ -1019,24 +1021,24 @@ export function WallpaperManagement() {
 
                   <motion.button
                     onClick={() => handleEdit(wallpaper)}
-                    className="flex items-center gap-2 px-3 py-2 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/50 hover:border-blue-400 rounded-lg transition-all"
+                    className="flex items-center gap-2 px-3 py-2 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/50 hover:border-blue-400 rounded-lg transition-all text-xs"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     title="Edit this wallpaper"
                   >
                     <Edit2 className="w-4 h-4 text-blue-400" />
-                    <span className="text-xs text-blue-400 font-medium">Edit</span>
+                    <span className="text-blue-400 font-medium">Edit</span>
                   </motion.button>
 
                   <motion.button
                     onClick={() => handleDelete(wallpaper.id)}
-                    className="flex items-center gap-2 px-3 py-2 bg-red-600/20 hover:bg-red-600/40 border border-red-500/50 hover:border-red-400 rounded-lg transition-all"
+                    className="flex items-center gap-2 px-3 py-2 bg-red-600/20 hover:bg-red-600/40 border border-red-500/50 hover:border-red-400 rounded-lg transition-all text-xs"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     title="Delete this wallpaper"
                   >
                     <Trash2 className="w-4 h-4 text-red-400" />
-                    <span className="text-xs text-red-400 font-medium">Remove</span>
+                    <span className="text-red-400 font-medium">Remove</span>
                   </motion.button>
                 </div>
               </div>
