@@ -25,7 +25,6 @@ export default function App() {
     <ToastProvider>
       <CartProvider>
         <Router>
-          <Preloader />
           <Favicon />
           <Routes>
             <Route path="/" element={<StorePage />} />
