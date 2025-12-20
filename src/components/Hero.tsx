@@ -20,7 +20,7 @@ const getDefaultWallpapers = (): Wallpaper[] => [
   {
     id: "default_wallpaper_1",
     imageUrl:
-      "https://images.pexels.com/photos/18613634/pexels-photo-18613634/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23a855f7;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23ec4899;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1920' height='1080' fill='url(%23g1)'/%3E%3Ctext x='50%25' y='50%25' font-size='72' fill='white' text-anchor='middle' dominant-baseline='middle'%3E⚔️ Demon Slayer Collection%3C/text%3E%3C/svg%3E",
     title: "Demon Slayer Collection",
     subtitle: "Limited Edition Figures & Katanas",
     order: 0,
@@ -28,7 +28,7 @@ const getDefaultWallpapers = (): Wallpaper[] => [
   {
     id: "default_wallpaper_2",
     imageUrl:
-      "https://images.pexels.com/photos/19091613/pexels-photo-19091613/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Cdefs%3E%3ClinearGradient id='g2' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23f59e0b;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%239333ea;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1920' height='1080' fill='url(%23g2)'/%3E%3Ctext x='50%25' y='50%25' font-size='72' fill='white' text-anchor='middle' dominant-baseline='middle'%3E🥷 Naruto Legends%3C/text%3E%3C/svg%3E",
     title: "Naruto Legends",
     subtitle: "Iconic Ninja Collection",
     order: 1,
@@ -36,7 +36,7 @@ const getDefaultWallpapers = (): Wallpaper[] => [
   {
     id: "default_wallpaper_3",
     imageUrl:
-      "https://images.pexels.com/photos/17696732/pexels-photo-17696732/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Cdefs%3E%3ClinearGradient id='g3' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%238b5cf6;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%235b21b6;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1920' height='1080' fill='url(%23g3)'/%3E%3Ctext x='50%25' y='50%25' font-size='72' fill='white' text-anchor='middle' dominant-baseline='middle'%3E🏴‍☠️ One Piece Adventure%3C/text%3E%3C/svg%3E",
     title: "One Piece Adventure",
     subtitle: "Grand Line Treasures",
     order: 2,
@@ -44,7 +44,7 @@ const getDefaultWallpapers = (): Wallpaper[] => [
   {
     id: "default_wallpaper_4",
     imageUrl:
-      "https://images.pexels.com/photos/16615635/pexels-photo-16615635/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Cdefs%3E%3ClinearGradient id='g4' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236366f1;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23dc2626;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1920' height='1080' fill='url(%23g4)'/%3E%3Ctext x='50%25' y='50%25' font-size='72' fill='white' text-anchor='middle' dominant-baseline='middle'%3E⛩️ Attack on Titan%3C/text%3E%3C/svg%3E",
     title: "Attack on Titan",
     subtitle: "Survey Corps Collection",
     order: 3,
@@ -52,7 +52,7 @@ const getDefaultWallpapers = (): Wallpaper[] => [
   {
     id: "default_wallpaper_5",
     imageUrl:
-      "https://images.pexels.com/photos/15582104/pexels-photo-15582104/portrait.jpeg?auto=compress&cs=tinysrgb&w=1920&h=1080&dpr=1",
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Cdefs%3E%3ClinearGradient id='g5' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23fbbf24;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23f87171;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1920' height='1080' fill='url(%23g5)'/%3E%3Ctext x='50%25' y='50%25' font-size='72' fill='white' text-anchor='middle' dominant-baseline='middle'%3E💥 Dragon Ball Z%3C/text%3E%3C/svg%3E",
     title: "Dragon Ball Z",
     subtitle: "Super Saiyan Warriors",
     order: 4,
@@ -172,10 +172,15 @@ export function Hero({ onShopNow }: HeroProps) {
             localStorage.setItem("cached_wallpapers", JSON.stringify(validWallpapers));
           }
         }
+      } else {
+        console.log("⚠️ Wallpaper endpoint returned non-200 status:", response.status);
       }
     } catch (error) {
-      console.log("Background fetch failed, using cached data");
-      // Silently fail - using cached data
+      console.log("Background fetch failed, using default wallpapers:", error);
+      // Use default wallpapers as fallback
+      const defaults = getDefaultWallpapers();
+      setWallpapers(defaults);
+      localStorage.setItem("cached_wallpapers", JSON.stringify(defaults));
     }
   };
 
