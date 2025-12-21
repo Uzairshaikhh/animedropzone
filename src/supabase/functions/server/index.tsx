@@ -3421,10 +3421,19 @@ app.get("/make-server-95a96d8e/wallpapers", async (c) => {
 
     if (error) {
       console.error("❌ Error fetching from Postgres:", error);
+      if (error.message && error.message.includes("does not exist")) {
+        console.error("🚨 TABLE 'WALLPAPERS' DOES NOT EXIST");
+        return c.json({ 
+          success: false, 
+          error: "Table 'wallpapers' does not exist",
+          sqlCommand: `CREATE TABLE IF NOT EXISTS wallpapers (id BIGSERIAL PRIMARY KEY, image_url TEXT NOT NULL, title TEXT NOT NULL, subtitle TEXT NOT NULL, "order" INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP); CREATE INDEX IF NOT EXISTS wallpapers_order_idx ON wallpapers("order" ASC);`,
+          wallpapers: [] 
+        }, 500);
+      }
       return c.json({ success: false, error: error.message, wallpapers: [] }, 500);
     }
 
-    console.log("✅ Fetched", data.length, "wallpapers from Postgres");
+    console.log("✅ Fetched", data ? data.length : 0, "wallpapers from Postgres");
     return c.json({ success: true, wallpapers: data || [] });
   } catch (error) {
     console.error("❌ Error:", error);
@@ -3441,6 +3450,8 @@ app.post("/make-server-95a96d8e/wallpapers", async (c) => {
       return c.json({ success: false, error: "Missing required fields" }, 400);
     }
 
+    console.log("📝 POST /wallpapers - Creating:", { title });
+
     // Get max order from Postgres
     const { data: maxData, error: maxError } = await supabase
       .from("wallpapers")
@@ -3448,25 +3459,20 @@ app.post("/make-server-95a96d8e/wallpapers", async (c) => {
       .order("order", { ascending: false })
       .limit(1);
 
-    if (maxError && maxError.message.includes("does not exist")) {
-      console.error("❌ Table 'wallpapers' does not exist. Creating it...");
-      return c.json({ 
-        success: false, 
-        error: "Table 'wallpapers' does not exist. Please create it in Supabase using the provided SQL.",
-        sqlCommand: `CREATE TABLE IF NOT EXISTS wallpapers (
-  id BIGSERIAL PRIMARY KEY,
-  image_url TEXT NOT NULL,
-  title TEXT NOT NULL,
-  subtitle TEXT NOT NULL,
-  "order" INTEGER DEFAULT 0,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-CREATE INDEX IF NOT EXISTS wallpapers_order_idx ON wallpapers("order" ASC);`
-      }, 500);
+    if (maxError) {
+      console.error("❌ Error getting max order:", maxError.message);
+      if (maxError.message && maxError.message.includes("does not exist")) {
+        console.error("🚨 TABLE 'WALLPAPERS' DOES NOT EXIST");
+        return c.json({ 
+          success: false, 
+          error: "Table 'wallpapers' does not exist",
+          sqlCommand: `CREATE TABLE IF NOT EXISTS wallpapers (id BIGSERIAL PRIMARY KEY, image_url TEXT NOT NULL, title TEXT NOT NULL, subtitle TEXT NOT NULL, "order" INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP); CREATE INDEX IF NOT EXISTS wallpapers_order_idx ON wallpapers("order" ASC);`
+        }, 500);
+      }
     }
 
     const maxOrder = (maxData && maxData.length > 0) ? (maxData[0].order || 0) : -1;
+    console.log("📊 Max order found:", maxOrder);
 
     const wallpaper = {
       image_url: imageUrl,
@@ -3476,26 +3482,40 @@ CREATE INDEX IF NOT EXISTS wallpapers_order_idx ON wallpapers("order" ASC);`
       created_at: new Date().toISOString(),
     };
 
-    console.log("💾 Saving wallpaper to Postgres:", { title, order: maxOrder + 1 });
+    console.log("💾 Inserting wallpaper:", wallpaper);
     const { data, error } = await supabase
       .from("wallpapers")
       .insert([wallpaper])
       .select();
 
     if (error) {
-      console.error("❌ Error saving to Postgres:", error);
+      console.error("❌ Error saving to Postgres:", error.message);
+      if (error.message && error.message.includes("does not exist")) {
+        console.error("🚨 TABLE 'WALLPAPERS' DOES NOT EXIST - DURING INSERT");
+        return c.json({ 
+          success: false, 
+          error: "Table 'wallpapers' does not exist",
+          sqlCommand: `CREATE TABLE IF NOT EXISTS wallpapers (id BIGSERIAL PRIMARY KEY, image_url TEXT NOT NULL, title TEXT NOT NULL, subtitle TEXT NOT NULL, "order" INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP); CREATE INDEX IF NOT EXISTS wallpapers_order_idx ON wallpapers("order" ASC);`
+        }, 500);
+      }
       return c.json({ success: false, error: error.message }, 500);
     }
 
+    console.log("📦 Insert response - data type:", typeof data, "length:", data?.length);
+
     if (!data || data.length === 0) {
-      console.error("❌ Insert returned no data");
-      return c.json({ success: false, error: "Insert failed - no data returned" }, 500);
+      console.error("❌ Insert returned empty data - LIKELY TABLE DOESN'T EXIST");
+      return c.json({ 
+        success: false, 
+        error: "Insert failed - table may not exist",
+        sqlCommand: `CREATE TABLE IF NOT EXISTS wallpapers (id BIGSERIAL PRIMARY KEY, image_url TEXT NOT NULL, title TEXT NOT NULL, subtitle TEXT NOT NULL, "order" INTEGER DEFAULT 0, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP); CREATE INDEX IF NOT EXISTS wallpapers_order_idx ON wallpapers("order" ASC);`
+      }, 500);
     }
 
     console.log("✅ Wallpaper saved to Postgres:", data[0]);
     return c.json({ success: true, wallpaper: data[0] });
   } catch (error) {
-    console.error("❌ Error adding wallpaper:", error);
+    console.error("❌ Exception in POST /wallpapers:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
