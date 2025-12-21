@@ -3442,16 +3442,34 @@ app.post("/make-server-95a96d8e/wallpapers", async (c) => {
     }
 
     // Get max order from Postgres
-    const { data: maxData } = await supabase
+    const { data: maxData, error: maxError } = await supabase
       .from("wallpapers")
       .select("order")
       .order("order", { ascending: false })
       .limit(1);
 
+    if (maxError && maxError.message.includes("does not exist")) {
+      console.error("❌ Table 'wallpapers' does not exist. Creating it...");
+      return c.json({ 
+        success: false, 
+        error: "Table 'wallpapers' does not exist. Please create it in Supabase using the provided SQL.",
+        sqlCommand: `CREATE TABLE IF NOT EXISTS wallpapers (
+  id BIGSERIAL PRIMARY KEY,
+  image_url TEXT NOT NULL,
+  title TEXT NOT NULL,
+  subtitle TEXT NOT NULL,
+  "order" INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS wallpapers_order_idx ON wallpapers("order" ASC);`
+      }, 500);
+    }
+
     const maxOrder = (maxData && maxData.length > 0) ? (maxData[0].order || 0) : -1;
 
     const wallpaper = {
-      imageUrl,
+      image_url: imageUrl,
       title,
       subtitle,
       order: maxOrder + 1,
@@ -3469,23 +3487,18 @@ app.post("/make-server-95a96d8e/wallpapers", async (c) => {
       return c.json({ success: false, error: error.message }, 500);
     }
 
-    console.log("✅ Wallpaper saved to Postgres:", data?.[0]);
-    return c.json({ success: true, wallpaper: data?.[0] });
+    if (!data || data.length === 0) {
+      console.error("❌ Insert returned no data");
+      return c.json({ success: false, error: "Insert failed - no data returned" }, 500);
+    }
+
+    console.log("✅ Wallpaper saved to Postgres:", data[0]);
+    return c.json({ success: true, wallpaper: data[0] });
   } catch (error) {
     console.error("❌ Error adding wallpaper:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
-        message: "Default wallpaper updated locally",
-      });
-    }
-
-    // Ensure the wallpaperId has the proper prefix
-    if (!wallpaperId.startsWith("wallpaper:")) {
-      wallpaperId = `wallpaper:${wallpaperId}`;
-    }
-
-    console.log("🔍 Looking up wallpaper with key:", wallpaperId);
     const existingWallpaper = await kv.get(wallpaperId);
     if (!existingWallpaper) {
       console.log("❌ Wallpaper not found for key:", wallpaperId);
