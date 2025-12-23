@@ -350,6 +350,10 @@ export function Hero({ onShopNow }: HeroProps) {
 
   const currentWallpaper = wallpapers[currentIndex] || getDefaultWallpapers()[0];
 
+  // Validate wallpaper has required imageUrl property
+  const validCurrentWallpaper =
+    currentWallpaper && currentWallpaper.imageUrl ? currentWallpaper : getDefaultWallpapers()[0];
+
   return (
     <section className="relative overflow-hidden">
       {/* Animated Background - Disabled on mobile for performance */}
@@ -511,22 +515,28 @@ export function Hero({ onShopNow }: HeroProps) {
               {/* Main image container */}
               <div className="relative rounded-2xl overflow-hidden border-2 border-purple-500/50 shadow-2xl shadow-purple-900/50 bg-gradient-to-br from-purple-900 via-black to-pink-900 min-h-96">
                 <AnimatePresence mode="wait">
-                  <motion.img
-                    key={currentIndex}
-                    src={currentWallpaper.imageUrl}
-                    alt={currentWallpaper.title}
-                    loading="lazy"
-                    decoding="async"
-                    className="w-full h-auto"
-                    onError={(e) => {
-                      console.error("❌ Image failed to load:", currentWallpaper.imageUrl);
-                      console.error("Error:", e);
-                    }}
-                    initial={{ opacity: 0, scale: 1.05 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: isMobile ? 0.4 : 0.7 }}
-                  />
+                  {validCurrentWallpaper?.imageUrl ? (
+                    <motion.img
+                      key={currentIndex}
+                      src={validCurrentWallpaper.imageUrl}
+                      alt={validCurrentWallpaper.title || "Wallpaper"}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-auto"
+                      onError={(e) => {
+                        console.error("❌ Image failed to load:", validCurrentWallpaper.imageUrl);
+                        console.error("Error:", e);
+                      }}
+                      initial={{ opacity: 0, scale: 1.05 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: isMobile ? 0.4 : 0.7 }}
+                    />
+                  ) : (
+                    <div className="w-full h-96 bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center">
+                      <p className="text-gray-400">Loading wallpaper...</p>
+                    </div>
+                  )}
                 </AnimatePresence>
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
 
@@ -564,8 +574,8 @@ export function Hero({ onShopNow }: HeroProps) {
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.5 }}
                   >
-                    <h3 className="text-white text-2xl mb-2">{currentWallpaper.title}</h3>
-                    <p className="text-purple-200">{currentWallpaper.subtitle}</p>
+                    <h3 className="text-white text-2xl mb-2">{validCurrentWallpaper?.title || "Anime Collection"}</h3>
+                    <p className="text-purple-200">{validCurrentWallpaper?.subtitle || "Premium Collection"}</p>
                   </motion.div>
                 </AnimatePresence>
 
