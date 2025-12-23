@@ -278,6 +278,13 @@ export function Hero({ onShopNow }: HeroProps) {
         if (data.wallpapers && data.wallpapers.length > 0) {
           const validWallpapers = data.wallpapers
             .filter((w: Wallpaper | null) => w !== null && w !== undefined)
+            .map((w: any) => ({
+              id: w.id || w.wallpaper_id || `wallpaper_${Math.random()}`,
+              imageUrl: w.imageUrl || w.image_url || w.image,
+              title: w.title || "Anime Collection",
+              subtitle: w.subtitle || "Premium Collection",
+              order: w.order || 0,
+            }))
             .sort((a: Wallpaper, b: Wallpaper) => (a.order || 0) - (b.order || 0));
 
           if (validWallpapers.length > 0) {
