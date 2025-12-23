@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { useToast } from "../contexts/ToastContext";
@@ -154,26 +154,29 @@ export function StorePage() {
     localStorage.setItem("animedropzone_wishlist", JSON.stringify(wishlistItems));
   }, [wishlistItems]);
 
-  const handleToggleWishlist = (product: Product) => {
-    setWishlistItems((prev) => {
-      const exists = prev.find((item) => item.id === product.id);
-      if (exists) {
-        // Remove from wishlist
-        return prev.filter((item) => item.id !== product.id);
-      } else {
-        // Add to wishlist
-        return [...prev, product];
-      }
-    });
+  const handleToggleWishlist = useCallback(
+    (product: Product) => {
+      setWishlistItems((prev) => {
+        const exists = prev.find((item) => item.id === product.id);
+        if (exists) {
+          // Remove from wishlist
+          return prev.filter((item) => item.id !== product.id);
+        } else {
+          // Add to wishlist
+          return [...prev, product];
+        }
+      });
 
-    // Show toast after state update
-    const exists = wishlistItems.find((item) => item.id === product.id);
-    if (exists) {
-      showToast(`Removed ${product.name} from wishlist`, "info", 3000);
-    } else {
-      showToast(`Added ${product.name} to wishlist!`, "info", 3000);
-    }
-  };
+      // Show toast after state update
+      const exists = wishlistItems.find((item) => item.id === product.id);
+      if (exists) {
+        showToast(`Removed ${product.name} from wishlist`, "info", 3000);
+      } else {
+        showToast(`Added ${product.name} to wishlist!`, "info", 3000);
+      }
+    },
+    [wishlistItems, showToast]
+  );
 
   const handleRemoveFromWishlist = (productId: string) => {
     const product = wishlistItems.find((item) => item.id === productId);
@@ -310,6 +313,11 @@ export function StorePage() {
   }, [currentPage, filteredProducts, productsPerPage]);
 
   // Memoize displayed products to prevent unnecessary re-renders
+  const handleViewDetails = useCallback((product: Product) => {
+    setSelectedProduct(product);
+    setIsProductDetailModalOpen(true);
+  }, []);
+
   const memoizedDisplayedProducts = useMemo(
     () =>
       displayedProducts.map((product) => (
@@ -317,15 +325,12 @@ export function StorePage() {
           key={product.id}
           product={product}
           onAddToCart={handleAddToCart}
-          onViewDetails={() => {
-            setSelectedProduct(product);
-            setIsProductDetailModalOpen(true);
-          }}
+          onViewDetails={handleViewDetails}
           onToggleWishlist={handleToggleWishlist}
           isInWishlist={isInWishlist(product.id)}
         />
       )),
-    [displayedProducts, wishlistItems]
+    [displayedProducts, handleAddToCart, handleViewDetails, handleToggleWishlist]
   );
 
   const checkUser = async () => {
@@ -363,15 +368,18 @@ export function StorePage() {
     }
   };
 
-  const handleAddToCart = (product: Product) => {
-    addToCart(product);
-    const existing = cartItems.find((item) => item.id === product.id);
-    if (existing) {
-      showToast(`Added another ${product.name} to cart!`, "success", 3000);
-    } else {
-      showToast(`${product.name} added to cart!`, "success", 3000);
-    }
-  };
+  const handleAddToCart = useCallback(
+    (product: Product) => {
+      addToCart(product);
+      const existing = cartItems.find((item) => item.id === product.id);
+      if (existing) {
+        showToast(`Added another ${product.name} to cart!`, "success", 3000);
+      } else {
+        showToast(`${product.name} added to cart!`, "success", 3000);
+      }
+    },
+    [cartItems, addToCart, showToast]
+  );
 
   const handleCheckout = () => {
     // Check if user is logged in
