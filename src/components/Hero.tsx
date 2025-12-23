@@ -1,5 +1,5 @@
 import { ArrowRight, Star, Zap, Shield, ShoppingBag } from "lucide-react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { useState, useEffect } from "react";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
 
@@ -514,37 +514,27 @@ export function Hero({ onShopNow }: HeroProps) {
 
               {/* Main image container */}
               <div className="relative rounded-2xl overflow-hidden border-2 border-purple-500/50 shadow-2xl shadow-purple-900/50 bg-gradient-to-br from-purple-900 via-black to-pink-900 min-h-96">
-                <AnimatePresence mode="wait">
-                  {validCurrentWallpaper?.imageUrl ? (
-                    <motion.img
-                      key={currentIndex}
-                      src={validCurrentWallpaper.imageUrl}
-                      alt={validCurrentWallpaper.title || "Wallpaper"}
-                      loading="lazy"
-                      decoding="async"
-                      className="w-full h-auto"
-                      onError={(e) => {
-                        console.error("❌ Image failed to load:", validCurrentWallpaper.imageUrl);
-                        console.error("Error:", e);
-                      }}
-                      initial={{ opacity: 0, scale: 1.05 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: isMobile ? 0.4 : 0.7 }}
-                    />
-                  ) : (
-                    <motion.div
-                      key="loading"
-                      className="w-full h-96 bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <p className="text-gray-400">Loading wallpaper...</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                {validCurrentWallpaper?.imageUrl ? (
+                  <motion.img
+                    key={`wallpaper-${currentIndex}`}
+                    src={validCurrentWallpaper.imageUrl}
+                    alt={validCurrentWallpaper.title || "Wallpaper"}
+                    loading="lazy"
+                    decoding="async"
+                    className="w-full h-auto"
+                    onError={(e) => {
+                      console.error("❌ Image failed to load:", validCurrentWallpaper.imageUrl);
+                      console.error("Error:", e);
+                    }}
+                    initial={{ opacity: 0, scale: 1.05 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: isMobile ? 0.4 : 0.7 }}
+                  />
+                ) : (
+                  <div className="w-full h-96 bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center">
+                    <p className="text-gray-400">Loading wallpaper...</p>
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
 
                 {/* Badge - Disabled animation on mobile, instant load */}
@@ -572,19 +562,16 @@ export function Hero({ onShopNow }: HeroProps) {
                 </motion.div>
 
                 {/* Bottom text */}
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={`text-${currentIndex}`}
-                    className="absolute bottom-0 left-0 right-0 p-6"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <h3 className="text-white text-2xl mb-2">{validCurrentWallpaper?.title || "Anime Collection"}</h3>
-                    <p className="text-purple-200">{validCurrentWallpaper?.subtitle || "Premium Collection"}</p>
-                  </motion.div>
-                </AnimatePresence>
+                <motion.div
+                  key={`text-${currentIndex}`}
+                  className="absolute bottom-0 left-0 right-0 p-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <h3 className="text-white text-2xl mb-2">{validCurrentWallpaper?.title || "Anime Collection"}</h3>
+                  <p className="text-purple-200">{validCurrentWallpaper?.subtitle || "Premium Collection"}</p>
+                </motion.div>
 
                 {/* Slide indicators */}
                 {wallpapers.length > 1 && (
