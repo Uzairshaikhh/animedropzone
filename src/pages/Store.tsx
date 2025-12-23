@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { useToast } from "../contexts/ToastContext";
@@ -154,23 +154,20 @@ export function StorePage() {
     localStorage.setItem("animedropzone_wishlist", JSON.stringify(wishlistItems));
   }, [wishlistItems]);
 
-  const handleToggleWishlist = useCallback(
-    (product: Product) => {
-      setWishlistItems((prev) => {
-        const exists = prev.find((item) => item.id === product.id);
-        if (exists) {
-          // Remove from wishlist
-          showToast(`Removed ${product.name} from wishlist`, "info", 3000);
-          return prev.filter((item) => item.id !== product.id);
-        } else {
-          // Add to wishlist
-          showToast(`Added ${product.name} to wishlist!`, "info", 3000);
-          return [...prev, product];
-        }
-      });
-    },
-    [showToast]
-  );
+  const handleToggleWishlist = (product: Product) => {
+    setWishlistItems((prev) => {
+      const exists = prev.find((item) => item.id === product.id);
+      if (exists) {
+        // Remove from wishlist
+        showToast(`Removed ${product.name} from wishlist`, "info", 3000);
+        return prev.filter((item) => item.id !== product.id);
+      } else {
+        // Add to wishlist
+        showToast(`Added ${product.name} to wishlist!`, "info", 3000);
+        return [...prev, product];
+      }
+    });
+  };
 
   const handleRemoveFromWishlist = (productId: string) => {
     const product = wishlistItems.find((item) => item.id === productId);
@@ -306,27 +303,6 @@ export function StorePage() {
     setDisplayedProducts(filteredProducts.slice(startIdx, endIdx));
   }, [currentPage, filteredProducts, productsPerPage]);
 
-  // Memoize displayed products to prevent unnecessary re-renders
-  const handleViewDetails = useCallback((product: Product) => {
-    setSelectedProduct(product);
-    setIsProductDetailModalOpen(true);
-  }, []);
-
-  const memoizedDisplayedProducts = useMemo(
-    () =>
-      displayedProducts.map((product) => (
-        <ProductCard
-          key={product.id}
-          product={product}
-          onAddToCart={handleAddToCart}
-          onViewDetails={handleViewDetails}
-          onToggleWishlist={handleToggleWishlist}
-          isInWishlist={isInWishlist(product.id)}
-        />
-      )),
-    [displayedProducts, handleAddToCart, handleViewDetails, handleToggleWishlist]
-  );
-
   const checkUser = async () => {
     const { data } = await supabase.auth.getSession();
     if (data.session) {
@@ -362,13 +338,10 @@ export function StorePage() {
     }
   };
 
-  const handleAddToCart = useCallback(
-    (product: Product) => {
-      addToCart(product);
-      showToast(`${product.name} added to cart!`, "success", 3000);
-    },
-    [addToCart, showToast]
-  );
+  const handleAddToCart = (product: Product) => {
+    addToCart(product);
+    showToast(`${product.name} added to cart!`, "success", 3000);
+  };
 
   const handleCheckout = () => {
     // Check if user is logged in
@@ -548,7 +521,21 @@ export function StorePage() {
                 </div>
               ) : (
                 // Fallback for when there are fewer than 4 products
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">{memoizedDisplayedProducts}</div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {displayedProducts.map((product) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      onAddToCart={handleAddToCart}
+                      onViewDetails={() => {
+                        setSelectedProduct(product);
+                        setIsProductDetailModalOpen(true);
+                      }}
+                      onToggleWishlist={handleToggleWishlist}
+                      isInWishlist={isInWishlist(product.id)}
+                    />
+                  ))}
+                </div>
               )}
             </div>
           </section>
