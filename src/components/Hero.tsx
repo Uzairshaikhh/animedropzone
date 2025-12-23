@@ -533,9 +533,16 @@ export function Hero({ onShopNow }: HeroProps) {
                       transition={{ duration: isMobile ? 0.4 : 0.7 }}
                     />
                   ) : (
-                    <div className="w-full h-96 bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center">
+                    <motion.div
+                      key="loading"
+                      className="w-full h-96 bg-gradient-to-br from-purple-900 via-black to-pink-900 flex items-center justify-center"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
                       <p className="text-gray-400">Loading wallpaper...</p>
-                    </div>
+                    </motion.div>
                   )}
                 </AnimatePresence>
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
