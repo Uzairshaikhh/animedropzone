@@ -105,11 +105,13 @@ export function ProductDetailModal({
             {/* Product Image */}
             <div>
               <div className="relative rounded-xl overflow-hidden bg-black/50">
-                <img
-                  src={safeGallery[Math.min(activeImage, safeGallery.length - 1)]}
-                  alt={product.name}
-                  className="w-full h-auto object-cover"
-                />
+                <div className="w-full aspect-square flex items-center justify-center">
+                  <img
+                    src={safeGallery[Math.min(activeImage, safeGallery.length - 1)]}
+                    alt={product.name}
+                    className="w-full h-full object-contain"
+                  />
+                </div>
                 {product.stock === 0 && (
                   <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
                     <span className="text-white text-xl">Out of Stock</span>

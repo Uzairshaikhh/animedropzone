@@ -175,6 +175,18 @@ export function StorePage() {
 
   const fetchCategories = async () => {
     try {
+      // Check localStorage cache first
+      const cachedCategories = localStorage.getItem("animedropzone_categories");
+      const cacheTimestamp = localStorage.getItem("animedropzone_categories_time");
+      const now = Date.now();
+
+      // Use cache if it's less than 5 minutes old
+      if (cachedCategories && cacheTimestamp && now - parseInt(cacheTimestamp) < 5 * 60 * 1000) {
+        const cached = JSON.parse(cachedCategories);
+        setCategories(cached);
+        return;
+      }
+
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
 
@@ -201,6 +213,10 @@ export function StorePage() {
             }));
 
           setCategories(formattedCategories);
+
+          // Cache the categories for 5 minutes
+          localStorage.setItem("animedropzone_categories", JSON.stringify(formattedCategories));
+          localStorage.setItem("animedropzone_categories_time", Date.now().toString());
 
           // Build subcategory data
           const subData: { [key: string]: string[] } = {};
@@ -234,15 +250,21 @@ export function StorePage() {
       }
     } catch (error) {
       console.error("Error fetching categories:", error);
-      // Fallback to default categories
-      setCategories(
-        defaultCategories.map((cat) => ({
-          icon: iconMap[cat.icon] || Package,
-          title: cat.title,
-          description: cat.description,
-          value: cat.value,
-        }))
-      );
+      // Check if we have cached categories to fall back to
+      const cachedCategories = localStorage.getItem("animedropzone_categories");
+      if (cachedCategories) {
+        setCategories(JSON.parse(cachedCategories));
+      } else {
+        // Fallback to default categories
+        setCategories(
+          defaultCategories.map((cat) => ({
+            icon: iconMap[cat.icon] || Package,
+            title: cat.title,
+            description: cat.description,
+            value: cat.value,
+          }))
+        );
+      }
     }
   };
 
