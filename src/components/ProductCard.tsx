@@ -1,7 +1,7 @@
 import { ShoppingCart, Star, Eye, Heart } from "lucide-react";
 import { motion } from "motion/react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { memo } from "react";
+import { memo, useState } from "react";
 
 export interface Product {
   id: string;
@@ -31,6 +31,7 @@ export const ProductCard = memo(function ProductCard({
 }: ProductCardProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const imageUrl =
     product.images?.[0] ||
@@ -78,20 +79,24 @@ export const ProductCard = memo(function ProductCard({
       )}
 
       <div className="relative overflow-hidden aspect-square bg-gradient-to-br from-purple-900 via-black to-pink-900">
-        <motion.img
+        <img
           src={finalImageUrl}
           alt={product.name}
           loading="lazy"
           decoding="async"
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover transition-all duration-300 ${
+            imageLoaded ? "opacity-100" : "opacity-0"
+          } group-hover:scale-110`}
+          onLoad={() => setImageLoaded(true)}
           onError={(e) => {
             console.warn("Product image failed to load:", finalImageUrl);
-            // Image failed - the gradient background will show through
+            setImageLoaded(true);
             (e.target as HTMLImageElement).style.display = "none";
           }}
-          whileHover={{ scale: 1.1 }}
-          transition={{ duration: 0.3 }}
         />
+        {!imageLoaded && (
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-900 via-black to-pink-900 animate-pulse" />
+        )}
         {/* Fallback content when image fails */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 opacity-50">
           <div className="text-2xl mb-2">📦</div>

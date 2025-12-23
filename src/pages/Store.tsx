@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { useToast } from "../contexts/ToastContext";
@@ -47,6 +47,15 @@ const iconMap: { [key: string]: LucideIcon } = {
   Image,
   Shirt,
   Bookmark,
+};
+
+// Debounce helper
+const debounce = <T extends (...args: any[]) => any>(func: T, delay: number) => {
+  let timeoutId: NodeJS.Timeout | null = null;
+  return ((...args: any[]) => {
+    if (timeoutId) clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => func(...args), delay);
+  }) as T;
 };
 
 // Fallback default categories (used if database is empty)
@@ -115,8 +124,13 @@ export function StorePage() {
   const [subcategoryData, setSubcategoryData] = useState<{ [key: string]: string[] }>({});
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const hasInitialized = useRef(false);
+  const [isMobile, setIsMobile] = useState(typeof window !== "undefined" && window.innerWidth < 768);
 
   useEffect(() => {
+    if (hasInitialized.current) return; // Only fetch once on mount
+    hasInitialized.current = true;
+
     fetchProducts();
     checkUser();
     fetchCategories();
@@ -294,6 +308,25 @@ export function StorePage() {
     const endIdx = startIdx + productsPerPage;
     setDisplayedProducts(filteredProducts.slice(startIdx, endIdx));
   }, [currentPage, filteredProducts, productsPerPage]);
+
+  // Memoize displayed products to prevent unnecessary re-renders
+  const memoizedDisplayedProducts = useMemo(
+    () =>
+      displayedProducts.map((product) => (
+        <ProductCard
+          key={product.id}
+          product={product}
+          onAddToCart={handleAddToCart}
+          onViewDetails={() => {
+            setSelectedProduct(product);
+            setIsProductDetailModalOpen(true);
+          }}
+          onToggleWishlist={handleToggleWishlist}
+          isInWishlist={isInWishlist(product.id)}
+        />
+      )),
+    [displayedProducts, wishlistItems]
+  );
 
   const checkUser = async () => {
     const { data } = await supabase.auth.getSession();
@@ -518,21 +551,7 @@ export function StorePage() {
                 </div>
               ) : (
                 // Fallback for when there are fewer than 4 products
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {products.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      onAddToCart={handleAddToCart}
-                      onViewDetails={() => {
-                        setSelectedProduct(product);
-                        setIsProductDetailModalOpen(true);
-                      }}
-                      onToggleWishlist={handleToggleWishlist}
-                      isInWishlist={isInWishlist(product.id)}
-                    />
-                  ))}
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">{memoizedDisplayedProducts}</div>
               )}
             </div>
           </section>
