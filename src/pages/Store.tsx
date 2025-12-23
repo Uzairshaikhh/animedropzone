@@ -160,22 +160,16 @@ export function StorePage() {
         const exists = prev.find((item) => item.id === product.id);
         if (exists) {
           // Remove from wishlist
+          showToast(`Removed ${product.name} from wishlist`, "info", 3000);
           return prev.filter((item) => item.id !== product.id);
         } else {
           // Add to wishlist
+          showToast(`Added ${product.name} to wishlist!`, "info", 3000);
           return [...prev, product];
         }
       });
-
-      // Show toast after state update
-      const exists = wishlistItems.find((item) => item.id === product.id);
-      if (exists) {
-        showToast(`Removed ${product.name} from wishlist`, "info", 3000);
-      } else {
-        showToast(`Added ${product.name} to wishlist!`, "info", 3000);
-      }
     },
-    [wishlistItems, showToast]
+    [showToast]
   );
 
   const handleRemoveFromWishlist = (productId: string) => {
@@ -371,14 +365,9 @@ export function StorePage() {
   const handleAddToCart = useCallback(
     (product: Product) => {
       addToCart(product);
-      const existing = cartItems.find((item) => item.id === product.id);
-      if (existing) {
-        showToast(`Added another ${product.name} to cart!`, "success", 3000);
-      } else {
-        showToast(`${product.name} added to cart!`, "success", 3000);
-      }
+      showToast(`${product.name} added to cart!`, "success", 3000);
     },
-    [cartItems, addToCart, showToast]
+    [addToCart, showToast]
   );
 
   const handleCheckout = () => {
