@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { motion } from "motion/react";
 import { useToast } from "../contexts/ToastContext";
 import { useCart } from "../contexts/CartContext";
 import { Package, Swords, Sparkles, Image, Shirt, Bookmark, type LucideIcon } from "lucide-react";
@@ -429,37 +427,32 @@ export function StorePage() {
         {/* Categories Section */}
         <section id="categories" className="py-20 px-4">
           <div className="max-w-7xl mx-auto">
-            <motion.div
-              className="text-center mb-12"
-              initial={{ opacity: 0, y: -20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-            >
+            <div className="text-center mb-12">
               <h2 className="mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
                 Browse Categories
               </h2>
               <p className="text-gray-400 max-w-2xl mx-auto">Explore our wide range of anime merchandise categories</p>
-            </motion.div>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {categories
                 .filter((category) => category && category.icon && category.value && category.title)
-                .map((category, index) => (
-                  <motion.div
-                    key={category.value}
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5, delay: index * 0.1 }}
-                  >
-                    <CategoryCard
-                      icon={category.icon}
-                      title={category.title}
-                      description={category.description}
-                      onClick={() => handleCategoryClick(category.value)}
-                    />
-                  </motion.div>
-                ))}
+                .map((category) => {
+                  try {
+                    return (
+                      <div key={category.value}>
+                        <CategoryCard
+                          icon={category.icon}
+                          title={category.title}
+                          description={category.description}
+                          onClick={() => handleCategoryClick(category.value)}
+                        />
+                      </div>
+                    );
+                  } catch (error) {
+                    console.error("Error rendering category:", category, error);
+                    return null;
+                  }
+                })}
             </div>
             {(selectedCategory || selectedSubcategory) && (
               <div className="mt-6 text-center space-x-4">
@@ -491,20 +484,14 @@ export function StorePage() {
         {!selectedCategory && !selectedSubcategory && (
           <section id="featured" className="py-20 px-4">
             <div className="max-w-7xl mx-auto">
-              <motion.div
-                className="text-center mb-12"
-                initial={{ opacity: 0, y: -20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6 }}
-              >
+              <div className="text-center mb-12">
                 <h2 className="mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
                   Latest Products
                 </h2>
                 <p className="text-gray-400 max-w-2xl mx-auto">
                   Discover our handpicked selection of premium anime merchandise
                 </p>
-              </motion.div>
+              </div>
 
               {products.length >= 4 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
