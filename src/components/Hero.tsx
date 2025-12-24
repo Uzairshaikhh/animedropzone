@@ -148,7 +148,7 @@ export function Hero({ onShopNow }: HeroProps) {
     try {
       console.log("🔵 Fetching wallpapers from server (source of truth)...");
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000); // 4s timeout
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
 
       // Add cache-busting query parameter to force fresh data
       const cacheKey = `?t=${Date.now()}`;
