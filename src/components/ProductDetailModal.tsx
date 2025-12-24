@@ -103,11 +103,11 @@ export function ProductDetailModal({
         <div className="flex-1 overflow-y-auto">
           <div className="p-3 md:p-6">
             {/* Mobile: Full width image on top, Desktop: Side-by-side layout */}
-            <div className="flex flex-col md:flex-row gap-3 md:gap-6 mb-4 md:mb-8">
+            <div className="flex flex-col md:flex-row gap-2 md:gap-6 mb-2 md:mb-8">
               {/* Product Image - Full Width on Mobile, Auto on Desktop */}
               <div className="w-full md:flex-1 md:min-w-0 md:max-h-[60vh]">
                 <div className="relative rounded-lg md:rounded-xl overflow-hidden bg-black/50">
-                  <div className="w-full aspect-square flex items-center justify-center">
+                  <div className="w-full h-64 md:aspect-square md:h-auto flex items-center justify-center">
                     <img
                       src={safeGallery[Math.min(activeImage, safeGallery.length - 1)]}
                       alt={product.name}
@@ -191,7 +191,7 @@ export function ProductDetailModal({
                     type="button"
                     key={`thumb-mobile-${idx}-${img.substring(0, 20)}`}
                     onClick={() => setActiveImage(idx)}
-                    className={`w-14 h-14 md:w-24 md:h-24 rounded-lg overflow-hidden border-2 transition-all hover:scale-105 cursor-pointer shrink-0 ${
+                    className={`w-12 h-12 md:w-24 md:h-24 rounded-lg overflow-hidden border-2 transition-all hover:scale-105 cursor-pointer shrink-0 ${
                       activeImage === idx
                         ? "border-purple-500 shadow-lg shadow-purple-900/50 ring-2 ring-purple-400"
                         : "border-purple-500/30 hover:border-purple-400"
@@ -209,33 +209,33 @@ export function ProductDetailModal({
             )}
             {/* Product Info */}
             <div>
-              <h3 className="text-white text-2xl md:text-3xl mb-2 md:mb-4">{product.name}</h3>
+              <h3 className="text-white text-xl md:text-3xl mb-1 md:mb-4">{product.name}</h3>
 
-              <div className="flex items-center gap-1 mb-2 md:mb-4">
+              <div className="flex items-center gap-1 mb-1 md:mb-4">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 md:w-5 md:h-5 fill-yellow-400 text-yellow-400" />
+                  <Star key={i} className="w-3 h-3 md:w-5 md:h-5 fill-yellow-400 text-yellow-400" />
                 ))}
-                <span className="text-gray-400 ml-2 text-xs md:text-sm">(See reviews below)</span>
+                <span className="text-gray-400 ml-1 text-xs md:text-sm">(Reviews)</span>
               </div>
 
-              <p className="text-gray-300 mb-3 md:mb-6 leading-relaxed text-sm md:text-base">{product.description}</p>
+              <p className="text-gray-300 mb-2 md:mb-6 leading-relaxed text-xs md:text-base">{product.description}</p>
 
-              <div className="mb-3 md:mb-6">
-                <p className="text-gray-400 text-xs md:text-sm mb-1">Category</p>
-                <p className="text-purple-400 capitalize text-sm md:text-base">{product.category}</p>
+              <div className="mb-2 md:mb-6">
+                <p className="text-gray-400 text-xs md:text-sm mb-0.5">Category</p>
+                <p className="text-purple-400 capitalize text-xs md:text-base">{product.category}</p>
               </div>
 
-              <div className="mb-3 md:mb-6">
-                <p className="text-gray-400 text-xs md:text-sm mb-1">Stock Status</p>
-                <p className={`text-sm md:text-base ${product.stock > 0 ? "text-green-400" : "text-red-400"}`}>
+              <div className="mb-2 md:mb-6">
+                <p className="text-gray-400 text-xs md:text-sm mb-0.5">Stock Status</p>
+                <p className={`text-xs md:text-base ${product.stock > 0 ? "text-green-400" : "text-red-400"}`}>
                   {product.stock > 0 ? `${product.stock} units available` : "Out of stock"}
                 </p>
               </div>
 
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4 md:mb-6 p-3 md:p-6 bg-purple-900/20 border border-purple-500/30 rounded-lg md:rounded-xl gap-3 md:gap-0">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2 md:mb-6 p-2 md:p-6 bg-purple-900/20 border border-purple-500/30 rounded-lg md:rounded-xl gap-2 md:gap-0">
                 <div>
-                  <p className="text-gray-400 text-xs md:text-sm mb-1">Price</p>
-                  <p className="text-2xl md:text-4xl bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  <p className="text-gray-400 text-xs md:text-sm mb-0.5">Price</p>
+                  <p className="text-xl md:text-4xl bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                     ₹{product.price.toLocaleString()}
                   </p>
                 </div>
@@ -245,9 +245,9 @@ export function ProductDetailModal({
                     onClose();
                   }}
                   disabled={product.stock === 0}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed px-4 md:px-8 py-2 md:py-4 rounded-lg flex items-center gap-2 md:gap-3 transition-all text-sm md:text-lg w-full md:w-auto justify-center md:justify-start"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed px-3 md:px-8 py-1.5 md:py-4 rounded-lg flex items-center gap-1 md:gap-3 transition-all text-xs md:text-lg w-full md:w-auto justify-center md:justify-start"
                 >
-                  <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
+                  <ShoppingCart className="w-3 h-3 md:w-5 md:h-5" />
                   Add to Cart
                 </button>
               </div>
