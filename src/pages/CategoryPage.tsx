@@ -107,6 +107,7 @@ const subcategoryData: { [key: string]: Array<{ name: string; value: string; des
 export function CategoryPage() {
   const { category } = useParams<{ category: string }>();
   const navigate = useNavigate();
+  const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : false;
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
@@ -309,25 +310,31 @@ export function CategoryPage() {
         </div>
 
         {/* Category Header */}
-        <section className="max-w-7xl mx-auto px-4 py-8">
+        <section className="max-w-7xl mx-auto px-4 py-4 md:py-8">
           <motion.div
-            className="text-center mb-12"
+            className="text-center mb-8 md:mb-12"
             initial={{ opacity: 0, y: -30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <motion.div
-              className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl mb-6"
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ duration: 0.6, type: "spring" }}
-              whileHover={{ scale: 1.1, rotate: 5 }}
-            >
-              <Icon className="w-12 h-12 text-white" />
-            </motion.div>
+            {!isMobile ? (
+              <motion.div
+                className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl mb-6"
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ duration: 0.6, type: "spring" }}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+              >
+                <Icon className="w-12 h-12 text-white" />
+              </motion.div>
+            ) : (
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl mb-4">
+                <Icon className="w-10 h-10 text-white" />
+              </div>
+            )}
 
             <motion.h1
-              className="mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent"
+              className="mb-2 md:mb-4 text-2xl md:text-4xl bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
@@ -336,7 +343,7 @@ export function CategoryPage() {
             </motion.h1>
 
             <motion.p
-              className="text-gray-300 text-lg max-w-2xl mx-auto"
+              className="text-gray-300 text-sm md:text-lg max-w-2xl mx-auto"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
@@ -453,23 +460,13 @@ export function CategoryPage() {
               </div>
             </motion.div>
           ) : (
-            <motion.div
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-            >
-              {filteredProducts.map((product, index) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.4, delay: 0.05 * index }}
-                >
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+              {filteredProducts.map((product) => (
+                <div key={product.id}>
                   <ProductCard product={product} onAddToCart={handleAddToCart} />
-                </motion.div>
+                </div>
               ))}
-            </motion.div>
+            </div>
           )}
 
           {/* Product Count */}
