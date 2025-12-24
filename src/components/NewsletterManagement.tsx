@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Mail, Send, Users, Calendar, Eye, Edit2, Trash2, Plus } from 'lucide-react';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { motion } from 'motion/react';
+import { useState, useEffect } from "react";
+import { Mail, Send, Users, Calendar, Eye, Edit2, Trash2, Plus } from "lucide-react";
+import { projectId, publicAnonKey } from "../utils/supabase/info";
+import { motion } from "motion/react";
 
 interface Newsletter {
   id: string;
@@ -10,7 +10,7 @@ interface Newsletter {
   htmlContent: string;
   scheduledFor: string | null;
   sentAt: string | null;
-  status: 'draft' | 'scheduled' | 'sent';
+  status: "draft" | "scheduled" | "sent";
   recipientCount: number;
   openRate: number;
   clickRate: number;
@@ -21,7 +21,7 @@ interface Subscriber {
   email: string;
   name: string;
   subscribedAt: string;
-  status: 'active' | 'unsubscribed';
+  status: "active" | "unsubscribed";
 }
 
 export function NewsletterManagement() {
@@ -30,13 +30,13 @@ export function NewsletterManagement() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
-    subject: '',
-    content: '',
-    htmlContent: '',
-    scheduledFor: '',
+    subject: "",
+    content: "",
+    htmlContent: "",
+    scheduledFor: "",
   });
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'campaigns' | 'subscribers'>('campaigns');
+  const [activeTab, setActiveTab] = useState<"campaigns" | "subscribers">("campaigns");
 
   useEffect(() => {
     fetchNewsletters();
@@ -46,20 +46,17 @@ export function NewsletterManagement() {
   const fetchNewsletters = async () => {
     try {
       setLoading(true);
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/newsletters`,
-        {
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-        }
-      );
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/newsletters`, {
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`,
+        },
+      });
       const data = await response.json();
       if (data.success) {
         setNewsletters(data.newsletters);
       }
     } catch (error) {
-      console.error('Error fetching newsletters:', error);
+      console.error("Error fetching newsletters:", error);
     } finally {
       setLoading(false);
     }
@@ -71,7 +68,7 @@ export function NewsletterManagement() {
         `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/newsletter-subscribers`,
         {
           headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
+            Authorization: `Bearer ${publicAnonKey}`,
           },
         }
       );
@@ -80,51 +77,51 @@ export function NewsletterManagement() {
         setSubscribers(data.subscribers);
       }
     } catch (error) {
-      console.error('Error fetching subscribers:', error);
+      console.error("Error fetching subscribers:", error);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       const url = editingId
         ? `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/newsletters/${editingId}`
         : `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/newsletters`;
 
       const response = await fetch(url, {
-        method: editingId ? 'PUT' : 'POST',
+        method: editingId ? "PUT" : "POST",
         headers: {
-          'Authorization': `Bearer ${publicAnonKey}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${publicAnonKey}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(formData),
       });
 
       const data = await response.json();
       if (data.success) {
-        setFormData({ subject: '', content: '', htmlContent: '', scheduledFor: '' });
+        setFormData({ subject: "", content: "", htmlContent: "", scheduledFor: "" });
         setEditingId(null);
         setShowForm(false);
         fetchNewsletters();
-        alert('Newsletter saved successfully!');
+        alert("Newsletter saved successfully!");
       }
     } catch (error) {
-      console.error('Error saving newsletter:', error);
-      alert('Failed to save newsletter');
+      console.error("Error saving newsletter:", error);
+      alert("Failed to save newsletter");
     }
   };
 
   const sendNewsletter = async (id: string) => {
-    if (!confirm('Are you sure you want to send this newsletter to all subscribers?')) return;
+    if (!confirm("Are you sure you want to send this newsletter to all subscribers?")) return;
 
     try {
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/newsletters/${id}/send`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
+            Authorization: `Bearer ${publicAnonKey}`,
           },
         }
       );
@@ -134,24 +131,24 @@ export function NewsletterManagement() {
         alert(`Newsletter sent to ${data.sentCount} subscribers!`);
         fetchNewsletters();
       } else {
-        alert('Failed to send newsletter: ' + data.error);
+        alert("Failed to send newsletter: " + data.error);
       }
     } catch (error) {
-      console.error('Error sending newsletter:', error);
-      alert('Failed to send newsletter');
+      console.error("Error sending newsletter:", error);
+      alert("Failed to send newsletter");
     }
   };
 
   const deleteNewsletter = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this newsletter?')) return;
+    if (!confirm("Are you sure you want to delete this newsletter?")) return;
 
     try {
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/newsletters/${id}`,
         {
-          method: 'DELETE',
+          method: "DELETE",
           headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
+            Authorization: `Bearer ${publicAnonKey}`,
           },
         }
       );
@@ -161,12 +158,12 @@ export function NewsletterManagement() {
         fetchNewsletters();
       }
     } catch (error) {
-      console.error('Error deleting newsletter:', error);
-      alert('Failed to delete newsletter');
+      console.error("Error deleting newsletter:", error);
+      alert("Failed to delete newsletter");
     }
   };
 
-  const activeSubscribers = subscribers.filter(s => s.status === 'active');
+  const activeSubscribers = subscribers.filter((s) => s.status === "active");
 
   return (
     <div className="space-y-6">
@@ -176,12 +173,12 @@ export function NewsletterManagement() {
           <h1 className="text-white mb-2">Newsletter & Email Campaigns</h1>
           <p className="text-gray-400">Send promotional emails to your customers</p>
         </div>
-        {!showForm && activeTab === 'campaigns' && (
+        {!showForm && activeTab === "campaigns" && (
           <button
             onClick={() => {
               setShowForm(true);
               setEditingId(null);
-              setFormData({ subject: '', content: '', htmlContent: '', scheduledFor: '' });
+              setFormData({ subject: "", content: "", htmlContent: "", scheduledFor: "" });
             }}
             className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-lg flex items-center gap-2 transition-all"
           >
@@ -206,7 +203,7 @@ export function NewsletterManagement() {
             <Mail className="w-6 h-6 text-pink-500" />
             <h3 className="text-white">Campaigns</h3>
           </div>
-          <p className="text-3xl text-white">{newsletters.filter(n => n.status === 'sent').length}</p>
+          <p className="text-3xl text-white">{newsletters.filter((n) => n.status === "sent").length}</p>
           <p className="text-gray-400 text-sm">Emails sent</p>
         </div>
         <div className="bg-gradient-to-br from-black to-purple-900/20 border border-purple-500/30 rounded-2xl p-6">
@@ -214,7 +211,7 @@ export function NewsletterManagement() {
             <Calendar className="w-6 h-6 text-purple-500" />
             <h3 className="text-white">Scheduled</h3>
           </div>
-          <p className="text-3xl text-white">{newsletters.filter(n => n.status === 'scheduled').length}</p>
+          <p className="text-3xl text-white">{newsletters.filter((n) => n.status === "scheduled").length}</p>
           <p className="text-gray-400 text-sm">Upcoming campaigns</p>
         </div>
       </div>
@@ -222,22 +219,22 @@ export function NewsletterManagement() {
       {/* Tabs */}
       <div className="flex gap-4 border-b border-purple-900/30">
         <button
-          onClick={() => setActiveTab('campaigns')}
+          onClick={() => setActiveTab("campaigns")}
           className={`px-6 py-3 flex items-center gap-2 transition-all border-b-2 ${
-            activeTab === 'campaigns'
-              ? 'border-purple-500 text-purple-400'
-              : 'border-transparent text-gray-400 hover:text-gray-300'
+            activeTab === "campaigns"
+              ? "border-purple-500 text-purple-400"
+              : "border-transparent text-gray-400 hover:text-gray-300"
           }`}
         >
           <Mail className="w-5 h-5" />
           Campaigns
         </button>
         <button
-          onClick={() => setActiveTab('subscribers')}
+          onClick={() => setActiveTab("subscribers")}
           className={`px-6 py-3 flex items-center gap-2 transition-all border-b-2 ${
-            activeTab === 'subscribers'
-              ? 'border-purple-500 text-purple-400'
-              : 'border-transparent text-gray-400 hover:text-gray-300'
+            activeTab === "subscribers"
+              ? "border-purple-500 text-purple-400"
+              : "border-transparent text-gray-400 hover:text-gray-300"
           }`}
         >
           <Users className="w-5 h-5" />
@@ -245,15 +242,19 @@ export function NewsletterManagement() {
         </button>
       </div>
 
-      {activeTab === 'campaigns' && (
+      {activeTab === "campaigns" && (
         <>
           {showForm ? (
             <div className="bg-gradient-to-br from-black to-purple-900/20 border border-purple-500/30 rounded-2xl p-6">
-              <h2 className="text-white mb-6">{editingId ? 'Edit' : 'Create'} Campaign</h2>
+              <h2 className="text-white mb-6">{editingId ? "Edit" : "Create"} Campaign</h2>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-gray-300 mb-2">Subject Line</label>
+                  <label htmlFor="campaignSubject" className="block text-gray-300 mb-2">
+                    Subject Line
+                  </label>
                   <input
+                    id="campaignSubject"
+                    name="campaignSubject"
                     type="text"
                     value={formData.subject}
                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
@@ -263,8 +264,12 @@ export function NewsletterManagement() {
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-300 mb-2">Plain Text Content</label>
+                  <label htmlFor="campaignContent" className="block text-gray-300 mb-2">
+                    Plain Text Content
+                  </label>
                   <textarea
+                    id="campaignContent"
+                    name="campaignContent"
                     value={formData.content}
                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                     required
@@ -274,8 +279,12 @@ export function NewsletterManagement() {
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-300 mb-2">HTML Content (Optional)</label>
+                  <label htmlFor="campaignHtmlContent" className="block text-gray-300 mb-2">
+                    HTML Content (Optional)
+                  </label>
                   <textarea
+                    id="campaignHtmlContent"
+                    name="campaignHtmlContent"
                     value={formData.htmlContent}
                     onChange={(e) => setFormData({ ...formData, htmlContent: e.target.value })}
                     rows={6}
@@ -284,8 +293,12 @@ export function NewsletterManagement() {
                   />
                 </div>
                 <div>
-                  <label className="block text-gray-300 mb-2">Schedule For (Optional)</label>
+                  <label htmlFor="campaignScheduledFor" className="block text-gray-300 mb-2">
+                    Schedule For (Optional)
+                  </label>
                   <input
+                    id="campaignScheduledFor"
+                    name="campaignScheduledFor"
                     type="datetime-local"
                     value={formData.scheduledFor}
                     onChange={(e) => setFormData({ ...formData, scheduledFor: e.target.value })}
@@ -298,7 +311,7 @@ export function NewsletterManagement() {
                     type="submit"
                     className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-2 rounded-lg transition-all"
                   >
-                    {editingId ? 'Update' : 'Save'} Campaign
+                    {editingId ? "Update" : "Save"} Campaign
                   </button>
                   <button
                     type="button"
@@ -333,28 +346,28 @@ export function NewsletterManagement() {
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-white text-lg">{newsletter.subject}</h3>
-                          <span className={`px-3 py-1 rounded-full text-sm ${
-                            newsletter.status === 'sent' ? 'bg-green-600' :
-                            newsletter.status === 'scheduled' ? 'bg-blue-600' :
-                            'bg-gray-600'
-                          }`}>
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm ${
+                              newsletter.status === "sent"
+                                ? "bg-green-600"
+                                : newsletter.status === "scheduled"
+                                ? "bg-blue-600"
+                                : "bg-gray-600"
+                            }`}
+                          >
                             {newsletter.status}
                           </span>
                         </div>
                         <p className="text-gray-400 text-sm mb-3">{newsletter.content.substring(0, 100)}...</p>
                         {newsletter.sentAt && (
                           <div className="flex gap-6 text-sm">
-                            <span className="text-gray-500">
-                              Sent to {newsletter.recipientCount} subscribers
-                            </span>
-                            <span className="text-gray-500">
-                              {new Date(newsletter.sentAt).toLocaleDateString()}
-                            </span>
+                            <span className="text-gray-500">Sent to {newsletter.recipientCount} subscribers</span>
+                            <span className="text-gray-500">{new Date(newsletter.sentAt).toLocaleDateString()}</span>
                           </div>
                         )}
                       </div>
                       <div className="flex gap-2 ml-4">
-                        {newsletter.status === 'draft' && (
+                        {newsletter.status === "draft" && (
                           <>
                             <button
                               onClick={() => {
@@ -363,7 +376,7 @@ export function NewsletterManagement() {
                                   subject: newsletter.subject,
                                   content: newsletter.content,
                                   htmlContent: newsletter.htmlContent,
-                                  scheduledFor: newsletter.scheduledFor || '',
+                                  scheduledFor: newsletter.scheduledFor || "",
                                 });
                                 setShowForm(true);
                               }}
@@ -398,7 +411,7 @@ export function NewsletterManagement() {
         </>
       )}
 
-      {activeTab === 'subscribers' && (
+      {activeTab === "subscribers" && (
         <div className="bg-gradient-to-br from-black to-purple-900/20 border border-purple-500/30 rounded-2xl p-6">
           <h2 className="text-white mb-6">Subscriber List</h2>
           <div className="overflow-x-auto">
@@ -420,9 +433,11 @@ export function NewsletterManagement() {
                       {new Date(subscriber.subscribedAt).toLocaleDateString()}
                     </td>
                     <td className="py-3 px-4">
-                      <span className={`px-3 py-1 rounded-full text-sm ${
-                        subscriber.status === 'active' ? 'bg-green-600' : 'bg-gray-600'
-                      }`}>
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm ${
+                          subscriber.status === "active" ? "bg-green-600" : "bg-gray-600"
+                        }`}
+                      >
                         {subscriber.status}
                       </span>
                     </td>

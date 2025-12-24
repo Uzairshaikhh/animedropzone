@@ -431,8 +431,12 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-gray-300 mb-2">First Name</label>
+              <label htmlFor="checkoutFirstName" className="block text-gray-300 mb-2">
+                First Name
+              </label>
               <input
+                id="checkoutFirstName"
+                name="checkoutFirstName"
                 type="text"
                 value={formData.firstName}
                 onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
@@ -441,8 +445,12 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
               />
             </div>
             <div>
-              <label className="block text-gray-300 mb-2">Last Name</label>
+              <label htmlFor="checkoutLastName" className="block text-gray-300 mb-2">
+                Last Name
+              </label>
               <input
+                id="checkoutLastName"
+                name="checkoutLastName"
                 type="text"
                 value={formData.lastName}
                 onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
@@ -451,8 +459,12 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
               />
             </div>
             <div>
-              <label className="block text-gray-300 mb-2">Email</label>
+              <label htmlFor="checkoutEmail" className="block text-gray-300 mb-2">
+                Email
+              </label>
               <input
+                id="checkoutEmail"
+                name="checkoutEmail"
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -461,8 +473,12 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
               />
             </div>
             <div>
-              <label className="block text-gray-300 mb-2">Phone Number</label>
+              <label htmlFor="checkoutPhone" className="block text-gray-300 mb-2">
+                Phone Number
+              </label>
               <input
+                id="checkoutPhone"
+                name="checkoutPhone"
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -473,8 +489,12 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
               />
             </div>
             <div>
-              <label className="block text-gray-300 mb-2">Shipping Address</label>
+              <label htmlFor="checkoutAddress" className="block text-gray-300 mb-2">
+                Shipping Address
+              </label>
               <textarea
+                id="checkoutAddress"
+                name="checkoutAddress"
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 required
@@ -483,8 +503,12 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
               />
             </div>
             <div>
-              <label className="block text-gray-300 mb-2">Landmark</label>
+              <label htmlFor="checkoutLandmark" className="block text-gray-300 mb-2">
+                Landmark
+              </label>
               <input
+                id="checkoutLandmark"
+                name="checkoutLandmark"
                 type="text"
                 value={formData.landmark}
                 onChange={(e) => setFormData({ ...formData, landmark: e.target.value })}
@@ -494,8 +518,12 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
               />
             </div>
             <div>
-              <label className="block text-gray-300 mb-2">City</label>
+              <label htmlFor="checkoutCity" className="block text-gray-300 mb-2">
+                City
+              </label>
               <input
+                id="checkoutCity"
+                name="checkoutCity"
                 type="text"
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
@@ -504,8 +532,12 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
               />
             </div>
             <div>
-              <label className="block text-gray-300 mb-2">State</label>
+              <label htmlFor="checkoutState" className="block text-gray-300 mb-2">
+                State
+              </label>
               <input
+                id="checkoutState"
+                name="checkoutState"
                 type="text"
                 value={formData.state}
                 onChange={(e) => setFormData({ ...formData, state: e.target.value })}
@@ -514,8 +546,12 @@ export function CheckoutModal({ isOpen, onClose, items, total, onSuccess, user }
               />
             </div>
             <div>
-              <label className="block text-gray-300 mb-2">Pincode</label>
+              <label htmlFor="checkoutPincode" className="block text-gray-300 mb-2">
+                Pincode
+              </label>
               <input
+                id="checkoutPincode"
+                name="checkoutPincode"
                 type="text"
                 value={formData.pincode}
                 onChange={(e) => setFormData({ ...formData, pincode: e.target.value })}

@@ -1,7 +1,7 @@
-import { X, Upload, Shirt, Image as ImageIcon } from 'lucide-react';
-import { useState } from 'react';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { supabase } from '../utils/supabase/client';
+import { X, Upload, Shirt, Image as ImageIcon } from "lucide-react";
+import { useState } from "react";
+import { projectId, publicAnonKey } from "../utils/supabase/info";
+import { supabase } from "../utils/supabase/client";
 
 interface CustomClothingModalProps {
   isOpen: boolean;
@@ -11,15 +11,15 @@ interface CustomClothingModalProps {
 
 export function CustomClothingModal({ isOpen, onClose, onSuccess }: CustomClothingModalProps) {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    clothingType: 'tshirt',
-    size: 'M',
-    color: '',
-    quantity: '1',
-    instructions: '',
-    address: '',
+    name: "",
+    email: "",
+    phone: "",
+    clothingType: "tshirt",
+    size: "M",
+    color: "",
+    quantity: "1",
+    instructions: "",
+    address: "",
   });
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
@@ -28,12 +28,12 @@ export function CustomClothingModal({ isOpen, onClose, onSuccess }: CustomClothi
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files.length + selectedImages.length > 5) {
-      alert('Maximum 5 images allowed');
+      alert("Maximum 5 images allowed");
       return;
     }
 
     setSelectedImages([...selectedImages, ...files]);
-    const previews = files.map(file => URL.createObjectURL(file));
+    const previews = files.map((file) => URL.createObjectURL(file));
     setImagePreviews([...imagePreviews, ...previews]);
   };
 
@@ -44,9 +44,9 @@ export function CustomClothingModal({ isOpen, onClose, onSuccess }: CustomClothi
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (selectedImages.length === 0) {
-      alert('Please upload at least one design image');
+      alert("Please upload at least one design image");
       return;
     }
 
@@ -55,18 +55,18 @@ export function CustomClothingModal({ isOpen, onClose, onSuccess }: CustomClothi
     try {
       // Upload images to Supabase Storage via server
       const uploadedUrls: string[] = [];
-      
+
       for (const image of selectedImages) {
         const formDataObj = new FormData();
-        formDataObj.append('file', image);
-        formDataObj.append('folder', 'custom-designs');
-        
+        formDataObj.append("file", image);
+        formDataObj.append("folder", "custom-designs");
+
         const uploadResponse = await fetch(
           `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/upload-image`,
           {
-            method: 'POST',
+            method: "POST",
             headers: {
-              'Authorization': `Bearer ${publicAnonKey}`,
+              Authorization: `Bearer ${publicAnonKey}`,
             },
             body: formDataObj,
           }
@@ -74,8 +74,8 @@ export function CustomClothingModal({ isOpen, onClose, onSuccess }: CustomClothi
 
         if (!uploadResponse.ok) {
           const errorData = await uploadResponse.json();
-          console.error('Error uploading image:', errorData);
-          throw new Error(errorData.error || 'Failed to upload images');
+          console.error("Error uploading image:", errorData);
+          throw new Error(errorData.error || "Failed to upload images");
         }
 
         const uploadData = await uploadResponse.json();
@@ -86,10 +86,10 @@ export function CustomClothingModal({ isOpen, onClose, onSuccess }: CustomClothi
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/custom-clothing`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${publicAnonKey}`,
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             ...formData,
@@ -100,30 +100,32 @@ export function CustomClothingModal({ isOpen, onClose, onSuccess }: CustomClothi
       );
 
       const data = await response.json();
-      
+
       if (data.success) {
-        alert(`Custom clothing request submitted successfully! Request ID: ${data.requestId}\nWe'll contact you within 24-48 hours with a quote.`);
+        alert(
+          `Custom clothing request submitted successfully! Request ID: ${data.requestId}\nWe'll contact you within 24-48 hours with a quote.`
+        );
         setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          clothingType: 'tshirt',
-          size: 'M',
-          color: '',
-          quantity: '1',
-          instructions: '',
-          address: '',
+          name: "",
+          email: "",
+          phone: "",
+          clothingType: "tshirt",
+          size: "M",
+          color: "",
+          quantity: "1",
+          instructions: "",
+          address: "",
         });
         setSelectedImages([]);
         setImagePreviews([]);
         onSuccess();
         onClose();
       } else {
-        alert(data.error || 'Failed to submit request. Please try again.');
+        alert(data.error || "Failed to submit request. Please try again.");
       }
     } catch (error) {
-      console.error('Error submitting custom order:', error);
-      alert('Failed to submit request. Please try again.');
+      console.error("Error submitting custom order:", error);
+      alert("Failed to submit request. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -139,10 +141,7 @@ export function CustomClothingModal({ isOpen, onClose, onSuccess }: CustomClothi
             <Shirt className="w-6 h-6" />
             <h2 className="text-white">Custom Clothing Design</h2>
           </div>
-          <button
-            onClick={onClose}
-            className="hover:bg-white/10 p-2 rounded-lg transition-colors"
-          >
+          <button onClick={onClose} className="hover:bg-white/10 p-2 rounded-lg transition-colors">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -164,10 +163,8 @@ export function CustomClothingModal({ isOpen, onClose, onSuccess }: CustomClothi
 
           {/* Design Upload */}
           <div>
-            <label className="block text-gray-300 mb-3">
-              Upload Design Images * (Max 5)
-            </label>
-            
+            <label className="block text-gray-300 mb-3">Upload Design Images * (Max 5)</label>
+
             {/* Image Previews */}
             {imagePreviews.length > 0 && (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
@@ -198,25 +195,21 @@ export function CustomClothingModal({ isOpen, onClose, onSuccess }: CustomClothi
                   <p className="text-gray-300 mb-1">Click to upload design images</p>
                   <p className="text-gray-500 text-sm">PNG, JPG up to 5MB each</p>
                 </div>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleImageChange}
-                  className="hidden"
-                />
+                <input type="file" accept="image/*" multiple onChange={handleImageChange} className="hidden" />
               </label>
             )}
-            <p className="text-xs text-gray-400 mt-2">
-              {selectedImages.length} of 5 images uploaded
-            </p>
+            <p className="text-xs text-gray-400 mt-2">{selectedImages.length} of 5 images uploaded</p>
           </div>
 
           {/* Personal Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-gray-300 mb-2">Full Name *</label>
+              <label htmlFor="customName" className="block text-gray-300 mb-2">
+                Full Name *
+              </label>
               <input
+                id="customName"
+                name="customName"
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -227,8 +220,12 @@ export function CustomClothingModal({ isOpen, onClose, onSuccess }: CustomClothi
             </div>
 
             <div>
-              <label className="block text-gray-300 mb-2">Email *</label>
+              <label htmlFor="customEmail" className="block text-gray-300 mb-2">
+                Email *
+              </label>
               <input
+                id="customEmail"
+                name="customEmail"
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -239,8 +236,12 @@ export function CustomClothingModal({ isOpen, onClose, onSuccess }: CustomClothi
             </div>
 
             <div>
-              <label className="block text-gray-300 mb-2">Phone Number *</label>
+              <label htmlFor="customPhone" className="block text-gray-300 mb-2">
+                Phone Number *
+              </label>
               <input
+                id="customPhone"
+                name="customPhone"
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -251,8 +252,12 @@ export function CustomClothingModal({ isOpen, onClose, onSuccess }: CustomClothi
             </div>
 
             <div>
-              <label className="block text-gray-300 mb-2">Clothing Type *</label>
+              <label htmlFor="customClothingType" className="block text-gray-300 mb-2">
+                Clothing Type *
+              </label>
               <select
+                id="customClothingType"
+                name="customClothingType"
                 value={formData.clothingType}
                 onChange={(e) => setFormData({ ...formData, clothingType: e.target.value })}
                 className="w-full bg-purple-900/20 border border-purple-500/30 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
@@ -267,8 +272,12 @@ export function CustomClothingModal({ isOpen, onClose, onSuccess }: CustomClothi
             </div>
 
             <div>
-              <label className="block text-gray-300 mb-2">Size *</label>
+              <label htmlFor="customSize" className="block text-gray-300 mb-2">
+                Size *
+              </label>
               <select
+                id="customSize"
+                name="customSize"
                 value={formData.size}
                 onChange={(e) => setFormData({ ...formData, size: e.target.value })}
                 className="w-full bg-purple-900/20 border border-purple-500/30 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
@@ -284,8 +293,12 @@ export function CustomClothingModal({ isOpen, onClose, onSuccess }: CustomClothi
             </div>
 
             <div>
-              <label className="block text-gray-300 mb-2">Preferred Color</label>
+              <label htmlFor="customColor" className="block text-gray-300 mb-2">
+                Preferred Color
+              </label>
               <input
+                id="customColor"
+                name="customColor"
                 type="text"
                 value={formData.color}
                 onChange={(e) => setFormData({ ...formData, color: e.target.value })}
@@ -295,8 +308,12 @@ export function CustomClothingModal({ isOpen, onClose, onSuccess }: CustomClothi
             </div>
 
             <div>
-              <label className="block text-gray-300 mb-2">Quantity *</label>
+              <label htmlFor="customQuantity" className="block text-gray-300 mb-2">
+                Quantity *
+              </label>
               <input
+                id="customQuantity"
+                name="customQuantity"
                 type="number"
                 value={formData.quantity}
                 onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
@@ -309,8 +326,12 @@ export function CustomClothingModal({ isOpen, onClose, onSuccess }: CustomClothi
 
           {/* Special Instructions */}
           <div>
-            <label className="block text-gray-300 mb-2">Special Instructions</label>
+            <label htmlFor="customInstructions" className="block text-gray-300 mb-2">
+              Special Instructions
+            </label>
             <textarea
+              id="customInstructions"
+              name="customInstructions"
               value={formData.instructions}
               onChange={(e) => setFormData({ ...formData, instructions: e.target.value })}
               rows={4}
@@ -321,8 +342,12 @@ export function CustomClothingModal({ isOpen, onClose, onSuccess }: CustomClothi
 
           {/* Delivery Address */}
           <div>
-            <label className="block text-gray-300 mb-2">Delivery Address *</label>
+            <label htmlFor="customAddress" className="block text-gray-300 mb-2">
+              Delivery Address *
+            </label>
             <textarea
+              id="customAddress"
+              name="customAddress"
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               required
@@ -336,8 +361,8 @@ export function CustomClothingModal({ isOpen, onClose, onSuccess }: CustomClothi
           <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-lg p-4">
             <h4 className="text-purple-400 mb-2">Pricing Information</h4>
             <p className="text-gray-300 text-sm">
-              Custom clothing prices vary based on design complexity, quantity, and clothing type. 
-              Our team will provide you with a detailed quote within 24-48 hours after reviewing your design.
+              Custom clothing prices vary based on design complexity, quantity, and clothing type. Our team will provide
+              you with a detailed quote within 24-48 hours after reviewing your design.
             </p>
           </div>
 

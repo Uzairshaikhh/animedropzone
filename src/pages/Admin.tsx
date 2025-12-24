@@ -549,10 +549,14 @@ export function AdminPage() {
 
                   <form onSubmit={handleLogin} className="space-y-4">
                     <div>
-                      <label className="block text-gray-300 mb-2">User ID</label>
+                      <label htmlFor="userId" className="block text-gray-300 mb-2">
+                        User ID
+                      </label>
                       <div className="relative">
                         <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
+                          id="userId"
+                          name="userId"
                           type="text"
                           value={userId}
                           onChange={(e) => setUserId(e.target.value)}
@@ -564,10 +568,14 @@ export function AdminPage() {
                     </div>
 
                     <div>
-                      <label className="block text-gray-300 mb-2">Password</label>
+                      <label htmlFor="password" className="block text-gray-300 mb-2">
+                        Password
+                      </label>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                         <input
+                          id="password"
+                          name="password"
                           type="password"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
@@ -831,8 +839,12 @@ export function AdminPage() {
                         <h2 className="text-white mb-6">{editingProduct ? "Edit Product" : "Add New Product"}</h2>
                         <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl">
                           <div>
-                            <label className="block text-gray-300 mb-2">Product Name</label>
+                            <label htmlFor="productName" className="block text-gray-300 mb-2">
+                              Product Name
+                            </label>
                             <input
+                              id="productName"
+                              name="productName"
                               type="text"
                               value={formData.name}
                               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -841,8 +853,12 @@ export function AdminPage() {
                             />
                           </div>
                           <div>
-                            <label className="block text-gray-300 mb-2">Description</label>
+                            <label htmlFor="productDescription" className="block text-gray-300 mb-2">
+                              Description
+                            </label>
                             <textarea
+                              id="productDescription"
+                              name="productDescription"
                               value={formData.description}
                               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                               rows={3}
@@ -851,8 +867,12 @@ export function AdminPage() {
                           </div>
                           <div className="grid grid-cols-2 gap-4">
                             <div>
-                              <label className="block text-gray-300 mb-2">Price (₹)</label>
+                              <label htmlFor="productPrice" className="block text-gray-300 mb-2">
+                                Price (₹)
+                              </label>
                               <input
+                                id="productPrice"
+                                name="productPrice"
                                 type="number"
                                 value={formData.price}
                                 onChange={(e) => setFormData({ ...formData, price: e.target.value })}
@@ -863,8 +883,12 @@ export function AdminPage() {
                               />
                             </div>
                             <div>
-                              <label className="block text-gray-300 mb-2">Stock</label>
+                              <label htmlFor="productStock" className="block text-gray-300 mb-2">
+                                Stock
+                              </label>
                               <input
+                                id="productStock"
+                                name="productStock"
                                 type="number"
                                 value={formData.stock}
                                 onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
@@ -875,8 +899,12 @@ export function AdminPage() {
                             </div>
                           </div>
                           <div>
-                            <label className="block text-gray-300 mb-2">Category</label>
+                            <label htmlFor="productCategory" className="block text-gray-300 mb-2">
+                              Category
+                            </label>
                             <select
+                              id="productCategory"
+                              name="productCategory"
                               value={formData.category}
                               onChange={(e) => setFormData({ ...formData, category: e.target.value, subcategory: "" })}
                               className="w-full bg-purple-900/20 border border-purple-500/30 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
@@ -900,7 +928,9 @@ export function AdminPage() {
                             </select>
                           </div>
                           <div>
-                            <label className="block text-gray-300 mb-2">Subcategory (Optional)</label>
+                            <label htmlFor="productSubcategory" className="block text-gray-300 mb-2">
+                              Subcategory (Optional)
+                            </label>
                             {(() => {
                               const selectedCategory = categories.find((cat) => cat.slug === formData.category);
                               const hasSubcategories =
@@ -910,6 +940,8 @@ export function AdminPage() {
 
                               return hasSubcategories ? (
                                 <select
+                                  id="productSubcategory"
+                                  name="productSubcategory"
                                   value={formData.subcategory}
                                   onChange={(e) => setFormData({ ...formData, subcategory: e.target.value })}
                                   className="w-full bg-purple-900/20 border border-purple-500/30 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"

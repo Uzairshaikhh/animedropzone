@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { Search, Package, CheckCircle, MapPin, XCircle, X } from 'lucide-react';
-import { Navbar } from '../components/Navbar';
-import { Footer } from '../components/Footer';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { useToast } from '../contexts/ToastContext';
+import { useState } from "react";
+import { Search, Package, CheckCircle, MapPin, XCircle, X } from "lucide-react";
+import { Navbar } from "../components/Navbar";
+import { Footer } from "../components/Footer";
+import { projectId, publicAnonKey } from "../utils/supabase/info";
+import { useToast } from "../contexts/ToastContext";
 
 interface Order {
   id: string;
@@ -25,56 +25,51 @@ interface Order {
 
 export function TrackOrderPage() {
   const { error: showErrorToast } = useToast();
-  const [trackingId, setTrackingId] = useState('');
+  const [trackingId, setTrackingId] = useState("");
   const [order, setOrder] = useState<Order | null>(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [cancelReason, setCancelReason] = useState('');
+  const [cancelReason, setCancelReason] = useState("");
   const [isCancelling, setIsCancelling] = useState(false);
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
 
   // Check if order is eligible for return (within 7 days of delivery)
   const isReturnEligible = (order: Order | null): boolean => {
-    if (!order || order.status !== 'Order Delivered') return false;
-    
+    if (!order || order.status !== "Order Delivered") return false;
+
     const deliveryDate = new Date((order as any).deliveredAt || order.createdAt);
     const daysSinceDelivery = Math.floor((Date.now() - deliveryDate.getTime()) / (1000 * 60 * 60 * 24));
-    
+
     return daysSinceDelivery <= 7;
   };
 
   const handleTrackOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setOrder(null);
     setIsLoading(true);
 
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/orders`,
-        {
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-        }
-      );
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/orders`, {
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`,
+        },
+      });
 
       const data = await response.json();
       if (data.success) {
         // Search by both Order ID and Tracking ID
-        const foundOrder = data.orders.find((o: Order) => 
-          o.trackingId === trackingId || o.id === trackingId
-        );
+        const foundOrder = data.orders.find((o: Order) => o.trackingId === trackingId || o.id === trackingId);
         if (foundOrder) {
           setOrder(foundOrder);
         } else {
-          setError('Order not found. Please check your Order ID or Tracking ID.');
+          setError("Order not found. Please check your Order ID or Tracking ID.");
         }
       }
     } catch (error) {
-      console.log('Error tracking order:', error);
-      setError('An error occurred. Please try again.');
+      console.log("Error tracking order:", error);
+      setError("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -82,42 +77,41 @@ export function TrackOrderPage() {
 
   const handleCancelOrder = async () => {
     setIsCancelling(true);
-    setError('');
+    setError("");
 
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/orders/cancel`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            orderId: order?.id,
-            reason: cancelReason,
-          }),
-        }
-      );
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/orders/cancel`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId: order?.id,
+          reason: cancelReason,
+        }),
+      });
 
       const data = await response.json();
       if (data.success) {
         // Show sad toast for order cancellation
         showErrorToast(
-          `😢 Order cancelled successfully. ${order?.paymentMethod !== 'cod' ? 'Refund will be processed in 5-7 days.' : ''}`,
+          `😢 Order cancelled successfully. ${
+            order?.paymentMethod !== "cod" ? "Refund will be processed in 5-7 days." : ""
+          }`,
           6000
         );
-        
+
         setOrder(null);
         setIsCancelModalOpen(false);
-        setCancelReason('');
-        setTrackingId('');
+        setCancelReason("");
+        setTrackingId("");
       } else {
-        setError(data.message || 'Failed to cancel order.');
+        setError(data.message || "Failed to cancel order.");
       }
     } catch (error) {
-      console.log('Error cancelling order:', error);
-      setError('An error occurred. Please try again.');
+      console.log("Error cancelling order:", error);
+      setError("An error occurred. Please try again.");
     } finally {
       setIsCancelling(false);
     }
@@ -126,7 +120,7 @@ export function TrackOrderPage() {
   return (
     <div className="min-h-screen bg-black flex flex-col">
       <Navbar />
-      
+
       <main className="flex-1 py-20 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
@@ -138,8 +132,13 @@ export function TrackOrderPage() {
           <div className="bg-gradient-to-br from-black to-purple-900/20 border border-purple-500/30 rounded-2xl p-8 mb-8">
             <form onSubmit={handleTrackOrder} className="flex gap-4">
               <div className="flex-1 relative">
+                <label htmlFor="trackingInput" className="sr-only">
+                  Enter Order ID or Tracking ID
+                </label>
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
+                  id="trackingInput"
+                  name="trackingInput"
                   type="text"
                   value={trackingId}
                   onChange={(e) => setTrackingId(e.target.value)}
@@ -153,7 +152,7 @@ export function TrackOrderPage() {
                 disabled={isLoading}
                 className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 px-8 py-3 rounded-lg transition-all"
               >
-                {isLoading ? 'Searching...' : 'Track Order'}
+                {isLoading ? "Searching..." : "Track Order"}
               </button>
             </form>
 
@@ -170,13 +169,13 @@ export function TrackOrderPage() {
               {/* Status Banner */}
               <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-8 text-center">
                 <div className="flex justify-center mb-4">
-                  {order.status === 'Order Delivered' ? (
+                  {order.status === "Order Delivered" ? (
                     <CheckCircle className="w-16 h-16 text-white" />
-                  ) : order.status === 'Out for Delivery' ? (
+                  ) : order.status === "Out for Delivery" ? (
                     <Package className="w-16 h-16 text-white" />
-                  ) : order.status === 'In Transit' ? (
+                  ) : order.status === "In Transit" ? (
                     <MapPin className="w-16 h-16 text-white" />
-                  ) : order.status === 'Cancelled' ? (
+                  ) : order.status === "Cancelled" ? (
                     <XCircle className="w-16 h-16 text-white" />
                   ) : (
                     <Package className="w-16 h-16 text-white" />
@@ -189,7 +188,7 @@ export function TrackOrderPage() {
               {/* Order Information */}
               <div className="bg-gradient-to-br from-black to-purple-900/20 border border-purple-500/30 rounded-2xl p-8">
                 <h3 className="text-white mb-6">Order Details</h3>
-                
+
                 <div className="grid md:grid-cols-2 gap-6 mb-6">
                   <div>
                     <p className="text-gray-400 text-sm mb-1">Order ID</p>
@@ -229,7 +228,7 @@ export function TrackOrderPage() {
                   <Package className="w-5 h-5 text-purple-400" />
                   Items Ordered
                 </h3>
-                
+
                 <div className="space-y-4">
                   {order.items.map((item, index) => (
                     <div
@@ -262,7 +261,7 @@ export function TrackOrderPage() {
               </div>
 
               {/* Cancel Order Button */}
-              {order.status === 'Order Pending' && (
+              {order.status === "Order Pending" && (
                 <div className="text-center mt-6">
                   <button
                     onClick={() => setIsCancelModalOpen(true)}
@@ -272,8 +271,6 @@ export function TrackOrderPage() {
                   </button>
                 </div>
               )}
-
-
             </div>
           )}
 
@@ -296,21 +293,13 @@ export function TrackOrderPage() {
 
                 <div className="p-6 space-y-4">
                   <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
-                    <p className="text-white mb-2">
-                      Are you sure you want to cancel this order?
-                    </p>
-                    <p className="text-gray-400 text-sm">
-                      Order ID: {order?.id}
-                    </p>
-                    <p className="text-gray-400 text-sm">
-                      Tracking ID: {order?.trackingId}
-                    </p>
+                    <p className="text-white mb-2">Are you sure you want to cancel this order?</p>
+                    <p className="text-gray-400 text-sm">Order ID: {order?.id}</p>
+                    <p className="text-gray-400 text-sm">Tracking ID: {order?.trackingId}</p>
                   </div>
 
                   <div>
-                    <label className="block text-gray-300 mb-2">
-                      Reason for Cancellation (Optional)
-                    </label>
+                    <label className="block text-gray-300 mb-2">Reason for Cancellation (Optional)</label>
                     <textarea
                       value={cancelReason}
                       onChange={(e) => setCancelReason(e.target.value)}
@@ -324,7 +313,7 @@ export function TrackOrderPage() {
                     <p className="text-yellow-400 text-sm">
                       ⚠️ You will receive cancellation confirmation via Email and WhatsApp
                     </p>
-                    {order?.paymentMethod !== 'cod' && (
+                    {order?.paymentMethod !== "cod" && (
                       <p className="text-yellow-400 text-sm mt-2">
                         💰 Refund will be processed within 5-7 business days
                       </p>
@@ -361,8 +350,6 @@ export function TrackOrderPage() {
               </div>
             </div>
           )}
-
-
         </div>
       </main>
 

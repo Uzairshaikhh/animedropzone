@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { CreditCard, Wallet, Smartphone, Banknote, CheckCircle, AlertCircle, Loader } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { CreditCard, Wallet, Smartphone, Banknote, CheckCircle, AlertCircle, Loader } from "lucide-react";
 
 // Razorpay TypeScript interface
 declare global {
@@ -27,84 +27,84 @@ interface PaymentResponse {
   paymentId: string;
   paymentMethod: string;
   amount: number;
-  status: 'success' | 'pending' | 'failed';
+  status: "success" | "pending" | "failed";
   transactionId?: string;
   upiApp?: string;
 }
 
 export function PaymentIntegration({
   amount,
-  currency = 'INR',
+  currency = "INR",
   customerInfo,
   onSuccess,
   onFailure,
   onClose,
-  description = 'Purchase from AnimeDropZone',
+  description = "Purchase from AnimeDropZone",
   disabled = false,
 }: PaymentIntegrationProps) {
-  const [selectedMethod, setSelectedMethod] = useState<'razorpay' | 'upi' | 'paytm' | 'cod'>('razorpay');
+  const [selectedMethod, setSelectedMethod] = useState<"razorpay" | "upi" | "paytm" | "cod">("razorpay");
   const [isProcessing, setIsProcessing] = useState(false);
-  const [upiTransactionId, setUpiTransactionId] = useState('');
-  const [selectedUpiApp, setSelectedUpiApp] = useState('');
+  const [upiTransactionId, setUpiTransactionId] = useState("");
+  const [selectedUpiApp, setSelectedUpiApp] = useState("");
   const [showUpiDetails, setShowUpiDetails] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  const UPI_ID = 'ziddenkhan5@ptaxis'; // Your UPI ID
-  const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID || '';
+  const UPI_ID = "ziddenkhan5@ptaxis"; // Your UPI ID
+  const RAZORPAY_KEY = import.meta.env.VITE_RAZORPAY_KEY_ID || "";
 
   // Payment methods configuration
   const paymentMethods = [
     {
-      id: 'razorpay',
-      name: 'Razorpay',
-      description: 'Cards, UPI, Wallets, NetBanking',
+      id: "razorpay",
+      name: "Razorpay",
+      description: "Cards, UPI, Wallets, NetBanking",
       icon: CreditCard,
-      color: 'from-blue-500 to-blue-600',
+      color: "from-blue-500 to-blue-600",
       available: true,
     },
     {
-      id: 'upi',
-      name: 'Direct UPI',
-      description: 'Pay via any UPI app',
+      id: "upi",
+      name: "Direct UPI",
+      description: "Pay via any UPI app",
       icon: Smartphone,
-      color: 'from-green-500 to-green-600',
+      color: "from-green-500 to-green-600",
       available: true,
     },
     {
-      id: 'paytm',
-      name: 'Paytm',
-      description: 'Paytm Wallet & UPI',
+      id: "paytm",
+      name: "Paytm",
+      description: "Paytm Wallet & UPI",
       icon: Wallet,
-      color: 'from-cyan-500 to-cyan-600',
+      color: "from-cyan-500 to-cyan-600",
       available: true,
     },
     {
-      id: 'cod',
-      name: 'Cash on Delivery',
-      description: 'Pay when you receive',
+      id: "cod",
+      name: "Cash on Delivery",
+      description: "Pay when you receive",
       icon: Banknote,
-      color: 'from-orange-500 to-orange-600',
+      color: "from-orange-500 to-orange-600",
       available: true,
     },
   ];
 
   // UPI apps list
   const upiApps = [
-    { id: 'gpay', name: 'Google Pay', color: 'bg-blue-500' },
-    { id: 'phonepe', name: 'PhonePe', color: 'bg-purple-600' },
-    { id: 'paytm', name: 'Paytm', color: 'bg-cyan-500' },
-    { id: 'bhim', name: 'BHIM', color: 'bg-green-600' },
-    { id: 'amazonpay', name: 'Amazon Pay', color: 'bg-orange-500' },
-    { id: 'other', name: 'Other UPI App', color: 'bg-gray-600' },
+    { id: "gpay", name: "Google Pay", color: "bg-blue-500" },
+    { id: "phonepe", name: "PhonePe", color: "bg-purple-600" },
+    { id: "paytm", name: "Paytm", color: "bg-cyan-500" },
+    { id: "bhim", name: "BHIM", color: "bg-green-600" },
+    { id: "amazonpay", name: "Amazon Pay", color: "bg-orange-500" },
+    { id: "other", name: "Other UPI App", color: "bg-gray-600" },
   ];
 
   // Load Razorpay script
   useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
     script.async = true;
     document.body.appendChild(script);
-    
+
     return () => {
       document.body.removeChild(script);
     };
@@ -113,36 +113,36 @@ export function PaymentIntegration({
   // Razorpay Payment Handler
   const handleRazorpayPayment = async () => {
     if (!RAZORPAY_KEY) {
-      setError('Razorpay is not configured. Please contact support.');
-      if (onFailure) onFailure({ error: 'Razorpay key missing' });
+      setError("Razorpay is not configured. Please contact support.");
+      if (onFailure) onFailure({ error: "Razorpay key missing" });
       return;
     }
 
     setIsProcessing(true);
-    setError('');
+    setError("");
 
     try {
       const options = {
         key: RAZORPAY_KEY,
         amount: Math.round(amount * 100), // Convert to paise
         currency: currency,
-        name: 'AnimeDropZone',
+        name: "AnimeDropZone",
         description: description,
-        image: '/logo.png', // Your logo
+        image: "/logo.png", // Your logo
         prefill: {
           name: customerInfo.name,
           email: customerInfo.email,
           contact: customerInfo.phone,
         },
         theme: {
-          color: '#9333ea', // Purple theme
+          color: "#9333ea", // Purple theme
         },
         handler: function (response: any) {
           const paymentData: PaymentResponse = {
             paymentId: response.razorpay_payment_id,
-            paymentMethod: 'Razorpay',
+            paymentMethod: "Razorpay",
             amount: amount,
-            status: 'success',
+            status: "success",
           };
           onSuccess(paymentData);
           setIsProcessing(false);
@@ -156,16 +156,16 @@ export function PaymentIntegration({
       };
 
       const razorpay = new window.Razorpay(options);
-      razorpay.on('payment.failed', function (response: any) {
-        setError('Payment failed. Please try again.');
+      razorpay.on("payment.failed", function (response: any) {
+        setError("Payment failed. Please try again.");
         if (onFailure) onFailure(response);
         setIsProcessing(false);
       });
-      
+
       razorpay.open();
     } catch (error) {
-      console.error('Razorpay error:', error);
-      setError('Failed to initialize payment. Please try again.');
+      console.error("Razorpay error:", error);
+      setError("Failed to initialize payment. Please try again.");
       if (onFailure) onFailure(error);
       setIsProcessing(false);
     }
@@ -174,27 +174,27 @@ export function PaymentIntegration({
   // Direct UPI Payment Handler
   const handleUPIPayment = async () => {
     if (!selectedUpiApp) {
-      setError('Please select a UPI app');
+      setError("Please select a UPI app");
       return;
     }
 
     if (!upiTransactionId.trim()) {
-      setError('Please enter transaction ID');
+      setError("Please enter transaction ID");
       return;
     }
 
     setIsProcessing(true);
-    setError('');
+    setError("");
 
     try {
       // Simulate verification (in production, verify with your backend)
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const paymentData: PaymentResponse = {
         paymentId: `UPI-${selectedUpiApp}-${upiTransactionId}`,
         paymentMethod: `UPI (${selectedUpiApp})`,
         amount: amount,
-        status: 'success',
+        status: "success",
         transactionId: upiTransactionId,
         upiApp: selectedUpiApp,
       };
@@ -203,8 +203,8 @@ export function PaymentIntegration({
       setIsProcessing(false);
       setShowUpiDetails(false);
     } catch (error) {
-      console.error('UPI payment error:', error);
-      setError('UPI payment verification failed. Please try again.');
+      console.error("UPI payment error:", error);
+      setError("UPI payment verification failed. Please try again.");
       if (onFailure) onFailure(error);
       setIsProcessing(false);
     }
@@ -213,17 +213,17 @@ export function PaymentIntegration({
   // Paytm Payment Handler
   const handlePaytmPayment = async () => {
     setIsProcessing(true);
-    setError('');
+    setError("");
 
     try {
       // For production: Integrate Paytm Payment Gateway properly
       // This is a simplified flow for demonstration
-      
+
       const confirmed = confirm(
         `Paytm Payment\n\nAmount: ₹${amount.toLocaleString()}\n\n` +
-        'You will be redirected to Paytm to complete the payment.\n\n' +
-        'Note: For production, complete Paytm integration is required.\n\n' +
-        'Proceed with payment?'
+          "You will be redirected to Paytm to complete the payment.\n\n" +
+          "Note: For production, complete Paytm integration is required.\n\n" +
+          "Proceed with payment?"
       );
 
       if (!confirmed) {
@@ -233,20 +233,20 @@ export function PaymentIntegration({
       }
 
       // Simulate Paytm payment
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       const paymentData: PaymentResponse = {
         paymentId: `PAYTM-${Date.now()}`,
-        paymentMethod: 'Paytm',
+        paymentMethod: "Paytm",
         amount: amount,
-        status: 'success',
+        status: "success",
       };
 
       onSuccess(paymentData);
       setIsProcessing(false);
     } catch (error) {
-      console.error('Paytm payment error:', error);
-      setError('Paytm payment failed. Please try again.');
+      console.error("Paytm payment error:", error);
+      setError("Paytm payment failed. Please try again.");
       if (onFailure) onFailure(error);
       setIsProcessing(false);
     }
@@ -255,13 +255,13 @@ export function PaymentIntegration({
   // Cash on Delivery Handler
   const handleCODPayment = async () => {
     setIsProcessing(true);
-    setError('');
+    setError("");
 
     try {
       const confirmed = confirm(
         `Cash on Delivery\n\nAmount to pay: ₹${amount.toLocaleString()}\n\n` +
-        'Please keep exact cash ready when the delivery arrives.\n\n' +
-        'Confirm order?'
+          "Please keep exact cash ready when the delivery arrives.\n\n" +
+          "Confirm order?"
       );
 
       if (!confirmed) {
@@ -272,16 +272,16 @@ export function PaymentIntegration({
 
       const paymentData: PaymentResponse = {
         paymentId: `COD-${Date.now()}`,
-        paymentMethod: 'Cash on Delivery',
+        paymentMethod: "Cash on Delivery",
         amount: amount,
-        status: 'pending',
+        status: "pending",
       };
 
       onSuccess(paymentData);
       setIsProcessing(false);
     } catch (error) {
-      console.error('COD order error:', error);
-      setError('Failed to place COD order. Please try again.');
+      console.error("COD order error:", error);
+      setError("Failed to place COD order. Please try again.");
       if (onFailure) onFailure(error);
       setIsProcessing(false);
     }
@@ -290,20 +290,20 @@ export function PaymentIntegration({
   // Main payment handler
   const handlePayment = async () => {
     switch (selectedMethod) {
-      case 'razorpay':
+      case "razorpay":
         await handleRazorpayPayment();
         break;
-      case 'upi':
+      case "upi":
         if (!showUpiDetails) {
           setShowUpiDetails(true);
         } else {
           await handleUPIPayment();
         }
         break;
-      case 'paytm':
+      case "paytm":
         await handlePaytmPayment();
         break;
-      case 'cod':
+      case "cod":
         await handleCODPayment();
         break;
     }
@@ -311,7 +311,7 @@ export function PaymentIntegration({
 
   const copyUPIId = () => {
     navigator.clipboard.writeText(UPI_ID);
-    alert('UPI ID copied to clipboard!');
+    alert("UPI ID copied to clipboard!");
   };
 
   return (
@@ -322,7 +322,7 @@ export function PaymentIntegration({
         {paymentMethods.map((method) => {
           const Icon = method.icon;
           const isSelected = selectedMethod === method.id;
-          
+
           return (
             <button
               key={method.id}
@@ -330,26 +330,26 @@ export function PaymentIntegration({
               onClick={() => {
                 setSelectedMethod(method.id as any);
                 setShowUpiDetails(false);
-                setError('');
+                setError("");
               }}
               disabled={!method.available || disabled}
               className={`w-full p-4 rounded-lg border-2 transition-all ${
                 isSelected
-                  ? 'border-purple-500 bg-purple-900/30'
-                  : 'border-purple-500/30 bg-purple-900/10 hover:border-purple-500/50'
-              } ${!method.available || disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  ? "border-purple-500 bg-purple-900/30"
+                  : "border-purple-500/30 bg-purple-900/10 hover:border-purple-500/50"
+              } ${!method.available || disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
             >
               <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${method.color} flex items-center justify-center`}>
+                <div
+                  className={`w-12 h-12 rounded-full bg-gradient-to-br ${method.color} flex items-center justify-center`}
+                >
                   <Icon className="w-6 h-6 text-white" />
                 </div>
                 <div className="flex-1 text-left">
                   <div className="text-white">{method.name}</div>
                   <div className="text-gray-400 text-sm">{method.description}</div>
                 </div>
-                {isSelected && (
-                  <CheckCircle className="w-6 h-6 text-purple-400" />
-                )}
+                {isSelected && <CheckCircle className="w-6 h-6 text-purple-400" />}
               </div>
             </button>
           );
@@ -357,12 +357,16 @@ export function PaymentIntegration({
       </div>
 
       {/* UPI Details Section */}
-      {selectedMethod === 'upi' && showUpiDetails && (
+      {selectedMethod === "upi" && showUpiDetails && (
         <div className="space-y-4 bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
           <div>
-            <label className="block text-gray-300 mb-2">UPI ID</label>
+            <label htmlFor="upiId" className="block text-gray-300 mb-2">
+              UPI ID
+            </label>
             <div className="flex gap-2">
               <input
+                id="upiId"
+                name="upiId"
                 type="text"
                 value={UPI_ID}
                 readOnly
@@ -388,8 +392,8 @@ export function PaymentIntegration({
                   onClick={() => setSelectedUpiApp(app.id)}
                   className={`p-3 rounded-lg border transition-all ${
                     selectedUpiApp === app.id
-                      ? 'border-purple-500 bg-purple-900/30'
-                      : 'border-purple-500/30 bg-purple-900/10 hover:border-purple-500/50'
+                      ? "border-purple-500 bg-purple-900/30"
+                      : "border-purple-500/30 bg-purple-900/10 hover:border-purple-500/50"
                   }`}
                 >
                   <div className={`w-8 h-8 ${app.color} rounded-full mx-auto mb-2`}></div>
@@ -400,8 +404,12 @@ export function PaymentIntegration({
           </div>
 
           <div>
-            <label className="block text-gray-300 mb-2">Transaction ID / UTR Number</label>
+            <label htmlFor="upiTransactionId" className="block text-gray-300 mb-2">
+              Transaction ID / UTR Number
+            </label>
             <input
+              id="upiTransactionId"
+              name="upiTransactionId"
               type="text"
               value={upiTransactionId}
               onChange={(e) => setUpiTransactionId(e.target.value)}
@@ -445,7 +453,9 @@ export function PaymentIntegration({
           </>
         ) : (
           <>
-            {selectedMethod === 'upi' && !showUpiDetails ? 'Continue to UPI Payment' : `Pay ₹${amount.toLocaleString()}`}
+            {selectedMethod === "upi" && !showUpiDetails
+              ? "Continue to UPI Payment"
+              : `Pay ₹${amount.toLocaleString()}`}
           </>
         )}
       </button>
@@ -457,28 +467,28 @@ export function PaymentIntegration({
           Payment Information
         </h4>
         <ul className="text-gray-400 text-sm space-y-1">
-          {selectedMethod === 'razorpay' && (
+          {selectedMethod === "razorpay" && (
             <>
               <li>• Supports all major cards, UPI, wallets, and net banking</li>
               <li>• Secure payment gateway with instant confirmation</li>
               <li>• Refunds processed within 5-7 business days</li>
             </>
           )}
-          {selectedMethod === 'upi' && (
+          {selectedMethod === "upi" && (
             <>
               <li>• Pay via any UPI app (GPay, PhonePe, Paytm, etc.)</li>
               <li>• Manual verification of transaction ID required</li>
               <li>• Order confirmed after payment verification</li>
             </>
           )}
-          {selectedMethod === 'paytm' && (
+          {selectedMethod === "paytm" && (
             <>
               <li>• Pay using Paytm wallet or linked bank account</li>
               <li>• Instant cashback and offers available</li>
               <li>• Secure and verified transactions</li>
             </>
           )}
-          {selectedMethod === 'cod' && (
+          {selectedMethod === "cod" && (
             <>
               <li>• Pay cash when you receive the product</li>
               <li>• Keep exact amount ready for delivery</li>

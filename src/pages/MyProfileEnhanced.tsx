@@ -620,9 +620,13 @@ export function MyProfilePage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Full Name</label>
+                  <label htmlFor="profileName" className="block text-sm text-gray-400 mb-2">
+                    Full Name
+                  </label>
                   {isEditing ? (
                     <input
+                      id="profileName"
+                      name="profileName"
                       type="text"
                       value={editedProfile?.name || ""}
                       onChange={(e) => setEditedProfile({ ...editedProfile!, name: e.target.value })}
@@ -642,12 +646,14 @@ export function MyProfilePage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2 flex items-center gap-2">
+                  <label htmlFor="profilePhone" className="block text-sm text-gray-400 mb-2 flex items-center gap-2">
                     <Phone className="w-4 h-4 text-purple-400" />
                     Phone Number
                   </label>
                   {isEditing ? (
                     <input
+                      id="profilePhone"
+                      name="profilePhone"
                       type="tel"
                       value={editedProfile?.phone || ""}
                       onChange={(e) => setEditedProfile({ ...editedProfile!, phone: e.target.value })}
