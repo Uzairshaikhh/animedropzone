@@ -66,9 +66,9 @@ export function ProductPage() {
     }
   }, [product?.id]);
 
-  // Auto-advance slider for products with multiple images
+  // Auto-advance slider for products with multiple images (disabled on mobile)
   useEffect(() => {
-    if (!product) {
+    if (!product || isMobile) {
       if (slideTimer.current) {
         clearInterval(slideTimer.current);
         slideTimer.current = null;
@@ -323,7 +323,7 @@ export function ProductPage() {
                     ease: "easeInOut",
                   }}
                 />
-                <div className="relative rounded-2xl overflow-hidden border-2 border-purple-500/50 bg-black max-h-96 md:max-h-full">
+                <div className="relative rounded-2xl overflow-hidden border-2 border-purple-500/50 bg-black max-h-80 md:max-h-full">
                   <motion.img
                     src={activeImage}
                     alt={product.name}
@@ -375,30 +375,19 @@ export function ProductPage() {
                   )}
                 </div>
                 {/* Thumbnail Gallery Slider */}
-                <div className="mt-3 md:mt-6 pt-3 md:pt-4 border-t border-purple-500/20">
-                  <div className="flex items-center justify-between mb-2 md:mb-3">
+                <div className="mt-2 md:mt-6 pt-2 md:pt-4 border-t border-purple-500/20">
+                  <div className="flex items-center justify-between mb-2">
                     <p className="text-gray-400 text-xs md:text-sm">
-                      Product Images {safeGallery.length > 1 && `(${safeGallery.length})`}
+                      {safeGallery.length > 1 && `${safeGallery.length} photos`}
                     </p>
-                    {safeGallery.length > 1 && (
-                      <motion.button
-                        onClick={() => setShowImageSelector(!showImageSelector)}
-                        className="flex items-center gap-2 px-2 md:px-3 py-1 md:py-1.5 bg-purple-600/50 hover:bg-purple-600 border border-purple-500/50 rounded-lg text-purple-300 hover:text-white text-xs md:text-sm transition-all"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <ImagePlus className="w-3 h-3 md:w-4 md:h-4" />
-                        Select
-                      </motion.button>
-                    )}
                   </div>
-                  <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2">
+                  <div className="flex gap-1.5 md:gap-3 overflow-x-auto pb-2 scrollbar-thin">
                     {safeGallery.map((img, idx) => (
                       <button
                         type="button"
                         key={`${idx}-${img.substring(0, 20)}`}
                         onClick={() => setSelectedImage(idx)}
-                        className={`shrink-0 w-16 h-16 md:w-24 md:h-24 rounded-lg overflow-hidden border-2 transition-all hover:scale-105 cursor-pointer ${
+                        className={`shrink-0 w-14 h-14 md:w-24 md:h-24 rounded-lg overflow-hidden border-2 transition-all hover:scale-105 cursor-pointer ${
                           selectedImage === idx
                             ? "border-purple-500 shadow-lg shadow-purple-900/50 ring-2 ring-purple-400"
                             : "border-purple-500/30 hover:border-purple-400"
@@ -413,49 +402,6 @@ export function ProductPage() {
                       </button>
                     ))}
                   </div>
-
-                  {/* Image Selector Dropdown */}
-                  {showImageSelector && safeGallery.length > 1 && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="mt-2 md:mt-4 p-3 md:p-4 bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-lg"
-                    >
-                      <p className="text-gray-300 text-xs md:text-sm font-semibold mb-2 md:mb-3">Choose:</p>
-                      <div className="grid grid-cols-3 gap-2 md:gap-3">
-                        {safeGallery.map((img, idx) => (
-                          <motion.button
-                            key={`selector-${idx}-${img.substring(0, 20)}`}
-                            onClick={() => {
-                              setSelectedImage(idx);
-                              setShowImageSelector(false);
-                            }}
-                            className={`relative rounded-lg overflow-hidden border-2 transition-all h-20 md:h-28 ${
-                              selectedImage === idx
-                                ? "border-purple-400 ring-2 ring-purple-400 scale-105"
-                                : "border-purple-500/30 hover:border-purple-400"
-                            }`}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <img src={img} alt={`Image ${idx + 1}`} className="w-full h-full object-cover" />
-                            {selectedImage === idx && (
-                              <div className="absolute inset-0 bg-purple-600/20 flex items-center justify-center">
-                                <div className="bg-purple-500 text-white rounded-full w-6 h-6 md:w-8 md:h-8 flex items-center justify-center text-xs md:text-sm font-bold">
-                                  ✓
-                                </div>
-                              </div>
-                            )}
-                            <div className="absolute bottom-1 right-1 bg-black/70 text-purple-300 text-xs px-1.5 py-0.5 md:px-2 md:py-1 rounded">
-                              {idx + 1}
-                            </div>
-                          </motion.button>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
                 </div>
               </div>
 
