@@ -300,104 +300,61 @@ export function CategoryPage() {
       <main className="relative z-10">
         {/* Back Button */}
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <motion.button
+          <button
             onClick={() => navigate("/")}
             className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
-            whileHover={{ x: -5 }}
           >
             <ArrowLeft className="w-5 h-5" />
-          </motion.button>
+          </button>
         </div>
 
         {/* Category Header */}
         <section className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-          <motion.div
-            className="text-center mb-8 md:mb-12"
-            initial={{ opacity: 0, y: -30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
+          <div className="text-center mb-8 md:mb-12">
             {!isMobile ? (
-              <motion.div
-                className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl mb-6"
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                transition={{ duration: 0.6, type: "spring" }}
-                whileHover={{ scale: 1.1, rotate: 5 }}
-              >
+              <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl mb-6">
                 <Icon className="w-12 h-12 text-white" />
-              </motion.div>
+              </div>
             ) : (
               <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl mb-4">
                 <Icon className="w-10 h-10 text-white" />
               </div>
             )}
 
-            <motion.h1
-              className="mb-2 md:mb-4 text-2xl md:text-4xl bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
+            <h1 className="mb-2 md:mb-4 text-2xl md:text-4xl bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
               {info.title}
-            </motion.h1>
+            </h1>
 
-            <motion.p
-              className="text-gray-300 text-sm md:text-lg max-w-2xl mx-auto"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-            >
-              {info.description}
-            </motion.p>
+            <p className="text-gray-300 text-sm md:text-lg max-w-2xl mx-auto">{info.description}</p>
 
             {/* Subcategory Filter Button */}
             {hasSubcategories && (
-              <motion.div
-                className="mt-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-              >
-                <motion.button
+              <div className="mt-6">
+                <button
                   onClick={() => setIsSubcategoryModalOpen(true)}
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-lg transition-all shadow-lg shadow-purple-900/50"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
                 >
                   Browse by Subcategory
-                </motion.button>
+                </button>
                 {selectedSubcategory && (
-                  <motion.button
+                  <button
                     onClick={() => setSelectedSubcategory(null)}
                     className="ml-4 text-purple-400 hover:text-purple-300 underline transition-colors"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
                   >
                     Clear filter
-                  </motion.button>
+                  </button>
                 )}
-              </motion.div>
+              </div>
             )}
-          </motion.div>
+          </div>
 
           {/* Custom Clothing Banner (Only for clothing category) */}
           {category === "clothing" && (
-            <motion.div
-              className="mb-12 bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-2 border-purple-500/50 rounded-2xl p-8 shadow-2xl shadow-purple-900/50"
-              initial={{ opacity: 0, y: 30, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.6 }}
-              whileHover={{ scale: 1.02 }}
-            >
+            <div className="mb-12 bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-2 border-purple-500/50 rounded-2xl p-8 shadow-2xl shadow-purple-900/50">
               <div className="flex items-center gap-6">
-                <motion.div
-                  className="flex-shrink-0 w-20 h-20 bg-gradient-to-br from-pink-600 to-purple-600 rounded-xl flex items-center justify-center"
-                  whileHover={{ rotate: 10 }}
-                  transition={{ type: "spring" }}
-                >
+                <div className="flex-shrink-0 w-20 h-20 bg-gradient-to-br from-pink-600 to-purple-600 rounded-xl flex items-center justify-center">
                   <Palette className="w-10 h-10 text-white" />
-                </motion.div>
+                </div>
 
                 <div className="flex-1">
                   <h3 className="text-white text-2xl mb-2">🎨 Design Your Own Custom Clothing</h3>
@@ -411,44 +368,40 @@ export function CategoryPage() {
                     <li>✅ Get a quote within 24-48 hours</li>
                     <li>✅ Professional quality printing</li>
                   </ul>
-                  <motion.button
+                  <button
                     onClick={() => setIsCustomClothingModalOpen(true)}
                     className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 px-8 py-4 rounded-lg text-lg shadow-lg shadow-pink-900/50 flex items-center gap-2"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
                   >
                     <Palette className="w-5 h-5" />
                     Start Custom Design
-                  </motion.button>
+                  </button>
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
 
           {/* Products Grid */}
           {loading ? (
-            <motion.div className="text-center py-20" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <div className="text-center py-20">
               <div className="inline-block w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
               <p className="text-gray-400 mt-4">Loading products...</p>
-            </motion.div>
+            </div>
           ) : error ? (
-            <motion.div className="text-center py-20" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="text-center py-20">
               <div className="bg-red-900/20 border border-red-500/30 rounded-2xl p-12 max-w-md mx-auto">
                 <Icon className="w-16 h-16 text-red-400 mx-auto mb-4" />
                 <h3 className="text-white text-2xl mb-2">Error Loading Products</h3>
                 <p className="text-gray-400 mb-6">{error}</p>
-                <motion.button
+                <button
                   onClick={() => fetchProducts()}
                   className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-lg transition-all"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
                 >
                   Try Again
-                </motion.button>
+                </button>
               </div>
-            </motion.div>
+            </div>
           ) : filteredProducts.length === 0 ? (
-            <motion.div className="text-center py-20" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="text-center py-20">
               <div className="bg-purple-900/20 border border-purple-500/30 rounded-2xl p-12 max-w-md mx-auto">
                 <Icon className="w-16 h-16 text-purple-400 mx-auto mb-4" />
                 <h3 className="text-white text-2xl mb-2">No Products Found</h3>
@@ -458,7 +411,7 @@ export function CategoryPage() {
                     : "No products available in this category yet. Check back soon!"}
                 </p>
               </div>
-            </motion.div>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
               {filteredProducts.map((product) => (
