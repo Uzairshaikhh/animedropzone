@@ -24,6 +24,13 @@ import { useToast } from "../contexts/ToastContext";
 import { useCart } from "../contexts/CartContext";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
 import { supabase } from "../utils/supabase/client";
+import { shouldAnimateOnDesktop } from "../utils/mobileOptimizations";
+
+// Motion wrapper - returns motion component on desktop, regular div on mobile
+const MotionDiv = shouldAnimateOnDesktop() ? motion.div : ("div" as any);
+const MotionButton = shouldAnimateOnDesktop() ? motion.button : ("button" as any);
+const MotionH1 = shouldAnimateOnDesktop() ? motion.h1 : ("h1" as any);
+const MotionP = shouldAnimateOnDesktop() ? motion.p : ("p" as any);
 
 interface Review {
   id: string;
