@@ -190,7 +190,12 @@ export function StorePage() {
       // Use cache if it's less than 5 minutes old
       if (cachedCategories && cacheTimestamp && now - parseInt(cacheTimestamp) < 5 * 60 * 1000) {
         const cached = JSON.parse(cachedCategories);
-        setCategories(cached);
+        // Rebuild icon objects from stored names
+        const withIcons = cached.map((cat: any) => ({
+          ...cat,
+          icon: iconMap[cat.iconName] || Package,
+        }));
+        setCategories(withIcons);
         return;
       }
 
@@ -221,8 +226,13 @@ export function StorePage() {
 
           setCategories(formattedCategories);
 
-          // Cache the categories for 5 minutes
-          localStorage.setItem("animedropzone_categories", JSON.stringify(formattedCategories));
+          // Cache the categories for 5 minutes (store icon names, not objects)
+          const cacheable = formattedCategories.map((cat: any) => ({
+            ...cat,
+            icon: undefined, // Remove the object
+            iconName: Object.keys(iconMap).find((key) => iconMap[key] === cat.icon) || "Package",
+          }));
+          localStorage.setItem("animedropzone_categories", JSON.stringify(cacheable));
           localStorage.setItem("animedropzone_categories_time", Date.now().toString());
 
           // Build subcategory data
