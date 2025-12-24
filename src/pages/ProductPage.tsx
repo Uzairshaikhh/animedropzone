@@ -48,7 +48,9 @@ export function ProductPage() {
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [pendingCheckout, setPendingCheckout] = useState(false);
   const [showImageSelector, setShowImageSelector] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const slideTimer = useRef<number | null>(null);
+  const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : false;
 
   useEffect(() => {
     fetchProduct();
@@ -115,39 +117,58 @@ export function ProductPage() {
 
   const fetchProduct = async () => {
     try {
+      if (!id) {
+        setError("Product ID not found");
+        setTimeout(() => navigate("/"), 2000);
+        return;
+      }
       const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/products`, {
         headers: {
           Authorization: `Bearer ${publicAnonKey}`,
         },
       });
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
       const data = await response.json();
-      if (data.success) {
-        const foundProduct = data.products.find((p: Product) => p.id === id);
+      if (data.success && Array.isArray(data.products)) {
+        const foundProduct = data.products.find((p: Product) => p && p.id === id);
         if (foundProduct) {
           setProduct(foundProduct);
+          setError(null);
         } else {
-          navigate("/");
+          setError("Product not found");
+          setTimeout(() => navigate("/"), 2000);
         }
+      } else {
+        throw new Error("Invalid API response");
       }
     } catch (error) {
-      console.log("Error fetching product:", error);
-      navigate("/");
+      console.error("Error fetching product:", error);
+      setError(error instanceof Error ? error.message : "Failed to load product");
+      setTimeout(() => navigate("/"), 2000);
     }
   };
 
   const fetchReviews = async () => {
     try {
+      if (!id) return;
       const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/reviews/${id}`, {
         headers: {
           Authorization: `Bearer ${publicAnonKey}`,
         },
       });
+      if (!response.ok) {
+        console.warn(`Reviews API error: ${response.status}`);
+        return;
+      }
       const data = await response.json();
-      if (data.success) {
-        setReviews(data.reviews || []);
+      if (data.success && Array.isArray(data.reviews)) {
+        setReviews(data.reviews);
       }
     } catch (error) {
-      console.log("Error fetching reviews:", error);
+      console.warn("Error fetching reviews (non-critical):", error);
+      setReviews([]);
     }
   };
 
@@ -221,8 +242,17 @@ export function ProductPage() {
   if (!product) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <FloatingParticles />
-        <div className="text-white text-xl">Loading...</div>
+        {!isMobile && <FloatingParticles />}
+        <div className="text-center">
+          {error ? (
+            <>
+              <div className="text-red-400 text-xl mb-4">{error}</div>
+              <div className="text-gray-400 text-sm">Redirecting to home...</div>
+            </>
+          ) : (
+            <div className="text-white text-xl">Loading product...</div>
+          )}
+        </div>
       </div>
     );
   }
@@ -249,7 +279,7 @@ export function ProductPage() {
   return (
     <div className="min-h-screen bg-black">
       <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-      <FloatingParticles />
+      {!isMobile && <FloatingParticles />}
 
       <Navbar
         cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}

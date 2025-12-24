@@ -123,6 +123,7 @@ export function CategoryPage() {
   const [dynamicSubcategories, setDynamicSubcategories] = useState<
     Array<{ name: string; value: string; description: string }>
   >([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchCategoryData();
@@ -197,7 +198,11 @@ export function CategoryPage() {
 
   const fetchProducts = async () => {
     setLoading(true);
+    setError(null);
     try {
+      if (!category) {
+        throw new Error("Category not specified");
+      }
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/products/category/${category}`,
         {
@@ -206,13 +211,23 @@ export function CategoryPage() {
           },
         }
       );
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
       const data = await response.json();
-      if (data.success) {
-        setProducts(data.products || []);
-        setFilteredProducts(data.products || []);
+      if (data.success && Array.isArray(data.products)) {
+        setProducts(data.products);
+        setFilteredProducts(data.products);
+      } else if (!data.success) {
+        setError("Failed to load products");
+        setProducts([]);
+        setFilteredProducts([]);
       }
     } catch (error) {
-      console.log("Error fetching products:", error);
+      console.error("Error fetching products:", error);
+      setError(error instanceof Error ? error.message : "Failed to load products");
+      setProducts([]);
+      setFilteredProducts([]);
     } finally {
       setLoading(false);
     }
@@ -271,7 +286,7 @@ export function CategoryPage() {
   return (
     <div className="min-h-screen bg-black">
       <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-      <FloatingParticles />
+      {typeof window !== "undefined" && window.innerWidth >= 768 && <FloatingParticles />}
 
       <Navbar
         cartCount={cartItems.reduce((sum, item) => sum + item.quantity, 0)}
@@ -408,6 +423,22 @@ export function CategoryPage() {
             <motion.div className="text-center py-20" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <div className="inline-block w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
               <p className="text-gray-400 mt-4">Loading products...</p>
+            </motion.div>
+          ) : error ? (
+            <motion.div className="text-center py-20" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <div className="bg-red-900/20 border border-red-500/30 rounded-2xl p-12 max-w-md mx-auto">
+                <Icon className="w-16 h-16 text-red-400 mx-auto mb-4" />
+                <h3 className="text-white text-2xl mb-2">Error Loading Products</h3>
+                <p className="text-gray-400 mb-6">{error}</p>
+                <motion.button
+                  onClick={() => fetchProducts()}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-lg transition-all"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  Try Again
+                </motion.button>
+              </div>
             </motion.div>
           ) : filteredProducts.length === 0 ? (
             <motion.div className="text-center py-20" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
