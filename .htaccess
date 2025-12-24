@@ -2,41 +2,64 @@
   RewriteEngine On
   RewriteBase /
   
-  # Don't rewrite files or directories
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
+  # Protect assets folder from rewrite
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
   
   # Rewrite all other requests to index.html for client-side routing
   RewriteRule ^(.*)$ index.html [L]
 </IfModule>
 
+# MIME Types for assets
+
+<IfModule mod_mime.c>
+  AddType application/javascript .js
+  AddType text/css .css
+  AddEncoding gzip .gz
+</IfModule>
+
+# Disable compression for versioned assets
+
+<FilesMatch "\.js$|\.css$">
+<IfModule mod_deflate.c>
+SetEnvIfNoCase Request_URI "\.js$" no-gzip=1
+    SetEnvIfNoCase Request_URI "\.css$" no-gzip=1
+</IfModule>
+</FilesMatch>
+
 # Don't cache main JavaScript bundles (they have hashes for versioning)
-<FilesMatch "^/assets/index-.*\.js$">
-  Header set Cache-Control "max-age=0, public, must-revalidate"
-  Header set Pragma "no-cache"
-  Header set Expires "0"
+
+<FilesMatch "^/assets/index-.\*\.js$">
+Header set Cache-Control "max-age=0, public, must-revalidate"
+Header set Pragma "no-cache"
+Header set Expires "0"
 </FilesMatch>
 
 # Cache vendor and library chunks (they're stable)
-<FilesMatch "^/assets/(vendor|framer|supabase|radix|CherryBlossomTree)-.*\.js$">
-  Header set Cache-Control "max-age=31536000, public, immutable"
+
+<FilesMatch "^/assets/(vendor|framer|supabase|radix|CherryBlossomTree)-.\*\.js$">
+Header set Cache-Control "max-age=31536000, public, immutable"
 </FilesMatch>
 
 # Don't cache CSS either
-<FilesMatch "^/assets/index-.*\.css$">
-  Header set Cache-Control "max-age=0, public, must-revalidate"
-  Header set Pragma "no-cache"
-  Header set Expires "0"
+
+<FilesMatch "^/assets/index-.\*\.css$">
+Header set Cache-Control "max-age=0, public, must-revalidate"
+Header set Pragma "no-cache"
+Header set Expires "0"
 </FilesMatch>
 
 # Cache static assets (images, fonts, etc)
+
 <FilesMatch "\.(jpg|jpeg|png|gif|ico|svg|webp|ttf|woff|woff2)$">
-  Header set Cache-Control "max-age=31536000, public, immutable"
+Header set Cache-Control "max-age=31536000, public, immutable"
 </FilesMatch>
 
 # Never cache HTML
+
 <FilesMatch "\.html$">
-  Header set Cache-Control "max-age=0, public, must-revalidate"
-  Header set Pragma "no-cache"
-  Header set Expires "0"
+Header set Cache-Control "max-age=0, public, must-revalidate"
+Header set Pragma "no-cache"
+Header set Expires "0"
 </FilesMatch>
