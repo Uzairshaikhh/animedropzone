@@ -1,37 +1,37 @@
-import { Mail, Phone, MapPin, MessageSquare } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { Mail, Phone, MapPin, MessageSquare } from "lucide-react";
+import { useState, useEffect } from "react";
+import { projectId, publicAnonKey } from "../utils/supabase/info";
 
 export function ContactUs() {
-  const whatsappNumber = '919819291230';
-  const instagramHandle = 'animedropzone';
-  const instagramUrl = 'https://www.instagram.com/animedropzone/?igsh=eGM5Z24wbHM2bHR4#';
-  const email = 'anime.drop.zone.00@gmail.com';
+  const whatsappNumber = "919819291230";
+  const instagramHandle = "animedropzone";
+  const instagramUrl = "https://www.instagram.com/animedropzone/?igsh=eGM5Z24wbHM2bHR4#";
+  const email = "anime.drop.zone.00@gmail.com";
 
   const [supportForm, setSupportForm] = useState({
-    name: '',
-    email: '',
-    subject: '',
-    question: '',
+    name: "",
+    email: "",
+    subject: "",
+    question: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState('');
+  const [submitMessage, setSubmitMessage] = useState("");
   const [myTickets, setMyTickets] = useState<any[]>([]);
   const [showMyTickets, setShowMyTickets] = useState(false);
 
   const handleSubmitSupport = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setSubmitMessage('');
+    setSubmitMessage("");
 
     try {
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/support/submit`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${publicAnonKey}`,
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(supportForm),
         }
@@ -40,15 +40,15 @@ export function ContactUs() {
       const data = await response.json();
 
       if (data.success) {
-        setSubmitMessage('✅ Your support ticket has been submitted! We will respond soon.');
-        setSupportForm({ name: '', email: '', subject: '', question: '' });
-        setTimeout(() => setSubmitMessage(''), 5000);
+        setSubmitMessage("✅ Your support ticket has been submitted! We will respond soon.");
+        setSupportForm({ name: "", email: "", subject: "", question: "" });
+        setTimeout(() => setSubmitMessage(""), 5000);
       } else {
-        setSubmitMessage(`❌ ${data.error || 'Failed to submit ticket'}`);
+        setSubmitMessage(`❌ ${data.error || "Failed to submit ticket"}`);
       }
     } catch (error) {
-      console.error('Error submitting support ticket:', error);
-      setSubmitMessage('❌ Failed to submit ticket. Please try again.');
+      console.error("Error submitting support ticket:", error);
+      setSubmitMessage("❌ Failed to submit ticket. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -56,16 +56,18 @@ export function ContactUs() {
 
   const loadMyTickets = async () => {
     if (!supportForm.email) {
-      alert('Please enter your email address first');
+      alert("Please enter your email address first");
       return;
     }
 
     try {
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/support/my-tickets?email=${encodeURIComponent(supportForm.email)}`,
+        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/support/my-tickets?email=${encodeURIComponent(
+          supportForm.email
+        )}`,
         {
           headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
+            Authorization: `Bearer ${publicAnonKey}`,
           },
         }
       );
@@ -76,11 +78,11 @@ export function ContactUs() {
         setMyTickets(data.tickets);
         setShowMyTickets(true);
       } else {
-        alert('Failed to load tickets');
+        alert("Failed to load tickets");
       }
     } catch (error) {
-      console.error('Error loading tickets:', error);
-      alert('Failed to load tickets');
+      console.error("Error loading tickets:", error);
+      alert("Failed to load tickets");
     }
   };
 
@@ -107,10 +109,7 @@ export function ContactUs() {
                 </div>
                 <div>
                   <h4 className="text-white mb-1">Email</h4>
-                  <a
-                    href={`mailto:${email}`}
-                    className="text-purple-400 hover:text-purple-300 transition-colors"
-                  >
+                  <a href={`mailto:${email}`} className="text-purple-400 hover:text-purple-300 transition-colors">
                     {email}
                   </a>
                 </div>
@@ -138,8 +137,10 @@ export function ContactUs() {
                 <div>
                   <h4 className="text-white mb-1">Address</h4>
                   <p className="text-gray-400">
-                    Jogeshwari West<br />
-                    Mumbai, Maharashtra 400102<br />
+                    Jogeshwari West
+                    <br />
+                    Mumbai, Maharashtra 400102
+                    <br />
                     India
                   </p>
                 </div>
@@ -149,7 +150,7 @@ export function ContactUs() {
             {/* Quick Contact Buttons */}
             <div className="space-y-3">
               <h4 className="text-white mb-4">Quick Connect</h4>
-              
+
               <a
                 href={`https://wa.me/${whatsappNumber}`}
                 target="_blank"
@@ -167,7 +168,7 @@ export function ContactUs() {
                 className="flex items-center gap-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-lg transition-all group"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
                 </svg>
                 <span>Follow on Instagram</span>
               </a>
@@ -223,8 +224,12 @@ export function ContactUs() {
               </div>
 
               <div>
-                <label className="block text-gray-300 mb-2">Your Question</label>
+                <label htmlFor="supportQuestion" className="block text-gray-300 mb-2">
+                  Your Question
+                </label>
                 <textarea
+                  id="supportQuestion"
+                  name="supportQuestion"
                   value={supportForm.question}
                   onChange={(e) => setSupportForm({ ...supportForm, question: e.target.value })}
                   required
@@ -235,11 +240,13 @@ export function ContactUs() {
               </div>
 
               {submitMessage && (
-                <div className={`border rounded-lg p-3 ${
-                  submitMessage.startsWith('✅') 
-                    ? 'bg-green-900/20 border-green-500/30 text-green-400'
-                    : 'bg-red-900/20 border-red-500/30 text-red-400'
-                }`}>
+                <div
+                  className={`border rounded-lg p-3 ${
+                    submitMessage.startsWith("✅")
+                      ? "bg-green-900/20 border-green-500/30 text-green-400"
+                      : "bg-red-900/20 border-red-500/30 text-red-400"
+                  }`}
+                >
                   {submitMessage}
                 </div>
               )}
@@ -249,7 +256,7 @@ export function ContactUs() {
                 disabled={isSubmitting}
                 className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 py-3 rounded-lg transition-all disabled:opacity-50"
               >
-                {isSubmitting ? 'Submitting...' : 'Submit Support Ticket'}
+                {isSubmitting ? "Submitting..." : "Submit Support Ticket"}
               </button>
             </form>
 
@@ -267,17 +274,16 @@ export function ContactUs() {
                   <h4 className="text-white">My Tickets</h4>
                   {myTickets.length > 0 ? (
                     myTickets.map((ticket) => (
-                      <div 
-                        key={ticket.id} 
-                        className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4"
-                      >
+                      <div key={ticket.id} className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
                         <div className="flex justify-between items-start mb-2">
                           <h5 className="text-white">{ticket.subject}</h5>
-                          <span className={`px-3 py-1 rounded-full text-sm ${
-                            ticket.status === 'answered' 
-                              ? 'bg-green-900/30 text-green-400 border border-green-500/30'
-                              : 'bg-yellow-900/30 text-yellow-400 border border-yellow-500/30'
-                          }`}>
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm ${
+                              ticket.status === "answered"
+                                ? "bg-green-900/30 text-green-400 border border-green-500/30"
+                                : "bg-yellow-900/30 text-yellow-400 border border-yellow-500/30"
+                            }`}
+                          >
                             {ticket.status}
                           </span>
                         </div>
@@ -289,9 +295,7 @@ export function ContactUs() {
                             </p>
                           </div>
                         )}
-                        <p className="text-gray-500 text-xs mt-2">
-                          {new Date(ticket.createdAt).toLocaleString()}
-                        </p>
+                        <p className="text-gray-500 text-xs mt-2">{new Date(ticket.createdAt).toLocaleString()}</p>
                       </div>
                     ))
                   ) : (

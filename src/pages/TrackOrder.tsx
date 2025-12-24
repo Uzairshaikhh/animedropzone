@@ -299,8 +299,12 @@ export function TrackOrderPage() {
                   </div>
 
                   <div>
-                    <label className="block text-gray-300 mb-2">Reason for Cancellation (Optional)</label>
+                    <label htmlFor="cancelReason" className="block text-gray-300 mb-2">
+                      Reason for Cancellation (Optional)
+                    </label>
                     <textarea
+                      id="cancelReason"
+                      name="cancelReason"
                       value={cancelReason}
                       onChange={(e) => setCancelReason(e.target.value)}
                       rows={4}

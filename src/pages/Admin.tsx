@@ -1239,8 +1239,12 @@ export function AdminPage() {
 
                               {/* Admin-only Status Dropdown */}
                               <div className="mb-4">
-                                <label className="block text-gray-300 mb-2">Order Status (Admin Only)</label>
+                                <label htmlFor="adminOrderStatus" className="block text-gray-300 mb-2">
+                                  Order Status (Admin Only)
+                                </label>
                                 <select
+                                  id="adminOrderStatus"
+                                  name="adminOrderStatus"
                                   value={order.status}
                                   onChange={async (e) => {
                                     const newStatus = e.target.value;
