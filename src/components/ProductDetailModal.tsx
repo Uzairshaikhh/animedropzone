@@ -100,7 +100,7 @@ export function ProductDetailModal({
         </div>
 
         {/* Content */}
-        <div className="p-6">
+        <div className="p-4 md:p-6">
           <div className="grid md:grid-cols-[1fr_100px] gap-4 mb-8">
             {/* Product Image */}
             <div>
@@ -114,19 +114,19 @@ export function ProductDetailModal({
                 </div>
                 {product.stock === 0 && (
                   <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-                    <span className="text-white text-xl">Out of Stock</span>
+                    <span className="text-white text-lg md:text-xl">Out of Stock</span>
                   </div>
                 )}
                 {safeGallery.length > 1 && (
                   <>
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-2 z-20">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-1 md:pl-2 z-20">
                       <button
                         type="button"
                         onClick={goPrev}
-                        className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white p-3 rounded-full border-2 border-purple-400 transition-all shadow-lg hover:shadow-purple-600/50 cursor-pointer"
+                        className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white p-2 md:p-3 rounded-full border-2 border-purple-400 transition-all shadow-lg hover:shadow-purple-600/50 cursor-pointer"
                         aria-label="Previous image"
                       >
-                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-4 h-4 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 20 20">
                           <path
                             fillRule="evenodd"
                             d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
@@ -135,14 +135,14 @@ export function ProductDetailModal({
                         </svg>
                       </button>
                     </div>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 z-20">
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-1 md:pr-2 z-20">
                       <button
                         type="button"
                         onClick={goNext}
-                        className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white p-3 rounded-full border-2 border-purple-400 transition-all shadow-lg hover:shadow-purple-600/50 cursor-pointer"
+                        className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white p-2 md:p-3 rounded-full border-2 border-purple-400 transition-all shadow-lg hover:shadow-purple-600/50 cursor-pointer"
                         aria-label="Next image"
                       >
-                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-4 h-4 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 20 20">
                           <path
                             fillRule="evenodd"
                             d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
@@ -156,9 +156,9 @@ export function ProductDetailModal({
               </div>
             </div>
 
-            {/* Vertical Thumbnail Slider */}
+            {/* Vertical Thumbnail Slider - Desktop Only */}
             {safeGallery.length > 0 && (
-              <div className="flex flex-col gap-2 overflow-y-auto max-h-96 min-w-max">
+              <div className="hidden md:flex flex-col gap-2 overflow-y-auto max-h-96 min-w-max">
                 {safeGallery.map((img, idx) => (
                   <button
                     type="button"
@@ -181,6 +181,31 @@ export function ProductDetailModal({
               </div>
             )}
           </div>
+
+          {/* Horizontal Thumbnail Slider - Mobile Only */}
+          {safeGallery.length > 1 && (
+            <div className="md:hidden flex gap-2 overflow-x-auto pb-2 mb-6 scroll-smooth">
+              {safeGallery.map((img, idx) => (
+                <button
+                  type="button"
+                  key={`thumb-mobile-${idx}-${img.substring(0, 20)}`}
+                  onClick={() => setActiveImage(idx)}
+                  className={`w-16 h-16 md:w-24 md:h-24 rounded-lg overflow-hidden border-2 transition-all hover:scale-105 cursor-pointer shrink-0 ${
+                    activeImage === idx
+                      ? "border-purple-500 shadow-lg shadow-purple-900/50 ring-2 ring-purple-400"
+                      : "border-purple-500/30 hover:border-purple-400"
+                  }`}
+                  aria-label={`View image ${idx + 1}`}
+                >
+                  <img
+                    src={img}
+                    alt={`Thumbnail ${idx + 1}`}
+                    className="w-full h-full object-cover pointer-events-none"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Product Info */}
           <div>
