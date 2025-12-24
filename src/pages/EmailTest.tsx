@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { ArrowLeft, Check, X, Loader, Mail, User, Shield } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { projectId, publicAnonKey } from "../utils/supabase/info";
+import { ArrowLeft, Check, X, Loader, Mail, User, Shield } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export function EmailTestPage() {
   const navigate = useNavigate();
   const [testData, setTestData] = useState({
-    customerEmail: '',
-    customerName: '',
-    customerPassword: '',
+    customerEmail: "",
+    customerName: "",
+    customerPassword: "",
   });
-  
+
   const [results, setResults] = useState<any>({
     basicTest: null,
     signupTest: null,
@@ -26,7 +26,7 @@ export function EmailTestPage() {
   // Test 1: Basic Email Service Test
   const runBasicEmailTest = async () => {
     if (!testData.customerEmail) {
-      setResults({ ...results, basicTest: { success: false, error: 'Please enter an email address' } });
+      setResults({ ...results, basicTest: { success: false, error: "Please enter an email address" } });
       return;
     }
 
@@ -34,31 +34,28 @@ export function EmailTestPage() {
     setResults({ ...results, basicTest: null });
 
     try {
-      console.log('🧪 TEST 1: Testing basic email service...');
-      
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/test-email`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email: testData.customerEmail }),
-        }
-      );
+      console.log("🧪 TEST 1: Testing basic email service...");
+
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/test-email`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: testData.customerEmail }),
+      });
 
       const data = await response.json();
-      console.log('✅ Basic email test response:', data);
+      console.log("✅ Basic email test response:", data);
       setResults({ ...results, basicTest: data });
     } catch (error) {
-      console.error('❌ Basic email test failed:', error);
-      setResults({ 
-        ...results, 
-        basicTest: { 
-          success: false, 
-          error: error instanceof Error ? error.message : 'Unknown error' 
-        } 
+      console.error("❌ Basic email test failed:", error);
+      setResults({
+        ...results,
+        basicTest: {
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
       });
     } finally {
       setLoading({ ...loading, basicTest: false });
@@ -68,12 +65,12 @@ export function EmailTestPage() {
   // Test 2: Signup Email Test (Customer Welcome + Admin Notification)
   const runSignupEmailTest = async () => {
     if (!testData.customerEmail || !testData.customerName || !testData.customerPassword) {
-      setResults({ 
-        ...results, 
-        signupTest: { 
-          success: false, 
-          error: 'Please fill in all signup fields (email, name, password)' 
-        } 
+      setResults({
+        ...results,
+        signupTest: {
+          success: false,
+          error: "Please fill in all signup fields (email, name, password)",
+        },
       });
       return;
     }
@@ -82,57 +79,54 @@ export function EmailTestPage() {
     setResults({ ...results, signupTest: null });
 
     try {
-      console.log('🧪 TEST 2: Testing signup email flow...');
-      console.log('📧 This will send:');
-      console.log('   1. Welcome email to:', testData.customerEmail);
-      console.log('   2. Admin notification to: anime.drop.zone.00@gmail.com');
-      
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/signup`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: testData.customerEmail,
-            name: testData.customerName,
-            password: testData.customerPassword,
-          }),
-        }
-      );
+      console.log("🧪 TEST 2: Testing signup email flow...");
+      console.log("📧 This will send:");
+      console.log("   1. Welcome email to:", testData.customerEmail);
+      console.log("   2. Admin notification to: anime.drop.zone.00@gmail.com");
+
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/signup`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: testData.customerEmail,
+          name: testData.customerName,
+          password: testData.customerPassword,
+        }),
+      });
 
       const data = await response.json();
-      console.log('✅ Signup response:', data);
-      
+      console.log("✅ Signup response:", data);
+
       if (data.success) {
-        setResults({ 
-          ...results, 
-          signupTest: { 
-            success: true, 
+        setResults({
+          ...results,
+          signupTest: {
+            success: true,
             message: `Account created successfully! Check these inboxes:\n1. ${testData.customerEmail} (Welcome email)\n2. anime.drop.zone.00@gmail.com (Admin notification)\n\n⚠️ Check spam folders if emails don't appear in inbox!`,
-            data 
-          } 
+            data,
+          },
         });
       } else {
-        setResults({ 
-          ...results, 
-          signupTest: { 
-            success: false, 
-            error: data.message || data.error || 'Signup failed',
-            data 
-          } 
+        setResults({
+          ...results,
+          signupTest: {
+            success: false,
+            error: data.message || data.error || "Signup failed",
+            data,
+          },
         });
       }
     } catch (error) {
-      console.error('❌ Signup test failed:', error);
-      setResults({ 
-        ...results, 
-        signupTest: { 
-          success: false, 
-          error: error instanceof Error ? error.message : 'Unknown error' 
-        } 
+      console.error("❌ Signup test failed:", error);
+      setResults({
+        ...results,
+        signupTest: {
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
       });
     } finally {
       setLoading({ ...loading, signupTest: false });
@@ -145,31 +139,28 @@ export function EmailTestPage() {
     setResults({ ...results, adminTest: null });
 
     try {
-      console.log('🧪 TEST 3: Testing admin email directly...');
-      
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/test-email`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email: 'anime.drop.zone.00@gmail.com' }),
-        }
-      );
+      console.log("🧪 TEST 3: Testing admin email directly...");
+
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/test-email`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: "anime.drop.zone.00@gmail.com" }),
+      });
 
       const data = await response.json();
-      console.log('✅ Admin email test response:', data);
+      console.log("✅ Admin email test response:", data);
       setResults({ ...results, adminTest: data });
     } catch (error) {
-      console.error('❌ Admin email test failed:', error);
-      setResults({ 
-        ...results, 
-        adminTest: { 
-          success: false, 
-          error: error instanceof Error ? error.message : 'Unknown error' 
-        } 
+      console.error("❌ Admin email test failed:", error);
+      setResults({
+        ...results,
+        adminTest: {
+          success: false,
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
       });
     } finally {
       setLoading({ ...loading, adminTest: false });
@@ -177,26 +168,26 @@ export function EmailTestPage() {
   };
 
   const runAllTests = async () => {
-    console.log('🚀 RUNNING ALL EMAIL TESTS...');
-    console.log('================================================');
-    
+    console.log("🚀 RUNNING ALL EMAIL TESTS...");
+    console.log("================================================");
+
     // Test 1: Basic email
     await runBasicEmailTest();
-    
+
     // Wait 2 seconds between tests
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
     // Test 2: Signup flow
     await runSignupEmailTest();
-    
+
     // Wait 2 seconds
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
     // Test 3: Admin email
     await runAdminEmailTest();
-    
-    console.log('================================================');
-    console.log('✅ ALL TESTS COMPLETED');
+
+    console.log("================================================");
+    console.log("✅ ALL TESTS COMPLETED");
   };
 
   return (
@@ -205,7 +196,7 @@ export function EmailTestPage() {
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -222,11 +213,15 @@ export function EmailTestPage() {
           {/* Test Configuration */}
           <div className="bg-gradient-to-br from-purple-900/20 to-black border border-purple-500/30 rounded-xl p-6 mb-6">
             <h2 className="text-2xl mb-4">🔧 Test Configuration</h2>
-            
+
             <div className="space-y-4">
               <div>
-                <label className="block text-gray-300 mb-2">Customer Email (for testing)</label>
+                <label htmlFor="testCustomerEmail" className="block text-gray-300 mb-2">
+                  Customer Email (for testing)
+                </label>
                 <input
+                  id="testCustomerEmail"
+                  name="testCustomerEmail"
                   type="email"
                   value={testData.customerEmail}
                   onChange={(e) => setTestData({ ...testData, customerEmail: e.target.value })}
@@ -238,8 +233,12 @@ export function EmailTestPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-gray-300 mb-2">Customer Name</label>
+                  <label htmlFor="testCustomerName" className="block text-gray-300 mb-2">
+                    Customer Name
+                  </label>
                   <input
+                    id="testCustomerName"
+                    name="testCustomerName"
                     type="text"
                     value={testData.customerName}
                     onChange={(e) => setTestData({ ...testData, customerName: e.target.value })}
@@ -249,8 +248,12 @@ export function EmailTestPage() {
                 </div>
 
                 <div>
-                  <label className="block text-gray-300 mb-2">Test Password</label>
+                  <label htmlFor="testPassword" className="block text-gray-300 mb-2">
+                    Test Password
+                  </label>
                   <input
+                    id="testPassword"
+                    name="testPassword"
                     type="password"
                     value={testData.customerPassword}
                     onChange={(e) => setTestData({ ...testData, customerPassword: e.target.value })}
@@ -286,32 +289,24 @@ export function EmailTestPage() {
                 disabled={loading.basicTest || !testData.customerEmail}
                 className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 px-6 py-2 rounded-lg transition-all flex items-center gap-2"
               >
-                {loading.basicTest ? (
-                  <Loader className="w-4 h-4 animate-spin" />
-                ) : (
-                  'Test'
-                )}
+                {loading.basicTest ? <Loader className="w-4 h-4 animate-spin" /> : "Test"}
               </button>
             </div>
 
             {results.basicTest && (
-              <div className={`p-4 rounded-lg border ${
-                results.basicTest.success 
-                  ? 'bg-green-900/20 border-green-500/30' 
-                  : 'bg-red-900/20 border-red-500/30'
-              }`}>
+              <div
+                className={`p-4 rounded-lg border ${
+                  results.basicTest.success ? "bg-green-900/20 border-green-500/30" : "bg-red-900/20 border-red-500/30"
+                }`}
+              >
                 {results.basicTest.success ? (
                   <>
                     <div className="flex items-center gap-2 text-green-400 mb-2">
                       <Check className="w-5 h-5" />
                       <strong>✅ Email Service Working!</strong>
                     </div>
-                    <p className="text-sm text-gray-300">
-                      Test email sent to: {testData.customerEmail}
-                    </p>
-                    <p className="text-xs text-yellow-400 mt-2">
-                      ⚠️ Check your inbox and spam folder
-                    </p>
+                    <p className="text-sm text-gray-300">Test email sent to: {testData.customerEmail}</p>
+                    <p className="text-xs text-yellow-400 mt-2">⚠️ Check your inbox and spam folder</p>
                   </>
                 ) : (
                   <>
@@ -338,14 +333,12 @@ export function EmailTestPage() {
               </div>
               <button
                 onClick={runSignupEmailTest}
-                disabled={loading.signupTest || !testData.customerEmail || !testData.customerName || !testData.customerPassword}
+                disabled={
+                  loading.signupTest || !testData.customerEmail || !testData.customerName || !testData.customerPassword
+                }
                 className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 px-6 py-2 rounded-lg transition-all flex items-center gap-2"
               >
-                {loading.signupTest ? (
-                  <Loader className="w-4 h-4 animate-spin" />
-                ) : (
-                  'Test'
-                )}
+                {loading.signupTest ? <Loader className="w-4 h-4 animate-spin" /> : "Test"}
               </button>
             </div>
 
@@ -354,28 +347,28 @@ export function EmailTestPage() {
                 <strong>📧 This test will send 2 emails:</strong>
               </p>
               <ul className="text-sm text-gray-300 ml-4 mt-2 space-y-1">
-                <li>1. Welcome email → {testData.customerEmail || '[Customer Email]'}</li>
+                <li>1. Welcome email → {testData.customerEmail || "[Customer Email]"}</li>
                 <li>2. Admin notification → anime.drop.zone.00@gmail.com</li>
               </ul>
             </div>
 
             {results.signupTest && (
-              <div className={`p-4 rounded-lg border ${
-                results.signupTest.success 
-                  ? 'bg-green-900/20 border-green-500/30' 
-                  : 'bg-red-900/20 border-red-500/30'
-              }`}>
+              <div
+                className={`p-4 rounded-lg border ${
+                  results.signupTest.success ? "bg-green-900/20 border-green-500/30" : "bg-red-900/20 border-red-500/30"
+                }`}
+              >
                 {results.signupTest.success ? (
                   <>
                     <div className="flex items-center gap-2 text-green-400 mb-2">
                       <Check className="w-5 h-5" />
                       <strong>✅ Signup Flow Completed!</strong>
                     </div>
-                    <p className="text-sm text-gray-300 whitespace-pre-line mb-3">
-                      {results.signupTest.message}
-                    </p>
+                    <p className="text-sm text-gray-300 whitespace-pre-line mb-3">{results.signupTest.message}</p>
                     <div className="bg-purple-900/30 border border-purple-500/30 rounded p-3 mt-3">
-                      <p className="text-xs text-purple-300 mb-2"><strong>What to check:</strong></p>
+                      <p className="text-xs text-purple-300 mb-2">
+                        <strong>What to check:</strong>
+                      </p>
                       <ul className="text-xs text-gray-400 space-y-1">
                         <li>✉️ Customer inbox: {testData.customerEmail}</li>
                         <li>✉️ Admin inbox: anime.drop.zone.00@gmail.com</li>
@@ -416,11 +409,7 @@ export function EmailTestPage() {
                 disabled={loading.adminTest}
                 className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 px-6 py-2 rounded-lg transition-all flex items-center gap-2"
               >
-                {loading.adminTest ? (
-                  <Loader className="w-4 h-4 animate-spin" />
-                ) : (
-                  'Test'
-                )}
+                {loading.adminTest ? <Loader className="w-4 h-4 animate-spin" /> : "Test"}
               </button>
             </div>
 
@@ -431,20 +420,18 @@ export function EmailTestPage() {
             </div>
 
             {results.adminTest && (
-              <div className={`p-4 rounded-lg border ${
-                results.adminTest.success 
-                  ? 'bg-green-900/20 border-green-500/30' 
-                  : 'bg-red-900/20 border-red-500/30'
-              }`}>
+              <div
+                className={`p-4 rounded-lg border ${
+                  results.adminTest.success ? "bg-green-900/20 border-green-500/30" : "bg-red-900/20 border-red-500/30"
+                }`}
+              >
                 {results.adminTest.success ? (
                   <>
                     <div className="flex items-center gap-2 text-green-400 mb-2">
                       <Check className="w-5 h-5" />
                       <strong>✅ Admin Email Sent!</strong>
                     </div>
-                    <p className="text-sm text-gray-300">
-                      Test email sent to admin: anime.drop.zone.00@gmail.com
-                    </p>
+                    <p className="text-sm text-gray-300">Test email sent to admin: anime.drop.zone.00@gmail.com</p>
                     <p className="text-xs text-yellow-400 mt-2">
                       ⚠️ Check anime.drop.zone.00@gmail.com inbox and spam folder
                     </p>
@@ -477,25 +464,26 @@ export function EmailTestPage() {
               <li>
                 <strong className="text-white">Check inboxes</strong>
                 <p className="ml-6 mt-1">
-                  • Your email inbox (customer welcome email)<br />
-                  • anime.drop.zone.00@gmail.com (admin notification)<br />
-                  • Don't forget to check spam/junk folders!
+                  • Your email inbox (customer welcome email)
+                  <br />
+                  • anime.drop.zone.00@gmail.com (admin notification)
+                  <br />• Don't forget to check spam/junk folders!
                 </p>
               </li>
               <li>
                 <strong className="text-white">Check browser console and server logs</strong>
                 <p className="ml-6 mt-1">
-                  • Open browser console (F12) for detailed logs<br />
-                  • Check Supabase Edge Function logs if emails fail
+                  • Open browser console (F12) for detailed logs
+                  <br />• Check Supabase Edge Function logs if emails fail
                 </p>
               </li>
             </ol>
-            
+
             <div className="mt-4 p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
               <p className="text-yellow-400 text-sm">
-                <strong>⚠️ Important:</strong> The signup test creates a real user account. 
-                If you run it multiple times with the same email, it will fail saying "user already exists".
-                Use different email addresses for multiple tests.
+                <strong>⚠️ Important:</strong> The signup test creates a real user account. If you run it multiple times
+                with the same email, it will fail saying "user already exists". Use different email addresses for
+                multiple tests.
               </p>
             </div>
           </div>

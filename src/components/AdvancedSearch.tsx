@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { Search, X, Filter, SlidersHorizontal } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useState, useEffect } from "react";
+import { Search, X, Filter, SlidersHorizontal } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 
 interface AdvancedSearchProps {
   onSearch: (filters: SearchFilters) => void;
@@ -15,13 +15,13 @@ export interface SearchFilters {
   maxPrice?: number;
   category?: string;
   minRating?: number;
-  sortBy?: 'price-low' | 'price-high' | 'rating' | 'newest';
+  sortBy?: "price-low" | "price-high" | "rating" | "newest";
   inStock?: boolean;
 }
 
 export function AdvancedSearch({ onSearch, categories, isVisible, onClose }: AdvancedSearchProps) {
   const [filters, setFilters] = useState<SearchFilters>({
-    query: '',
+    query: "",
     minPrice: undefined,
     maxPrice: undefined,
     category: undefined,
@@ -38,7 +38,7 @@ export function AdvancedSearch({ onSearch, categories, isVisible, onClose }: Adv
 
   const handleClear = () => {
     setFilters({
-      query: '',
+      query: "",
       minPrice: undefined,
       maxPrice: undefined,
       category: undefined,
@@ -47,7 +47,7 @@ export function AdvancedSearch({ onSearch, categories, isVisible, onClose }: Adv
       inStock: false,
     });
     onSearch({
-      query: '',
+      query: "",
       minPrice: undefined,
       maxPrice: undefined,
       category: undefined,
@@ -74,10 +74,7 @@ export function AdvancedSearch({ onSearch, categories, isVisible, onClose }: Adv
             </div>
             <h2 className="text-white text-xl">Advanced Search</h2>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors p-2"
-          >
+          <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors p-2">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -85,15 +82,19 @@ export function AdvancedSearch({ onSearch, categories, isVisible, onClose }: Adv
         <div className="space-y-4">
           {/* Search Query */}
           <div>
-            <label className="block text-gray-300 mb-2">Search Products</label>
+            <label htmlFor="advancedSearchQuery" className="block text-gray-300 mb-2">
+              Search Products
+            </label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
+                id="advancedSearchQuery"
+                name="advancedSearchQuery"
                 type="text"
                 value={filters.query}
                 onChange={(e) => setFilters({ ...filters, query: e.target.value })}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     handleSearch();
                   }
                 }}
@@ -109,36 +110,48 @@ export function AdvancedSearch({ onSearch, categories, isVisible, onClose }: Adv
             className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
           >
             <SlidersHorizontal className="w-5 h-5" />
-            {showFilters ? 'Hide Filters' : 'Show Filters'}
+            {showFilters ? "Hide Filters" : "Show Filters"}
           </button>
 
           <AnimatePresence>
             {showFilters && (
               <motion.div
                 initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
+                animate={{ height: "auto", opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
                 className="space-y-4 overflow-hidden"
               >
                 {/* Price Range */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-gray-300 mb-2">Min Price (₹)</label>
+                    <label htmlFor="minPrice" className="block text-gray-300 mb-2">
+                      Min Price (₹)
+                    </label>
                     <input
+                      id="minPrice"
+                      name="minPrice"
                       type="number"
-                      value={filters.minPrice || ''}
-                      onChange={(e) => setFilters({ ...filters, minPrice: e.target.value ? parseFloat(e.target.value) : undefined })}
+                      value={filters.minPrice || ""}
+                      onChange={(e) =>
+                        setFilters({ ...filters, minPrice: e.target.value ? parseFloat(e.target.value) : undefined })
+                      }
                       placeholder="0"
                       min="0"
                       className="w-full bg-purple-900/20 border border-purple-500/30 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-300 mb-2">Max Price (₹)</label>
+                    <label htmlFor="maxPrice" className="block text-gray-300 mb-2">
+                      Max Price (₹)
+                    </label>
                     <input
+                      id="maxPrice"
+                      name="maxPrice"
                       type="number"
-                      value={filters.maxPrice || ''}
-                      onChange={(e) => setFilters({ ...filters, maxPrice: e.target.value ? parseFloat(e.target.value) : undefined })}
+                      value={filters.maxPrice || ""}
+                      onChange={(e) =>
+                        setFilters({ ...filters, maxPrice: e.target.value ? parseFloat(e.target.value) : undefined })
+                      }
                       placeholder="10000"
                       min="0"
                       className="w-full bg-purple-900/20 border border-purple-500/30 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
@@ -148,9 +161,13 @@ export function AdvancedSearch({ onSearch, categories, isVisible, onClose }: Adv
 
                 {/* Category */}
                 <div>
-                  <label className="block text-gray-300 mb-2">Category</label>
+                  <label htmlFor="advancedSearchCategory" className="block text-gray-300 mb-2">
+                    Category
+                  </label>
                   <select
-                    value={filters.category || ''}
+                    id="advancedSearchCategory"
+                    name="advancedSearchCategory"
+                    value={filters.category || ""}
                     onChange={(e) => setFilters({ ...filters, category: e.target.value || undefined })}
                     className="w-full bg-purple-900/20 border border-purple-500/30 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
                   >
@@ -165,10 +182,16 @@ export function AdvancedSearch({ onSearch, categories, isVisible, onClose }: Adv
 
                 {/* Minimum Rating */}
                 <div>
-                  <label className="block text-gray-300 mb-2">Minimum Rating</label>
+                  <label htmlFor="advancedMinRating" className="block text-gray-300 mb-2">
+                    Minimum Rating
+                  </label>
                   <select
-                    value={filters.minRating || ''}
-                    onChange={(e) => setFilters({ ...filters, minRating: e.target.value ? parseFloat(e.target.value) : undefined })}
+                    id="advancedMinRating"
+                    name="advancedMinRating"
+                    value={filters.minRating || ""}
+                    onChange={(e) =>
+                      setFilters({ ...filters, minRating: e.target.value ? parseFloat(e.target.value) : undefined })
+                    }
                     className="w-full bg-purple-900/20 border border-purple-500/30 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
                   >
                     <option value="">Any Rating</option>
@@ -181,9 +204,13 @@ export function AdvancedSearch({ onSearch, categories, isVisible, onClose }: Adv
 
                 {/* Sort By */}
                 <div>
-                  <label className="block text-gray-300 mb-2">Sort By</label>
+                  <label htmlFor="advancedSortBy" className="block text-gray-300 mb-2">
+                    Sort By
+                  </label>
                   <select
-                    value={filters.sortBy || ''}
+                    id="advancedSortBy"
+                    name="advancedSortBy"
+                    value={filters.sortBy || ""}
                     onChange={(e) => setFilters({ ...filters, sortBy: (e.target.value || undefined) as any })}
                     className="w-full bg-purple-900/20 border border-purple-500/30 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-purple-500"
                   >
@@ -250,7 +277,7 @@ export function AdvancedSearch({ onSearch, categories, isVisible, onClose }: Adv
               )}
               {filters.category && (
                 <span className="bg-purple-600/20 text-purple-300 px-3 py-1 rounded-full text-sm border border-purple-500/30">
-                  Category: {categories.find(c => c.slug === filters.category)?.name}
+                  Category: {categories.find((c) => c.slug === filters.category)?.name}
                 </span>
               )}
               {filters.minRating && (
@@ -260,7 +287,7 @@ export function AdvancedSearch({ onSearch, categories, isVisible, onClose }: Adv
               )}
               {filters.sortBy && (
                 <span className="bg-purple-600/20 text-purple-300 px-3 py-1 rounded-full text-sm border border-purple-500/30">
-                  Sort: {filters.sortBy.replace(/-/g, ' ')}
+                  Sort: {filters.sortBy.replace(/-/g, " ")}
                 </span>
               )}
               {filters.inStock && (
@@ -268,9 +295,13 @@ export function AdvancedSearch({ onSearch, categories, isVisible, onClose }: Adv
                   In Stock Only
                 </span>
               )}
-              {!filters.query && !filters.minPrice && !filters.maxPrice && !filters.category && !filters.minRating && !filters.sortBy && !filters.inStock && (
-                <span className="text-gray-500 text-sm">No filters applied</span>
-              )}
+              {!filters.query &&
+                !filters.minPrice &&
+                !filters.maxPrice &&
+                !filters.category &&
+                !filters.minRating &&
+                !filters.sortBy &&
+                !filters.inStock && <span className="text-gray-500 text-sm">No filters applied</span>}
             </div>
           </div>
         </div>

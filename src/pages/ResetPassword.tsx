@@ -1,54 +1,54 @@
-import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { Lock, ArrowLeft, Check, Eye, EyeOff } from 'lucide-react';
-import { FloatingParticles } from '../components/FloatingParticles';
-import { Logo } from '../components/Logo';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { motion } from "motion/react";
+import { Lock, ArrowLeft, Check, Eye, EyeOff } from "lucide-react";
+import { FloatingParticles } from "../components/FloatingParticles";
+import { Logo } from "../components/Logo";
+import { projectId, publicAnonKey } from "../utils/supabase/info";
 
 export function ResetPasswordPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token');
+  const token = searchParams.get("token");
 
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   useEffect(() => {
     if (!token) {
-      setError('Invalid reset link');
+      setError("Invalid reset link");
     }
   }, [token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setError("Password must be at least 6 characters long");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
       return;
     }
 
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/auth/reset-password`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${publicAnonKey}`,
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ token, newPassword: password }),
         }
@@ -59,13 +59,13 @@ export function ResetPasswordPage() {
       if (data.success) {
         setIsSuccess(true);
         // Redirect to home after 3 seconds
-        setTimeout(() => navigate('/'), 3000);
+        setTimeout(() => navigate("/"), 3000);
       } else {
-        setError(data.message || 'Failed to reset password');
+        setError(data.message || "Failed to reset password");
       }
     } catch (err) {
-      console.error('Error resetting password:', err);
-      setError('An error occurred. Please try again.');
+      console.error("Error resetting password:", err);
+      setError("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -83,7 +83,7 @@ export function ResetPasswordPage() {
       >
         {/* Back button */}
         <motion.button
-          onClick={() => navigate('/')}
+          onClick={() => navigate("/")}
           className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors mb-6"
           whileHover={{ x: -5 }}
         >
@@ -100,9 +100,7 @@ export function ResetPasswordPage() {
           {!isSuccess ? (
             <>
               <h2 className="text-white text-center mb-2">Reset Password</h2>
-              <p className="text-gray-400 text-center mb-6">
-                Enter your new password below.
-              </p>
+              <p className="text-gray-400 text-center mb-6">Enter your new password below.</p>
 
               {error && (
                 <motion.div
@@ -116,11 +114,15 @@ export function ResetPasswordPage() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-gray-300 mb-2">New Password</label>
+                  <label htmlFor="resetPassword" className="block text-gray-300 mb-2">
+                    New Password
+                  </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
-                      type={showPassword ? 'text' : 'password'}
+                      id="resetPassword"
+                      name="resetPassword"
+                      type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="Enter new password"
@@ -140,11 +142,15 @@ export function ResetPasswordPage() {
                 </div>
 
                 <div>
-                  <label className="block text-gray-300 mb-2">Confirm Password</label>
+                  <label htmlFor="confirmResetPassword" className="block text-gray-300 mb-2">
+                    Confirm Password
+                  </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
-                      type={showConfirmPassword ? 'text' : 'password'}
+                      id="confirmResetPassword"
+                      name="confirmResetPassword"
+                      type={showConfirmPassword ? "text" : "password"}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       placeholder="Confirm new password"
@@ -169,28 +175,22 @@ export function ResetPasswordPage() {
                   whileHover={{ scale: isLoading ? 1 : 1.02 }}
                   whileTap={{ scale: isLoading ? 1 : 0.98 }}
                 >
-                  {isLoading ? 'Resetting...' : 'Reset Password'}
+                  {isLoading ? "Resetting..." : "Reset Password"}
                 </motion.button>
               </form>
             </>
           ) : (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center"
-            >
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
               <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Check className="w-8 h-8 text-green-400" />
               </div>
               <h3 className="text-white mb-2">Password Reset Successful!</h3>
-              <p className="text-gray-400 mb-6">
-                Your password has been updated successfully.
-              </p>
+              <p className="text-gray-400 mb-6">Your password has been updated successfully.</p>
               <p className="text-gray-500 text-sm mb-6">
                 You can now log in with your new password. Redirecting to home page...
               </p>
               <motion.button
-                onClick={() => navigate('/')}
+                onClick={() => navigate("/")}
                 className="text-purple-400 hover:text-purple-300 transition-colors"
                 whileHover={{ scale: 1.05 }}
               >

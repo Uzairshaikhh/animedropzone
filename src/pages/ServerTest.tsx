@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { ArrowLeft, Check, X, Loader, Mail, Server } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { projectId, publicAnonKey } from "../utils/supabase/info";
+import { ArrowLeft, Check, X, Loader, Mail, Server } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export function ServerTestPage() {
   const navigate = useNavigate();
-  const [emailInput, setEmailInput] = useState('');
+  const [emailInput, setEmailInput] = useState("");
   const [healthStatus, setHealthStatus] = useState<any>(null);
   const [emailTestResult, setEmailTestResult] = useState<any>(null);
   const [loading, setLoading] = useState({
@@ -18,21 +18,18 @@ export function ServerTestPage() {
     setHealthStatus(null);
 
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/health`,
-        {
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-        }
-      );
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/health`, {
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`,
+        },
+      });
 
       const data = await response.json();
       setHealthStatus({ success: true, data });
     } catch (error) {
-      setHealthStatus({ 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      setHealthStatus({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
       setLoading({ ...loading, health: false });
@@ -41,7 +38,7 @@ export function ServerTestPage() {
 
   const sendTestEmail = async () => {
     if (!emailInput) {
-      setEmailTestResult({ success: false, error: 'Please enter an email address' });
+      setEmailTestResult({ success: false, error: "Please enter an email address" });
       return;
     }
 
@@ -49,24 +46,21 @@ export function ServerTestPage() {
     setEmailTestResult(null);
 
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/test-email`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email: emailInput }),
-        }
-      );
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/test-email`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: emailInput }),
+      });
 
       const data = await response.json();
       setEmailTestResult(data);
     } catch (error) {
-      setEmailTestResult({ 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      setEmailTestResult({
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     } finally {
       setLoading({ ...loading, email: false });
@@ -79,7 +73,7 @@ export function ServerTestPage() {
         {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -119,11 +113,11 @@ export function ServerTestPage() {
             </button>
 
             {healthStatus && (
-              <div className={`p-4 rounded-lg border ${
-                healthStatus.success 
-                  ? 'bg-green-900/20 border-green-500/30' 
-                  : 'bg-red-900/20 border-red-500/30'
-              }`}>
+              <div
+                className={`p-4 rounded-lg border ${
+                  healthStatus.success ? "bg-green-900/20 border-green-500/30" : "bg-red-900/20 border-red-500/30"
+                }`}
+              >
                 {healthStatus.success ? (
                   <>
                     <div className="flex items-center gap-2 text-green-400 mb-3">
@@ -131,11 +125,19 @@ export function ServerTestPage() {
                       <strong>Server is Running!</strong>
                     </div>
                     <div className="text-sm space-y-2 text-gray-300">
-                      <p><strong>Status:</strong> {healthStatus.data.status}</p>
-                      <p><strong>Message:</strong> {healthStatus.data.message}</p>
-                      <p><strong>Timestamp:</strong> {new Date(healthStatus.data.timestamp).toLocaleString()}</p>
+                      <p>
+                        <strong>Status:</strong> {healthStatus.data.status}
+                      </p>
+                      <p>
+                        <strong>Message:</strong> {healthStatus.data.message}
+                      </p>
+                      <p>
+                        <strong>Timestamp:</strong> {new Date(healthStatus.data.timestamp).toLocaleString()}
+                      </p>
                       <div>
-                        <p className="mb-1"><strong>Services:</strong></p>
+                        <p className="mb-1">
+                          <strong>Services:</strong>
+                        </p>
                         <ul className="ml-4 space-y-1">
                           <li>• Database: {healthStatus.data.services.database}</li>
                           <li>• Email Provider: {healthStatus.data.services.emailProvider}</li>
@@ -165,13 +167,17 @@ export function ServerTestPage() {
             </div>
 
             <p className="text-gray-400 mb-4">
-              Send a test email to verify that the email service is working correctly.
-              This will send a real email to the address you provide.
+              Send a test email to verify that the email service is working correctly. This will send a real email to
+              the address you provide.
             </p>
 
             <div className="mb-4">
-              <label className="block text-gray-300 mb-2">Email Address</label>
+              <label htmlFor="serverTestEmail" className="block text-gray-300 mb-2">
+                Email Address
+              </label>
               <input
+                id="serverTestEmail"
+                name="serverTestEmail"
                 type="email"
                 value={emailInput}
                 onChange={(e) => setEmailInput(e.target.value)}
@@ -199,11 +205,11 @@ export function ServerTestPage() {
             </button>
 
             {emailTestResult && (
-              <div className={`p-4 rounded-lg border ${
-                emailTestResult.success 
-                  ? 'bg-green-900/20 border-green-500/30' 
-                  : 'bg-red-900/20 border-red-500/30'
-              }`}>
+              <div
+                className={`p-4 rounded-lg border ${
+                  emailTestResult.success ? "bg-green-900/20 border-green-500/30" : "bg-red-900/20 border-red-500/30"
+                }`}
+              >
                 {emailTestResult.success ? (
                   <>
                     <div className="flex items-center gap-2 text-green-400 mb-2">
@@ -221,9 +227,7 @@ export function ServerTestPage() {
                       <X className="w-5 h-5" />
                       <strong>Email Send Failed</strong>
                     </div>
-                    <p className="text-sm text-gray-300 mb-2">
-                      {emailTestResult.error || 'Unknown error'}
-                    </p>
+                    <p className="text-sm text-gray-300 mb-2">{emailTestResult.error || "Unknown error"}</p>
                     {emailTestResult.details && (
                       <div className="mt-3 p-3 bg-black/30 rounded text-xs text-gray-400 overflow-auto">
                         <pre>{JSON.stringify(emailTestResult.details, null, 2)}</pre>
@@ -245,11 +249,11 @@ export function ServerTestPage() {
               <li>Check your inbox (and spam folder) for the test email</li>
               <li>If you receive the email, your email service is working correctly!</li>
             </ol>
-            
+
             <div className="mt-4 p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
               <p className="text-yellow-400 text-sm">
-                <strong>⚠️ Note:</strong> If the test email fails, check the browser console (F12) 
-                and Supabase Edge Function logs for detailed error messages.
+                <strong>⚠️ Note:</strong> If the test email fails, check the browser console (F12) and Supabase Edge
+                Function logs for detailed error messages.
               </p>
             </div>
           </div>

@@ -1,22 +1,22 @@
-import { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from "react";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export function TestQuoteEmail() {
   const navigate = useNavigate();
-  const [quotedPrice, setQuotedPrice] = useState('1499.00');
-  
+  const [quotedPrice, setQuotedPrice] = useState("1499.00");
+
   // Sample data for preview
   const sampleRequest = {
-    requestId: 'CCR-1234567890',
+    requestId: "CCR-1234567890",
     customerInfo: {
-      name: 'Test Customer',
-      email: 'customer@example.com',
+      name: "Test Customer",
+      email: "customer@example.com",
     },
     clothingDetails: {
-      type: 'T-Shirt',
-      size: 'L',
-      color: 'Black',
+      type: "T-Shirt",
+      size: "L",
+      color: "Black",
       quantity: 2,
     },
   };
@@ -106,7 +106,7 @@ export function TestQuoteEmail() {
     <div className="min-h-screen bg-black p-8">
       <div className="max-w-4xl mx-auto">
         <button
-          onClick={() => navigate('/secret-admin-panel-7b2cbf')}
+          onClick={() => navigate("/secret-admin-panel-7b2cbf")}
           className="flex items-center gap-2 text-purple-400 hover:text-purple-300 mb-6"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -114,13 +114,15 @@ export function TestQuoteEmail() {
         </button>
 
         <h1 className="text-white text-3xl mb-4">Quote Email Preview</h1>
-        <p className="text-gray-400 mb-6">
-          This is how the customer will see the quote email with approval buttons.
-        </p>
+        <p className="text-gray-400 mb-6">This is how the customer will see the quote email with approval buttons.</p>
 
         <div className="mb-6">
-          <label className="block text-gray-300 mb-2">Adjust Quote Price (₹)</label>
+          <label htmlFor="testQuotePrice" className="block text-gray-300 mb-2">
+            Adjust Quote Price (₹)
+          </label>
           <input
+            id="testQuotePrice"
+            name="testQuotePrice"
             type="number"
             value={quotedPrice}
             onChange={(e) => setQuotedPrice(e.target.value)}
@@ -130,11 +132,7 @@ export function TestQuoteEmail() {
         </div>
 
         <div className="bg-white rounded-lg overflow-hidden">
-          <iframe
-            srcDoc={quoteEmailHtml}
-            className="w-full h-[800px] border-0"
-            title="Email Preview"
-          />
+          <iframe srcDoc={quoteEmailHtml} className="w-full h-[800px] border-0" title="Email Preview" />
         </div>
 
         <div className="mt-6 bg-purple-900/20 border border-purple-500/30 rounded-lg p-4">
@@ -144,7 +142,9 @@ export function TestQuoteEmail() {
             <li>The approval buttons will redirect to /approve-quote/:id page</li>
             <li>Customers can approve or reject with one click</li>
             <li>The status automatically updates in the database</li>
-            <li><strong>Note:</strong> With Resend free plan, emails only work if sent to your verified email address</li>
+            <li>
+              <strong>Note:</strong> With Resend free plan, emails only work if sent to your verified email address
+            </li>
           </ul>
         </div>
       </div>
