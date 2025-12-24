@@ -102,10 +102,10 @@ export function ProductDetailModal({
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-3 md:p-6">
-            {/* Mobile: Full width stack, Desktop: Side-by-side layout */}
-            <div className="flex flex-col md:flex-row gap-3 md:gap-6 mb-8">
+            {/* Mobile: Full width image on top, Desktop: Side-by-side layout */}
+            <div className="flex flex-col md:flex-row gap-3 md:gap-6 mb-4 md:mb-8">
               {/* Product Image - Full Width on Mobile, Auto on Desktop */}
-              <div className="w-full md:flex-1 md:min-w-0">
+              <div className="w-full md:flex-1 md:min-w-0 md:max-h-[60vh]">
                 <div className="relative rounded-lg md:rounded-xl overflow-hidden bg-black/50">
                   <div className="w-full aspect-square flex items-center justify-center">
                     <img
