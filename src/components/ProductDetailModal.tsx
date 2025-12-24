@@ -101,9 +101,10 @@ export function ProductDetailModal({
 
         {/* Content */}
         <div className="p-4 md:p-6">
-          <div className="grid md:grid-cols-[1fr_100px] gap-4 mb-8">
-            {/* Product Image */}
-            <div>
+          {/* Mobile: Full width stack, Desktop: Side-by-side layout */}
+          <div className="flex flex-col md:flex-row gap-4 md:gap-6 mb-8">
+            {/* Product Image - Full Width on Mobile, Auto on Desktop */}
+            <div className="w-full md:flex-1 md:min-w-0">
               <div className="relative rounded-xl overflow-hidden bg-black/50">
                 <div className="w-full aspect-square flex items-center justify-center">
                   <img
@@ -158,7 +159,7 @@ export function ProductDetailModal({
 
             {/* Vertical Thumbnail Slider - Desktop Only */}
             {safeGallery.length > 0 && (
-              <div className="hidden md:flex flex-col gap-2 overflow-y-auto max-h-96 min-w-max">
+              <div className="hidden md:flex md:flex-col gap-2 overflow-y-auto max-h-[32rem] w-32 flex-shrink-0">
                 {safeGallery.map((img, idx) => (
                   <button
                     type="button"
