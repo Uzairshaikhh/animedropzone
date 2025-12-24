@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "../contexts/ToastContext";
 import { useCart } from "../contexts/CartContext";
 import { Package, Swords, Sparkles, Image, Shirt, Bookmark, type LucideIcon } from "lucide-react";
