@@ -87,10 +87,10 @@ export function ProductDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-4">
       <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" onClick={onClose}></div>
 
-      <div className="relative bg-gradient-to-br from-black to-purple-900/20 border border-purple-500/30 rounded-2xl w-full max-w-6xl max-h-[90vh] overflow-y-auto shadow-2xl shadow-purple-900/50">
+      <div className="relative bg-gradient-to-br from-black to-purple-900/20 border border-purple-500/30 rounded-lg md:rounded-2xl w-full md:max-w-6xl max-h-[95vh] md:max-h-[90vh] overflow-y-auto shadow-2xl shadow-purple-900/50">
         {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between p-6 border-b border-purple-500/30 bg-black/50 backdrop-blur-sm">
           <h2 className="text-white text-xl">Product Details</h2>
@@ -100,12 +100,12 @@ export function ProductDetailModal({
         </div>
 
         {/* Content */}
-        <div className="p-4 md:p-6">
+        <div className="p-3 md:p-6">
           {/* Mobile: Full width stack, Desktop: Side-by-side layout */}
-          <div className="flex flex-col md:flex-row gap-4 md:gap-6 mb-8">
+          <div className="flex flex-col md:flex-row gap-3 md:gap-6 mb-8">
             {/* Product Image - Full Width on Mobile, Auto on Desktop */}
             <div className="w-full md:flex-1 md:min-w-0">
-              <div className="relative rounded-xl overflow-hidden bg-black/50">
+              <div className="relative rounded-lg md:rounded-xl overflow-hidden bg-black/50">
                 <div className="w-full aspect-square flex items-center justify-center">
                   <img
                     src={safeGallery[Math.min(activeImage, safeGallery.length - 1)]}
@@ -185,13 +185,13 @@ export function ProductDetailModal({
 
           {/* Horizontal Thumbnail Slider - Mobile Only */}
           {safeGallery.length > 1 && (
-            <div className="md:hidden flex gap-2 overflow-x-auto pb-2 mb-6 scroll-smooth">
+            <div className="md:hidden flex gap-1 overflow-x-auto pb-2 mb-4 scroll-smooth -mx-3 px-3">
               {safeGallery.map((img, idx) => (
                 <button
                   type="button"
                   key={`thumb-mobile-${idx}-${img.substring(0, 20)}`}
                   onClick={() => setActiveImage(idx)}
-                  className={`w-16 h-16 md:w-24 md:h-24 rounded-lg overflow-hidden border-2 transition-all hover:scale-105 cursor-pointer shrink-0 ${
+                  className={`w-14 h-14 md:w-24 md:h-24 rounded-lg overflow-hidden border-2 transition-all hover:scale-105 cursor-pointer shrink-0 ${
                     activeImage === idx
                       ? "border-purple-500 shadow-lg shadow-purple-900/50 ring-2 ring-purple-400"
                       : "border-purple-500/30 hover:border-purple-400"
