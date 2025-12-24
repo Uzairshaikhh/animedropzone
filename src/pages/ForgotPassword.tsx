@@ -1,31 +1,31 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
-import { Mail, ArrowLeft, Check } from 'lucide-react';
-import { FloatingParticles } from '../components/FloatingParticles';
-import { Logo } from '../components/Logo';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "motion/react";
+import { Mail, ArrowLeft, Check } from "lucide-react";
+import { FloatingParticles } from "../components/FloatingParticles";
+import { Logo } from "../components/Logo";
+import { projectId, publicAnonKey } from "../utils/supabase/info";
 
 export function ForgotPasswordPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError('');
+    setError("");
 
     try {
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/auth/forgot-password`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${publicAnonKey}`,
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ email }),
         }
@@ -36,11 +36,11 @@ export function ForgotPasswordPage() {
       if (data.success) {
         setIsSuccess(true);
       } else {
-        setError(data.message || 'Failed to send reset email');
+        setError(data.message || "Failed to send reset email");
       }
     } catch (err) {
-      console.error('Error sending reset email:', err);
-      setError('An error occurred. Please try again.');
+      console.error("Error sending reset email:", err);
+      setError("An error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -58,7 +58,7 @@ export function ForgotPasswordPage() {
       >
         {/* Back button */}
         <motion.button
-          onClick={() => navigate('/')}
+          onClick={() => navigate("/")}
           className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors mb-6"
           whileHover={{ x: -5 }}
         >
@@ -91,10 +91,14 @@ export function ForgotPasswordPage() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-gray-300 mb-2">Email Address</label>
+                  <label htmlFor="email" className="block text-gray-300 mb-2">
+                    Email Address
+                  </label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
+                      id="email"
+                      name="email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -112,16 +116,12 @@ export function ForgotPasswordPage() {
                   whileHover={{ scale: isLoading ? 1 : 1.02 }}
                   whileTap={{ scale: isLoading ? 1 : 0.98 }}
                 >
-                  {isLoading ? 'Sending...' : 'Send Reset Link'}
+                  {isLoading ? "Sending..." : "Send Reset Link"}
                 </motion.button>
               </form>
             </>
           ) : (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center"
-            >
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center">
               <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Check className="w-8 h-8 text-green-400" />
               </div>
@@ -133,7 +133,7 @@ export function ForgotPasswordPage() {
                 The link will expire in 1 hour. If you don't see the email, check your spam folder.
               </p>
               <motion.button
-                onClick={() => navigate('/')}
+                onClick={() => navigate("/")}
                 className="text-purple-400 hover:text-purple-300 transition-colors"
                 whileHover={{ scale: 1.05 }}
               >

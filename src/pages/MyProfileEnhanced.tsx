@@ -1,18 +1,18 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { 
-  User, 
-  ArrowLeft, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Edit2, 
-  Save, 
-  X, 
-  Package, 
-  Calendar, 
-  CreditCard, 
-  Truck, 
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  User,
+  ArrowLeft,
+  Mail,
+  Phone,
+  MapPin,
+  Edit2,
+  Save,
+  X,
+  Package,
+  Calendar,
+  CreditCard,
+  Truck,
   ShoppingBag,
   CheckCircle,
   XCircle,
@@ -24,13 +24,13 @@ import {
   MapPinned,
   AlertTriangle,
   Award,
-  RotateCcw
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
-import { supabase } from '../utils/supabase/client';
-import { useToast } from '../contexts/ToastContext';
-import { ReturnRequestModal } from '../components/ReturnRequestModal';
+  RotateCcw,
+} from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { projectId, publicAnonKey } from "../utils/supabase/info";
+import { supabase } from "../utils/supabase/client";
+import { useToast } from "../contexts/ToastContext";
+import { ReturnRequestModal } from "../components/ReturnRequestModal";
 
 interface UserProfile {
   email: string;
@@ -114,10 +114,12 @@ export function MyProfilePage() {
 
   const checkAuth = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!session || !session.user) {
-        navigate('/', { replace: true });
+        navigate("/", { replace: true });
         return;
       }
 
@@ -126,8 +128,8 @@ export function MyProfilePage() {
       await fetchOrders(session.user.email!);
       await fetchAddresses();
     } catch (error) {
-      console.error('Error checking auth:', error);
-      navigate('/', { replace: true });
+      console.error("Error checking auth:", error);
+      navigate("/", { replace: true });
     } finally {
       setLoading(false);
     }
@@ -136,17 +138,16 @@ export function MyProfilePage() {
   const fetchProfile = async (email: string, metadata: any) => {
     try {
       // Fetch profile from backend endpoint (includes loyalty points and default address)
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/user-profile`,
-        {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-        }
-      );
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/user-profile`, {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -156,37 +157,37 @@ export function MyProfilePage() {
           return;
         }
       }
-      
+
       // Fallback to metadata if backend call fails
       const profileData: UserProfile = {
         email: email,
-        name: metadata?.name || '',
-        phone: metadata?.phone || '',
-        address: metadata?.address || '',
-        city: metadata?.city || '',
-        state: metadata?.state || '',
-        pincode: metadata?.pincode || '',
+        name: metadata?.name || "",
+        phone: metadata?.phone || "",
+        address: metadata?.address || "",
+        city: metadata?.city || "",
+        state: metadata?.state || "",
+        pincode: metadata?.pincode || "",
         loyaltyPoints: metadata?.loyaltyPoints || 0,
         defaultAddress: metadata?.defaultAddress || null,
       };
-      
+
       setProfile(profileData);
       setEditedProfile(profileData);
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      console.error("Error fetching profile:", error);
       // Fallback to metadata
       const profileData: UserProfile = {
         email: email,
-        name: metadata?.name || '',
-        phone: metadata?.phone || '',
-        address: metadata?.address || '',
-        city: metadata?.city || '',
-        state: metadata?.state || '',
-        pincode: metadata?.pincode || '',
+        name: metadata?.name || "",
+        phone: metadata?.phone || "",
+        address: metadata?.address || "",
+        city: metadata?.city || "",
+        state: metadata?.state || "",
+        pincode: metadata?.pincode || "",
         loyaltyPoints: metadata?.loyaltyPoints || 0,
         defaultAddress: metadata?.defaultAddress || null,
       };
-      
+
       setProfile(profileData);
       setEditedProfile(profileData);
     }
@@ -198,43 +199,42 @@ export function MyProfilePage() {
         `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/my-orders?email=${email}`,
         {
           headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
+            Authorization: `Bearer ${publicAnonKey}`,
           },
         }
       );
 
       const data = await response.json();
       if (data.success) {
-        const sortedOrders = data.orders.sort((a: Order, b: Order) => 
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        const sortedOrders = data.orders.sort(
+          (a: Order, b: Order) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         setOrders(sortedOrders);
       }
     } catch (error) {
-      console.error('Error fetching orders:', error);
+      console.error("Error fetching orders:", error);
     }
   };
 
   const fetchAddresses = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/addresses`,
-        {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-        }
-      );
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/addresses`, {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
       const data = await response.json();
       if (data.success) {
         setSavedAddresses(data.addresses || []);
       }
     } catch (error) {
-      console.error('Error fetching addresses:', error);
+      console.error("Error fetching addresses:", error);
     }
   };
 
@@ -251,17 +251,17 @@ export function MyProfilePage() {
           city: editedProfile.city,
           state: editedProfile.state,
           pincode: editedProfile.pincode,
-        }
+        },
       });
 
       if (error) throw error;
 
       setProfile(editedProfile);
       setIsEditing(false);
-      success('Profile updated successfully!');
+      success("Profile updated successfully!");
     } catch (error) {
-      console.error('Error updating profile:', error);
-      showError('Failed to update profile. Please try again.');
+      console.error("Error updating profile:", error);
+      showError("Failed to update profile. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -276,58 +276,54 @@ export function MyProfilePage() {
     if (!user) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) return;
 
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/account`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-        }
-      );
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/account`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
       const data = await response.json();
       if (data.success) {
         await supabase.auth.signOut();
-        success('Account deleted successfully');
-        navigate('/', { replace: true });
+        success("Account deleted successfully");
+        navigate("/", { replace: true });
       } else {
-        showError(data.message || 'Failed to delete account');
+        showError(data.message || "Failed to delete account");
       }
     } catch (error) {
-      console.error('Error deleting account:', error);
-      showError('Error deleting account. Please try again.');
+      console.error("Error deleting account:", error);
+      showError("Error deleting account. Please try again.");
     }
   };
 
   const handleCancelOrder = async (orderId: string) => {
     try {
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/orders/cancel`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ orderId, reason: 'Customer requested cancellation' }),
-        }
-      );
+      const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/orders/cancel`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${publicAnonKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ orderId, reason: "Customer requested cancellation" }),
+      });
 
       const data = await response.json();
       if (data.success) {
-        success('Order cancelled successfully');
+        success("Order cancelled successfully");
         await fetchOrders(user.email);
         setShowCancelOrderConfirm(null);
       } else {
-        showError(data.message || 'Failed to cancel order');
+        showError(data.message || "Failed to cancel order");
       }
     } catch (error) {
-      console.error('Error cancelling order:', error);
-      showError('Error cancelling order. Please try again.');
+      console.error("Error cancelling order:", error);
+      showError("Error cancelling order. Please try again.");
     }
   };
 
@@ -335,16 +331,18 @@ export function MyProfilePage() {
     if (!editedAddress) return;
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) return;
 
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/orders/${orderId}/address`,
         {
-          method: 'PUT',
+          method: "PUT",
           headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(editedAddress),
         }
@@ -352,47 +350,47 @@ export function MyProfilePage() {
 
       const data = await response.json();
       if (data.success) {
-        success('Order address updated successfully');
+        success("Order address updated successfully");
         await fetchOrders(user.email);
         setShowAddressEditor(null);
         setEditedAddress(null);
       } else {
-        showError(data.message || 'Failed to update address');
+        showError(data.message || "Failed to update address");
       }
     } catch (error) {
-      console.error('Error updating address:', error);
-      showError('Error updating address. Please try again.');
+      console.error("Error updating address:", error);
+      showError("Error updating address. Please try again.");
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'pending':
-        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-      case 'processing':
-        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      case 'shipped':
-        return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-      case 'delivered':
-        return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'cancelled':
-        return 'bg-red-500/20 text-red-400 border-red-500/30';
+      case "pending":
+        return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
+      case "processing":
+        return "bg-blue-500/20 text-blue-400 border-blue-500/30";
+      case "shipped":
+        return "bg-purple-500/20 text-purple-400 border-purple-500/30";
+      case "delivered":
+        return "bg-green-500/20 text-green-400 border-green-500/30";
+      case "cancelled":
+        return "bg-red-500/20 text-red-400 border-red-500/30";
       default:
-        return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
+        return "bg-gray-500/20 text-gray-400 border-gray-500/30";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'pending':
+      case "pending":
         return <Clock className="w-4 h-4" />;
-      case 'processing':
+      case "processing":
         return <Package className="w-4 h-4" />;
-      case 'shipped':
+      case "shipped":
         return <Truck className="w-4 h-4" />;
-      case 'delivered':
+      case "delivered":
         return <CheckCircle className="w-4 h-4" />;
-      case 'cancelled':
+      case "cancelled":
         return <XCircle className="w-4 h-4" />;
       default:
         return <Package className="w-4 h-4" />;
@@ -400,47 +398,45 @@ export function MyProfilePage() {
   };
 
   const canModifyOrder = (status: string) => {
-    return status.toLowerCase() === 'pending';
+    return status.toLowerCase() === "pending";
   };
 
   const handleSetDefaultAddress = async (addressId: string) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) return;
 
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/addresses/${addressId}/set-default`,
         {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Authorization': `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
         }
       );
 
       const data = await response.json();
       if (data.success) {
-        success('Default address updated successfully!');
+        success("Default address updated successfully!");
         // Refresh profile and addresses
         await fetchProfile(user.email!, user.user_metadata);
         await fetchAddresses();
       } else {
-        showError(data.message || 'Failed to set default address');
+        showError(data.message || "Failed to set default address");
       }
     } catch (error) {
-      console.error('Error setting default address:', error);
-      showError('Error setting default address. Please try again.');
+      console.error("Error setting default address:", error);
+      showError("Error setting default address. Please try again.");
     }
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-black text-white flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
           <Loader2 className="w-12 h-12 text-purple-400 mx-auto mb-4 animate-spin" />
           <p className="text-gray-400">Loading your profile...</p>
         </motion.div>
@@ -453,22 +449,28 @@ export function MyProfilePage() {
       {/* Animated Background */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-600/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+        <div
+          className="absolute bottom-0 right-1/4 w-96 h-96 bg-pink-600/10 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1s" }}
+        />
       </div>
 
       {/* Header */}
-      <motion.header 
+      <motion.header
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         className="border-b border-purple-500/20 bg-black/80 backdrop-blur-sm sticky top-0 z-50"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors group">
+            <Link
+              to="/"
+              className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors group"
+            >
               <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
               <span>Back to Home</span>
             </Link>
-            <motion.h1 
+            <motion.h1
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2 }}
@@ -484,11 +486,7 @@ export function MyProfilePage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         {/* Loyalty Points Banner */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
-        >
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
           <div className="bg-gradient-to-r from-purple-600/20 via-pink-600/20 to-purple-600/20 border border-purple-500/30 rounded-2xl p-6 backdrop-blur-sm shadow-lg">
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex items-center gap-4">
@@ -532,9 +530,7 @@ export function MyProfilePage() {
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       className={`bg-black/50 border rounded-xl p-4 transition-all ${
-                        isDefault 
-                          ? 'border-purple-500/50 shadow-lg shadow-purple-500/20' 
-                          : 'border-purple-500/20'
+                        isDefault ? "border-purple-500/50 shadow-lg shadow-purple-500/20" : "border-purple-500/20"
                       }`}
                     >
                       <div className="flex items-start justify-between mb-3">
@@ -549,9 +545,13 @@ export function MyProfilePage() {
                         )}
                       </div>
                       <div className="text-sm text-gray-300 space-y-1">
-                        <p>{address.firstName} {address.lastName}</p>
+                        <p>
+                          {address.firstName} {address.lastName}
+                        </p>
                         <p>{address.address}</p>
-                        <p>{address.city}, {address.state} - {address.pincode}</p>
+                        <p>
+                          {address.city}, {address.state} - {address.pincode}
+                        </p>
                         <p>{address.phone}</p>
                       </div>
                       {!isDefault && (
@@ -575,11 +575,7 @@ export function MyProfilePage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Profile Information Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="lg:col-span-1"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="lg:col-span-1">
             <div className="bg-gradient-to-br from-purple-900/40 via-black to-pink-900/20 border border-purple-500/30 rounded-2xl p-6 backdrop-blur-sm shadow-2xl shadow-purple-500/10">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl flex items-center gap-2">
@@ -604,7 +600,11 @@ export function MyProfilePage() {
                       disabled={saving}
                       className="p-2 bg-green-600/20 border border-green-500/30 hover:bg-green-600/30 rounded-lg transition-all disabled:opacity-50"
                     >
-                      {saving ? <Loader2 className="w-4 h-4 text-green-400 animate-spin" /> : <Save className="w-4 h-4 text-green-400" />}
+                      {saving ? (
+                        <Loader2 className="w-4 h-4 text-green-400 animate-spin" />
+                      ) : (
+                        <Save className="w-4 h-4 text-green-400" />
+                      )}
                     </motion.button>
                     <motion.button
                       whileHover={{ scale: 1.05 }}
@@ -624,12 +624,12 @@ export function MyProfilePage() {
                   {isEditing ? (
                     <input
                       type="text"
-                      value={editedProfile?.name || ''}
+                      value={editedProfile?.name || ""}
                       onChange={(e) => setEditedProfile({ ...editedProfile!, name: e.target.value })}
                       className="w-full px-4 py-2 bg-black/50 border border-purple-500/30 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
                     />
                   ) : (
-                    <p className="text-white">{profile?.name || 'Not provided'}</p>
+                    <p className="text-white">{profile?.name || "Not provided"}</p>
                   )}
                 </div>
 
@@ -649,13 +649,13 @@ export function MyProfilePage() {
                   {isEditing ? (
                     <input
                       type="tel"
-                      value={editedProfile?.phone || ''}
+                      value={editedProfile?.phone || ""}
                       onChange={(e) => setEditedProfile({ ...editedProfile!, phone: e.target.value })}
                       placeholder="+91XXXXXXXXXX"
                       className="w-full px-4 py-2 bg-black/50 border border-purple-500/30 rounded-lg focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all"
                     />
                   ) : (
-                    <p className="text-white">{profile?.phone || 'Not provided'}</p>
+                    <p className="text-white">{profile?.phone || "Not provided"}</p>
                   )}
                 </div>
 
@@ -708,7 +708,11 @@ export function MyProfilePage() {
                           <p className="text-sm text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</p>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className={`px-3 py-1 rounded-full text-sm border flex items-center gap-1 ${getStatusColor(order.status)}`}>
+                          <span
+                            className={`px-3 py-1 rounded-full text-sm border flex items-center gap-1 ${getStatusColor(
+                              order.status
+                            )}`}
+                          >
                             {getStatusIcon(order.status)}
                             {order.status}
                           </span>
@@ -746,8 +750,8 @@ export function MyProfilePage() {
                           </motion.button>
                         </div>
                       )}
-                      
-                      {!canModifyOrder(order.status) && order.status.toLowerCase() !== 'cancelled' && (
+
+                      {!canModifyOrder(order.status) && order.status.toLowerCase() !== "cancelled" && (
                         <p className="text-xs text-gray-500 mt-3 flex items-center gap-1">
                           <AlertTriangle className="w-3 h-3" />
                           Order cannot be modified once processing has begun
@@ -760,14 +764,14 @@ export function MyProfilePage() {
                         className="w-full mt-3 text-purple-400 hover:text-purple-300 text-sm flex items-center justify-center gap-2"
                       >
                         <Eye className="w-4 h-4" />
-                        {selectedOrder?.id === order.id ? 'Hide' : 'View'} Details
+                        {selectedOrder?.id === order.id ? "Hide" : "View"} Details
                       </motion.button>
 
                       <AnimatePresence>
                         {selectedOrder?.id === order.id && (
                           <motion.div
                             initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
+                            animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
                             className="overflow-hidden"
                           >
@@ -775,7 +779,9 @@ export function MyProfilePage() {
                               <h4 className="text-sm text-gray-400 mb-2">Items:</h4>
                               {order.items.map((item) => (
                                 <div key={item.id} className="flex justify-between text-sm">
-                                  <span>{item.name} x {item.quantity}</span>
+                                  <span>
+                                    {item.name} x {item.quantity}
+                                  </span>
                                   <span>₹{(item.price * item.quantity).toLocaleString()}</span>
                                 </div>
                               ))}
@@ -801,9 +807,13 @@ export function MyProfilePage() {
                               </div>
                               <div className="border-t border-purple-500/20 pt-2 mt-2">
                                 <h4 className="text-sm text-gray-400 mb-2">Delivery Address:</h4>
-                                <p className="text-sm text-white">{order.customerInfo.firstName} {order.customerInfo.lastName}</p>
+                                <p className="text-sm text-white">
+                                  {order.customerInfo.firstName} {order.customerInfo.lastName}
+                                </p>
                                 <p className="text-sm text-gray-300">{order.customerInfo.address}</p>
-                                <p className="text-sm text-gray-300">{order.customerInfo.city}, {order.customerInfo.state} - {order.customerInfo.pincode}</p>
+                                <p className="text-sm text-gray-300">
+                                  {order.customerInfo.city}, {order.customerInfo.state} - {order.customerInfo.pincode}
+                                </p>
                                 <p className="text-sm text-gray-300">{order.customerInfo.phone}</p>
                               </div>
                             </div>
@@ -841,7 +851,9 @@ export function MyProfilePage() {
                   <AlertTriangle className="w-8 h-8 text-red-400" />
                 </div>
                 <h3 className="text-xl text-white mb-2">Delete Account?</h3>
-                <p className="text-gray-400">This action cannot be undone. All your data will be permanently deleted.</p>
+                <p className="text-gray-400">
+                  This action cannot be undone. All your data will be permanently deleted.
+                </p>
               </div>
               <div className="flex gap-3">
                 <button
@@ -931,64 +943,92 @@ export function MyProfilePage() {
               </h3>
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">First Name</label>
+                  <label htmlFor="firstName" className="block text-sm text-gray-400 mb-2">
+                    First Name
+                  </label>
                   <input
+                    id="firstName"
+                    name="firstName"
                     type="text"
-                    value={editedAddress.firstName || ''}
+                    value={editedAddress.firstName || ""}
                     onChange={(e) => setEditedAddress({ ...editedAddress, firstName: e.target.value })}
                     className="w-full px-4 py-2 bg-black/50 border border-purple-500/30 rounded-lg focus:outline-none focus:border-purple-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">Last Name</label>
+                  <label htmlFor="lastName" className="block text-sm text-gray-400 mb-2">
+                    Last Name
+                  </label>
                   <input
+                    id="lastName"
+                    name="lastName"
                     type="text"
-                    value={editedAddress.lastName || ''}
+                    value={editedAddress.lastName || ""}
                     onChange={(e) => setEditedAddress({ ...editedAddress, lastName: e.target.value })}
                     className="w-full px-4 py-2 bg-black/50 border border-purple-500/30 rounded-lg focus:outline-none focus:border-purple-500"
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-sm text-gray-400 mb-2">Phone</label>
+                  <label htmlFor="phone" className="block text-sm text-gray-400 mb-2">
+                    Phone
+                  </label>
                   <input
+                    id="phone"
+                    name="phone"
                     type="tel"
-                    value={editedAddress.phone || ''}
+                    value={editedAddress.phone || ""}
                     onChange={(e) => setEditedAddress({ ...editedAddress, phone: e.target.value })}
                     className="w-full px-4 py-2 bg-black/50 border border-purple-500/30 rounded-lg focus:outline-none focus:border-purple-500"
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-sm text-gray-400 mb-2">Address</label>
+                  <label htmlFor="address" className="block text-sm text-gray-400 mb-2">
+                    Address
+                  </label>
                   <textarea
-                    value={editedAddress.address || ''}
+                    id="address"
+                    name="address"
+                    value={editedAddress.address || ""}
                     onChange={(e) => setEditedAddress({ ...editedAddress, address: e.target.value })}
                     rows={3}
                     className="w-full px-4 py-2 bg-black/50 border border-purple-500/30 rounded-lg focus:outline-none focus:border-purple-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">City</label>
+                  <label htmlFor="city" className="block text-sm text-gray-400 mb-2">
+                    City
+                  </label>
                   <input
+                    id="city"
+                    name="city"
                     type="text"
-                    value={editedAddress.city || ''}
+                    value={editedAddress.city || ""}
                     onChange={(e) => setEditedAddress({ ...editedAddress, city: e.target.value })}
                     className="w-full px-4 py-2 bg-black/50 border border-purple-500/30 rounded-lg focus:outline-none focus:border-purple-500"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-2">State</label>
+                  <label htmlFor="state" className="block text-sm text-gray-400 mb-2">
+                    State
+                  </label>
                   <input
+                    id="state"
+                    name="state"
                     type="text"
-                    value={editedAddress.state || ''}
+                    value={editedAddress.state || ""}
                     onChange={(e) => setEditedAddress({ ...editedAddress, state: e.target.value })}
                     className="w-full px-4 py-2 bg-black/50 border border-purple-500/30 rounded-lg focus:outline-none focus:border-purple-500"
                   />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-sm text-gray-400 mb-2">Pincode</label>
+                  <label htmlFor="pincode" className="block text-sm text-gray-400 mb-2">
+                    Pincode
+                  </label>
                   <input
+                    id="pincode"
+                    name="pincode"
                     type="text"
-                    value={editedAddress.pincode || ''}
+                    value={editedAddress.pincode || ""}
                     onChange={(e) => setEditedAddress({ ...editedAddress, pincode: e.target.value })}
                     className="w-full px-4 py-2 bg-black/50 border border-purple-500/30 rounded-lg focus:outline-none focus:border-purple-500"
                   />
@@ -1015,11 +1055,7 @@ export function MyProfilePage() {
 
       {/* Return Request Modal */}
       <AnimatePresence>
-        {showReturnRequestModal && (
-          <ReturnRequestModal
-            onClose={() => setShowReturnRequestModal(false)}
-          />
-        )}
+        {showReturnRequestModal && <ReturnRequestModal onClose={() => setShowReturnRequestModal(false)} />}
       </AnimatePresence>
     </div>
   );
