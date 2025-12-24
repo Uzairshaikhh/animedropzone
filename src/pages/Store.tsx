@@ -339,11 +339,16 @@ export function StorePage() {
       clearTimeout(timeoutId);
 
       const data = await response.json();
-      if (data.success) {
-        setProducts(data.products);
+      if (data.success && Array.isArray(data.products)) {
+        // Validate products have required fields
+        const validProducts = data.products.filter((p: any) => p && p.id && p.name);
+        setProducts(validProducts);
+      } else {
+        setProducts([]);
       }
     } catch (error) {
       console.log("Error fetching products:", error);
+      setProducts([]);
     }
   };
 
@@ -573,26 +578,30 @@ export function StorePage() {
                 </p>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {displayedProducts.length === 0 ? (
+                {!displayedProducts || displayedProducts.length === 0 ? (
                   <div className="col-span-full text-center py-20">
                     <p className="text-gray-400 text-lg mb-4">
-                      {products.length === 0 ? "No products available yet." : "No products found in this category."}
+                      {!products || products.length === 0
+                        ? "No products available yet."
+                        : "No products found in this category."}
                     </p>
                   </div>
                 ) : (
-                  displayedProducts.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      onAddToCart={handleAddToCart}
-                      onViewDetails={() => {
-                        setSelectedProduct(product);
-                        setIsProductDetailModalOpen(true);
-                      }}
-                      onToggleWishlist={handleToggleWishlist}
-                      isInWishlist={isInWishlist(product.id)}
-                    />
-                  ))
+                  displayedProducts
+                    .filter((product) => product && product.id && product.name)
+                    .map((product) => (
+                      <ProductCard
+                        key={product.id}
+                        product={product}
+                        onAddToCart={handleAddToCart}
+                        onViewDetails={() => {
+                          setSelectedProduct(product);
+                          setIsProductDetailModalOpen(true);
+                        }}
+                        onToggleWishlist={handleToggleWishlist}
+                        isInWishlist={isInWishlist(product.id)}
+                      />
+                    ))
                 )}
               </div>
 
