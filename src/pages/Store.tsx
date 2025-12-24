@@ -426,15 +426,17 @@ export function StorePage() {
         />
 
         {/* Categories Section */}
-        <section id="categories" className="py-20 px-4">
+        <section id="categories" className="py-12 md:py-20 px-4">
           <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-12">
-              <h2 className="mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
+            <div className="text-center mb-8 md:mb-12">
+              <h2 className="mb-2 md:mb-4 text-2xl md:text-4xl bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
                 Browse Categories
               </h2>
-              <p className="text-gray-400 max-w-2xl mx-auto">Explore our wide range of anime merchandise categories</p>
+              <p className="text-gray-400 text-sm md:text-base max-w-2xl mx-auto">
+                Explore our wide range of anime merchandise categories
+              </p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-6">
               {categories
                 .filter((category) => category && category.icon && category.value && category.title)
                 .map((category) => {
