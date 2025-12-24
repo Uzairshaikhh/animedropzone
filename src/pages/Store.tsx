@@ -442,22 +442,24 @@ export function StorePage() {
               <p className="text-gray-400 max-w-2xl mx-auto">Explore our wide range of anime merchandise categories</p>
             </motion.div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {categories.map((category, index) => (
-                <motion.div
-                  key={category.value}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <CategoryCard
-                    icon={category.icon}
-                    title={category.title}
-                    description={category.description}
-                    onClick={() => handleCategoryClick(category.value)}
-                  />
-                </motion.div>
-              ))}
+              {categories
+                .filter((category) => category && category.icon && category.value && category.title)
+                .map((category, index) => (
+                  <motion.div
+                    key={category.value}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                  >
+                    <CategoryCard
+                      icon={category.icon}
+                      title={category.title}
+                      description={category.description}
+                      onClick={() => handleCategoryClick(category.value)}
+                    />
+                  </motion.div>
+                ))}
             </div>
             {(selectedCategory || selectedSubcategory) && (
               <div className="mt-6 text-center space-x-4">
