@@ -277,14 +277,23 @@ export function StorePage() {
   };
 
   useEffect(() => {
-    let filtered = products;
+    if (!products || products.length === 0) {
+      setFilteredProducts([]);
+      setDisplayedProducts([]);
+      return;
+    }
+
+    let filtered = [...products];
 
     if (selectedCategory) {
-      filtered = filtered.filter((p) => p.category === selectedCategory);
+      filtered = filtered.filter((p) => p.category && p.category.toLowerCase() === selectedCategory.toLowerCase());
     }
 
     if (selectedSubcategory) {
-      filtered = filtered.filter((p) => (p as any).subcategory === selectedSubcategory);
+      filtered = filtered.filter((p) => {
+        const subcat = (p as any).subcategory;
+        return subcat && subcat.toLowerCase() === selectedSubcategory.toLowerCase();
+      });
     }
 
     setFilteredProducts(filtered);
