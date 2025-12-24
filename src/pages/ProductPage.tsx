@@ -302,10 +302,15 @@ export function ProductPage() {
         </div>
 
         {/* Product Details Section */}
-        <section className="max-w-7xl mx-auto px-4 py-8">
-          <div className="grid md:grid-cols-2 gap-12">
+        <section className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+          <div className="grid md:grid-cols-2 gap-8 md:gap-12">
             {/* Product Images */}
-            <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6 }}>
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
+              className="w-full"
+            >
               <div className="relative z-10">
                 <motion.div
                   className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur-xl opacity-50 -z-10 pointer-events-none"
@@ -318,7 +323,7 @@ export function ProductPage() {
                     ease: "easeInOut",
                   }}
                 />
-                <div className="relative rounded-2xl overflow-hidden border-2 border-purple-500/50 bg-black">
+                <div className="relative rounded-2xl overflow-hidden border-2 border-purple-500/50 bg-black max-h-96 md:max-h-full">
                   <motion.img
                     src={activeImage}
                     alt={product.name}
@@ -334,14 +339,14 @@ export function ProductPage() {
                   )}
                   {safeGallery.length > 1 && (
                     <>
-                      <div className="absolute inset-y-0 left-0 flex items-center pl-2 z-20">
+                      <div className="absolute inset-y-0 left-0 flex items-center pl-1 md:pl-2 z-20">
                         <button
                           type="button"
                           onClick={goPrev}
-                          className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white p-3 rounded-full border-2 border-purple-400 transition-all shadow-lg hover:shadow-purple-600/50 cursor-pointer"
+                          className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white p-2 md:p-3 rounded-full border-2 border-purple-400 transition-all shadow-lg hover:shadow-purple-600/50 cursor-pointer"
                           aria-label="Previous image"
                         >
-                          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-4 h-4 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 20 20">
                             <path
                               fillRule="evenodd"
                               d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
@@ -350,14 +355,14 @@ export function ProductPage() {
                           </svg>
                         </button>
                       </div>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-2 z-20">
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-1 md:pr-2 z-20">
                         <button
                           type="button"
                           onClick={goNext}
-                          className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white p-3 rounded-full border-2 border-purple-400 transition-all shadow-lg hover:shadow-purple-600/50 cursor-pointer"
+                          className="bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white p-2 md:p-3 rounded-full border-2 border-purple-400 transition-all shadow-lg hover:shadow-purple-600/50 cursor-pointer"
                           aria-label="Next image"
                         >
-                          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-4 h-4 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 20 20">
                             <path
                               fillRule="evenodd"
                               d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
@@ -370,30 +375,30 @@ export function ProductPage() {
                   )}
                 </div>
                 {/* Thumbnail Gallery Slider */}
-                <div className="mt-6 pt-4 border-t border-purple-500/20">
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="text-gray-400 text-sm">
-                      Product Images {safeGallery.length > 1 && `(${safeGallery.length} available)`}
+                <div className="mt-3 md:mt-6 pt-3 md:pt-4 border-t border-purple-500/20">
+                  <div className="flex items-center justify-between mb-2 md:mb-3">
+                    <p className="text-gray-400 text-xs md:text-sm">
+                      Product Images {safeGallery.length > 1 && `(${safeGallery.length})`}
                     </p>
                     {safeGallery.length > 1 && (
                       <motion.button
                         onClick={() => setShowImageSelector(!showImageSelector)}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-purple-600/50 hover:bg-purple-600 border border-purple-500/50 rounded-lg text-purple-300 hover:text-white text-sm transition-all"
+                        className="flex items-center gap-2 px-2 md:px-3 py-1 md:py-1.5 bg-purple-600/50 hover:bg-purple-600 border border-purple-500/50 rounded-lg text-purple-300 hover:text-white text-xs md:text-sm transition-all"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        <ImagePlus className="w-4 h-4" />
-                        Select Image
+                        <ImagePlus className="w-3 h-3 md:w-4 md:h-4" />
+                        Select
                       </motion.button>
                     )}
                   </div>
-                  <div className="flex gap-3 overflow-x-auto pb-2">
+                  <div className="flex gap-2 md:gap-3 overflow-x-auto pb-2">
                     {safeGallery.map((img, idx) => (
                       <button
                         type="button"
                         key={`${idx}-${img.substring(0, 20)}`}
                         onClick={() => setSelectedImage(idx)}
-                        className={`shrink-0 w-24 h-24 rounded-lg overflow-hidden border-2 transition-all hover:scale-105 cursor-pointer ${
+                        className={`shrink-0 w-16 h-16 md:w-24 md:h-24 rounded-lg overflow-hidden border-2 transition-all hover:scale-105 cursor-pointer ${
                           selectedImage === idx
                             ? "border-purple-500 shadow-lg shadow-purple-900/50 ring-2 ring-purple-400"
                             : "border-purple-500/30 hover:border-purple-400"
@@ -416,10 +421,10 @@ export function ProductPage() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       transition={{ duration: 0.2 }}
-                      className="mt-4 p-4 bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-lg"
+                      className="mt-2 md:mt-4 p-3 md:p-4 bg-gradient-to-br from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-lg"
                     >
-                      <p className="text-gray-300 text-sm font-semibold mb-3">Choose an image:</p>
-                      <div className="grid grid-cols-3 gap-3">
+                      <p className="text-gray-300 text-xs md:text-sm font-semibold mb-2 md:mb-3">Choose:</p>
+                      <div className="grid grid-cols-3 gap-2 md:gap-3">
                         {safeGallery.map((img, idx) => (
                           <motion.button
                             key={`selector-${idx}-${img.substring(0, 20)}`}
@@ -427,7 +432,7 @@ export function ProductPage() {
                               setSelectedImage(idx);
                               setShowImageSelector(false);
                             }}
-                            className={`relative rounded-lg overflow-hidden border-2 transition-all h-28 ${
+                            className={`relative rounded-lg overflow-hidden border-2 transition-all h-20 md:h-28 ${
                               selectedImage === idx
                                 ? "border-purple-400 ring-2 ring-purple-400 scale-105"
                                 : "border-purple-500/30 hover:border-purple-400"
@@ -438,12 +443,12 @@ export function ProductPage() {
                             <img src={img} alt={`Image ${idx + 1}`} className="w-full h-full object-cover" />
                             {selectedImage === idx && (
                               <div className="absolute inset-0 bg-purple-600/20 flex items-center justify-center">
-                                <div className="bg-purple-500 text-white rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold">
+                                <div className="bg-purple-500 text-white rounded-full w-6 h-6 md:w-8 md:h-8 flex items-center justify-center text-xs md:text-sm font-bold">
                                   ✓
                                 </div>
                               </div>
                             )}
-                            <div className="absolute bottom-1 right-1 bg-black/70 text-purple-300 text-xs px-2 py-1 rounded">
+                            <div className="absolute bottom-1 right-1 bg-black/70 text-purple-300 text-xs px-1.5 py-0.5 md:px-2 md:py-1 rounded">
                               {idx + 1}
                             </div>
                           </motion.button>
@@ -456,7 +461,7 @@ export function ProductPage() {
 
               {/* Features */}
               <motion.div
-                className="grid grid-cols-2 gap-4 mt-8"
+                className="grid grid-cols-2 gap-2 md:gap-4 mt-4 md:mt-8"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
@@ -469,14 +474,14 @@ export function ProductPage() {
                 ].map((feature, index) => (
                   <motion.div
                     key={feature.text}
-                    className="flex items-center gap-3 bg-purple-900/20 border border-purple-500/30 rounded-lg p-4"
+                    className="flex items-center gap-2 md:gap-3 bg-purple-900/20 border border-purple-500/30 rounded-lg p-2 md:p-4 text-xs md:text-base"
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.4, delay: 0.4 + index * 0.1 }}
                     whileHover={{ scale: 1.05 }}
                   >
-                    <feature.icon className="w-6 h-6 text-purple-400" />
-                    <span className="text-gray-300 text-sm">{feature.text}</span>
+                    <feature.icon className="w-4 h-4 md:w-6 md:h-6 text-purple-400 shrink-0" />
+                    <span className="text-gray-300 text-xs md:text-sm">{feature.text}</span>
                   </motion.div>
                 ))}
               </motion.div>
@@ -487,19 +492,20 @@ export function ProductPage() {
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
+              className="w-full"
             >
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
               >
-                <span className="inline-block px-3 py-1 bg-gradient-to-r from-purple-600/30 to-pink-600/30 border border-purple-500/50 rounded-full text-purple-300 text-sm mb-4">
+                <span className="inline-block px-3 py-1 bg-gradient-to-r from-purple-600/30 to-pink-600/30 border border-purple-500/50 rounded-full text-purple-300 text-xs md:text-sm mb-3 md:mb-4">
                   {product.category.charAt(0).toUpperCase() + product.category.slice(1)}
                 </span>
               </motion.div>
 
               <motion.h1
-                className="text-white mb-4"
+                className="text-xl md:text-3xl lg:text-4xl text-white mb-3 md:mb-4 leading-tight"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
@@ -509,28 +515,28 @@ export function ProductPage() {
 
               {/* Rating */}
               <motion.div
-                className="flex items-center gap-4 mb-6"
+                className="flex items-center gap-2 md:gap-4 mb-4 md:mb-6 flex-wrap"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
               >
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5 md:gap-1">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`w-5 h-5 ${
+                      className={`w-3 h-3 md:w-5 md:h-5 ${
                         i < Math.floor(averageRating) ? "fill-yellow-400 text-yellow-400" : "text-gray-600"
                       }`}
                     />
                   ))}
                 </div>
-                <span className="text-gray-400">
+                <span className="text-gray-400 text-xs md:text-base">
                   {averageRating.toFixed(1)} ({reviews.length} reviews)
                 </span>
               </motion.div>
 
               <motion.p
-                className="text-gray-300 text-lg mb-6 leading-relaxed"
+                className="text-gray-300 text-sm md:text-lg mb-4 md:mb-6 leading-relaxed"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.6 }}
@@ -539,15 +545,15 @@ export function ProductPage() {
               </motion.p>
 
               <motion.div
-                className="mb-8"
+                className="mb-6 md:mb-8"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.7 }}
               >
-                <span className="text-5xl bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                <span className="text-3xl md:text-5xl bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent font-bold">
                   ₹{product.price.toLocaleString()}
                 </span>
-                <p className="text-gray-400 mt-2">
+                <p className="text-gray-400 text-xs md:text-base mt-1 md:mt-2">
                   Stock:{" "}
                   <span className={product.stock > 10 ? "text-green-400" : "text-orange-400"}>
                     {product.stock} available
@@ -557,24 +563,24 @@ export function ProductPage() {
 
               {/* Quantity Selector */}
               <motion.div
-                className="mb-6"
+                className="mb-4 md:mb-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.8 }}
               >
-                <label className="text-white mb-2 block">Quantity:</label>
-                <div className="flex items-center gap-4">
+                <label className="text-white text-sm md:text-base mb-2 block">Quantity:</label>
+                <div className="flex items-center gap-3 md:gap-4">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="bg-purple-600 hover:bg-purple-700 w-10 h-10 rounded-lg flex items-center justify-center transition-colors"
+                    className="bg-purple-600 hover:bg-purple-700 w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center transition-colors text-sm md:text-base"
                     disabled={product.stock === 0}
                   >
                     -
                   </button>
-                  <span className="text-white text-xl w-12 text-center">{quantity}</span>
+                  <span className="text-white text-lg md:text-xl w-8 md:w-12 text-center">{quantity}</span>
                   <button
                     onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                    className="bg-purple-600 hover:bg-purple-700 w-10 h-10 rounded-lg flex items-center justify-center transition-colors"
+                    className="bg-purple-600 hover:bg-purple-700 w-8 h-8 md:w-10 md:h-10 rounded-lg flex items-center justify-center transition-colors text-sm md:text-base"
                     disabled={product.stock === 0}
                   >
                     +
@@ -584,7 +590,7 @@ export function ProductPage() {
 
               {/* Action Buttons */}
               <motion.div
-                className="flex flex-col sm:flex-row gap-4"
+                className="flex flex-col gap-2 md:gap-4"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.9 }}
@@ -592,21 +598,21 @@ export function ProductPage() {
                 <motion.button
                   onClick={handleOrderNow}
                   disabled={product.stock === 0}
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed px-8 py-4 rounded-lg flex items-center justify-center gap-2 transition-all text-lg shadow-lg shadow-purple-900/50"
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed px-6 md:px-8 py-3 md:py-4 rounded-lg flex items-center justify-center gap-2 transition-all text-sm md:text-lg shadow-lg shadow-purple-900/50 font-semibold"
                   whileHover={{ scale: product.stock > 0 ? 1.02 : 1 }}
                   whileTap={{ scale: product.stock > 0 ? 0.98 : 1 }}
                 >
-                  <CreditCard className="w-5 h-5" />
+                  <CreditCard className="w-4 h-4 md:w-5 md:h-5" />
                   Order Now
                 </motion.button>
                 <motion.button
                   onClick={handleAddToCart}
                   disabled={product.stock === 0}
-                  className="flex-1 bg-white/10 hover:bg-white/20 border border-purple-500/50 hover:border-purple-500 disabled:opacity-50 disabled:cursor-not-allowed px-8 py-4 rounded-lg flex items-center justify-center gap-2 transition-all text-lg"
+                  className="bg-white/10 hover:bg-white/20 border border-purple-500/50 hover:border-purple-500 disabled:opacity-50 disabled:cursor-not-allowed px-6 md:px-8 py-3 md:py-4 rounded-lg flex items-center justify-center gap-2 transition-all text-sm md:text-lg font-semibold"
                   whileHover={{ scale: product.stock > 0 ? 1.02 : 1 }}
                   whileTap={{ scale: product.stock > 0 ? 0.98 : 1 }}
                 >
-                  <ShoppingCart className="w-5 h-5" />
+                  <ShoppingCart className="w-4 h-4 md:w-5 md:h-5" />
                   Add to Cart
                 </motion.button>
               </motion.div>
