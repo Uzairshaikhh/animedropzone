@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../contexts/ToastContext";
 import { useCart } from "../contexts/CartContext";
@@ -15,14 +15,21 @@ import { CheckoutModal } from "../components/CheckoutModal";
 import { SubcategoryModal } from "../components/SubcategoryModal";
 import { ProductDetailModal } from "../components/ProductDetailModal";
 import { CustomClothingModal } from "../components/CustomClothingModal";
-import { ProductRecommendations } from "../components/ProductRecommendations";
-import { AboutUs } from "../components/AboutUs";
-import { ContactUs } from "../components/ContactUs";
-import { NewsletterSubscribe } from "../components/NewsletterSubscribe";
 import { Logo } from "../components/Logo";
+import { SuspenseFallback } from "../components/SuspenseFallback";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
 import { supabase } from "../utils/supabase/client";
 import { Link } from "react-router-dom";
+
+// Lazy load heavy components
+const ProductRecommendations = lazy(() =>
+  import("../components/ProductRecommendations").then((m) => ({ default: m.ProductRecommendations }))
+);
+const AboutUs = lazy(() => import("../components/AboutUs").then((m) => ({ default: m.AboutUs })));
+const ContactUs = lazy(() => import("../components/ContactUs").then((m) => ({ default: m.ContactUs })));
+const NewsletterSubscribe = lazy(() =>
+  import("../components/NewsletterSubscribe").then((m) => ({ default: m.NewsletterSubscribe }))
+);
 
 interface CartItem extends Product {
   quantity: number;
@@ -631,9 +638,15 @@ export function StorePage() {
           </section>
         )}
 
-        <AboutUs />
-        <ContactUs />
-        <NewsletterSubscribe />
+        <Suspense fallback={<SuspenseFallback />}>
+          <AboutUs />
+        </Suspense>
+        <Suspense fallback={<SuspenseFallback />}>
+          <ContactUs />
+        </Suspense>
+        <Suspense fallback={<SuspenseFallback />}>
+          <NewsletterSubscribe />
+        </Suspense>
 
         {/* Footer */}
         <footer className="border-t border-purple-900/30 py-12 px-4">
