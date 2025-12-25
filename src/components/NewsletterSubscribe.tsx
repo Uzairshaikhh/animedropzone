@@ -21,7 +21,7 @@ export function NewsletterSubscribe() {
     setError("");
 
     try {
-      // Store locally since the server endpoint isn't available yet
+      // Store locally in browser storage
       const subscribers = JSON.parse(localStorage.getItem("newsletter_subscribers") || "[]");
 
       if (subscribers.includes(email.toLowerCase())) {
@@ -32,20 +32,6 @@ export function NewsletterSubscribe() {
 
       subscribers.push(email.toLowerCase());
       localStorage.setItem("newsletter_subscribers", JSON.stringify(subscribers));
-
-      // Try to also send to server (optional, won't block if it fails)
-      try {
-        await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/newsletter/subscribe`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${publicAnonKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email }),
-        });
-      } catch (serverErr) {
-        console.log("Server sync failed (non-critical):", serverErr);
-      }
 
       // Show success
       setSubscribed(true);
