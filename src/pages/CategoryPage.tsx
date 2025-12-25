@@ -138,13 +138,18 @@ export function CategoryPage() {
     if (!category) {
       setError("Category not specified");
       setIsValidCategory(false);
-    } else if (!categoryInfo[category]) {
-      // Don't redirect immediately - let it try to load from database
-      console.log("⚠️ Category not in hardcoded list, checking database...");
-      setIsValidCategory(true);
     } else {
-      setIsValidCategory(true);
-      setError(null);
+      // Normalize category for validation (handle spaces in URL)
+      const normalizedForValidation = category.toLowerCase().replace(/\s+/g, "-").replace(/-/g, "_");
+
+      if (!categoryInfo[normalizedForValidation] && !categoryInfo[category]) {
+        // Don't redirect immediately - let it try to load from database
+        console.log("⚠️ Category not in hardcoded list, checking database...");
+        setIsValidCategory(true);
+      } else {
+        setIsValidCategory(true);
+        setError(null);
+      }
     }
   }, [category, navigate]);
 
@@ -159,7 +164,11 @@ export function CategoryPage() {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.categories) {
-          const currentCategory = data.categories.find((cat: any) => cat.slug === category);
+          // Normalize category for matching: convert to lowercase and replace spaces with hyphens
+          const normalizedCategory = category?.toLowerCase().replace(/\s+/g, "-");
+          const currentCategory = data.categories.find(
+            (cat: any) => cat.slug === normalizedCategory || cat.slug === category
+          );
           console.log("🔵 Category data:", currentCategory);
 
           if (currentCategory) {
@@ -212,8 +221,12 @@ export function CategoryPage() {
       if (!category) {
         throw new Error("Category not specified");
       }
+      // Convert category to lowercase and replace spaces with hyphens for API compatibility
+      const normalizedCategory = category.toLowerCase().replace(/\s+/g, "-");
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/products/category/${category}`,
+        `https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/products/category/${encodeURIComponent(
+          normalizedCategory
+        )}`,
         {
           headers: {
             Authorization: `Bearer ${publicAnonKey}`,
@@ -276,11 +289,14 @@ export function CategoryPage() {
     setIsSubcategoryModalOpen(false);
   };
 
+  // Normalize category for lookups (handle spaces in URL)
+  const normalizedCategoryForLookup = category ? category.toLowerCase().replace(/\s+/g, "-").replace(/-/g, "_") : "";
+
   // Use dynamic category data with fallbacks
-  const Icon = category ? categoryIcons[category] || Package : Package;
+  const Icon = category ? categoryIcons[normalizedCategoryForLookup] || categoryIcons[category] || Package : Package;
   const info =
-    category && categoryInfo[category]
-      ? categoryInfo[category]
+    category && (categoryInfo[normalizedCategoryForLookup] || categoryInfo[category])
+      ? categoryInfo[normalizedCategoryForLookup] || categoryInfo[category]
       : categoryData
       ? { title: categoryData.name, description: categoryData.description || "Browse our products" }
       : { title: "Category", description: "Browse our products" };
@@ -289,7 +305,9 @@ export function CategoryPage() {
 
   // Use dynamic subcategories if available, otherwise fallback to hardcoded
   const subcategoriesToUse =
-    dynamicSubcategories.length > 0 ? dynamicSubcategories : subcategoryData[category || ""] || [];
+    dynamicSubcategories.length > 0
+      ? dynamicSubcategories
+      : subcategoryData[normalizedCategoryForLookup] || subcategoryData[category || ""] || [];
   const hasSubcategories = subcategoriesToUse.length > 0;
 
   return (
