@@ -296,6 +296,10 @@ export function CategoryPage() {
   const handleSubcategorySelect = (subcategory: string) => {
     setSelectedSubcategory(subcategory);
     setIsSubcategoryModalOpen(false);
+    // Save subcategory to sessionStorage for ProductCard to use
+    try {
+      sessionStorage.setItem("categorySubcategory", subcategory);
+    } catch {}
     // Add subcategory to URL for proper back navigation
     const newUrl = `${window.location.pathname}?subcat=${encodeURIComponent(subcategory)}`;
     window.history.replaceState({}, "", newUrl);
@@ -398,6 +402,10 @@ export function CategoryPage() {
                     <button
                       onClick={() => {
                         setSelectedSubcategory(null);
+                        // Clear from sessionStorage
+                        try {
+                          sessionStorage.removeItem("categorySubcategory");
+                        } catch {}
                         // Remove subcat from URL
                         window.history.replaceState({}, "", window.location.pathname);
                       }}

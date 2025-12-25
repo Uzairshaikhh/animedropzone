@@ -44,8 +44,17 @@ export const ProductCard = memo(function ProductCard({
   const handleViewDetails = () => {
     try {
       const currentPath = location.pathname + location.search;
+      // Check if we have a subcategory saved in sessionStorage
+      const subcategory = sessionStorage.getItem("categorySubcategory");
+      let pathToSave = currentPath;
+
+      // If we have a subcategory and it's not in the URL, add it
+      if (subcategory && !currentPath.includes("subcat=")) {
+        pathToSave = `${location.pathname}?subcat=${encodeURIComponent(subcategory)}`;
+      }
+
       // Save previous route for smarter back navigation
-      sessionStorage.setItem("prevRoute", currentPath);
+      sessionStorage.setItem("prevRoute", pathToSave);
     } catch {}
     navigate(`/product/${product.id}`);
   };
