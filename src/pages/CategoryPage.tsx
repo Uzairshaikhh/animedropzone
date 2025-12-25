@@ -125,6 +125,7 @@ export function CategoryPage() {
     Array<{ name: string; value: string; description: string }>
   >([]);
   const [error, setError] = useState<string | null>(null);
+  const [isValidCategory, setIsValidCategory] = useState(true);
 
   useEffect(() => {
     fetchCategoryData();
@@ -134,9 +135,16 @@ export function CategoryPage() {
 
   // Validate category and redirect if invalid
   useEffect(() => {
-    if (!category || !categoryInfo[category]) {
+    if (!category) {
+      setError("Category not specified");
+      setIsValidCategory(false);
+    } else if (!categoryInfo[category]) {
       // Don't redirect immediately - let it try to load from database
       console.log("⚠️ Category not in hardcoded list, checking database...");
+      setIsValidCategory(true);
+    } else {
+      setIsValidCategory(true);
+      setError(null);
     }
   }, [category, navigate]);
 
@@ -308,135 +316,156 @@ export function CategoryPage() {
           </button>
         </div>
 
+        {/* Show error if category is invalid */}
+        {!isValidCategory && (
+          <section className="max-w-7xl mx-auto px-4 py-8">
+            <div className="bg-red-900/20 border border-red-500/30 rounded-2xl p-12 max-w-md mx-auto">
+              <Package className="w-16 h-16 text-red-400 mx-auto mb-4" />
+              <h3 className="text-white text-2xl mb-2 text-center">Invalid Category</h3>
+              <p className="text-gray-400 mb-6 text-center">
+                The category "{category}" does not exist. Please select a valid category from the store.
+              </p>
+              <button
+                onClick={() => navigate("/")}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-lg transition-all"
+              >
+                Return to Store
+              </button>
+            </div>
+          </section>
+        )}
+
         {/* Category Header */}
-        <section className="max-w-7xl mx-auto px-4 py-4 md:py-8">
-          <div className="text-center mb-8 md:mb-12">
-            {!isMobile ? (
-              <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl mb-6">
-                <Icon className="w-12 h-12 text-white" />
+        {isValidCategory && (
+          <section className="max-w-7xl mx-auto px-4 py-4 md:py-8">
+            <div className="text-center mb-8 md:mb-12">
+              {!isMobile ? (
+                <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl mb-6">
+                  <Icon className="w-12 h-12 text-white" />
+                </div>
+              ) : (
+                <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl mb-4">
+                  <Icon className="w-10 h-10 text-white" />
+                </div>
+              )}
+
+              <h1 className="mb-2 md:mb-4 text-2xl md:text-4xl bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
+                {info.title}
+              </h1>
+
+              <p className="text-gray-300 text-sm md:text-lg max-w-2xl mx-auto">{info.description}</p>
+
+              {/* Subcategory Filter Button */}
+              {hasSubcategories && (
+                <div className="mt-6">
+                  <button
+                    onClick={() => setIsSubcategoryModalOpen(true)}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-lg transition-all shadow-lg shadow-purple-900/50"
+                  >
+                    Browse by Subcategory
+                  </button>
+                  {selectedSubcategory && (
+                    <button
+                      onClick={() => setSelectedSubcategory(null)}
+                      className="ml-4 text-purple-400 hover:text-purple-300 underline transition-colors"
+                    >
+                      Clear filter
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Custom Clothing Banner (Only for clothing category) */}
+            {category === "clothing" && (
+              <div className="mb-12 bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-2 border-purple-500/50 rounded-2xl p-8 shadow-2xl shadow-purple-900/50">
+                <div className="flex items-center gap-6">
+                  <div className="flex-shrink-0 w-20 h-20 bg-gradient-to-br from-pink-600 to-purple-600 rounded-xl flex items-center justify-center">
+                    <Palette className="w-10 h-10 text-white" />
+                  </div>
+
+                  <div className="flex-1">
+                    <h3 className="text-white text-2xl mb-2">🎨 Design Your Own Custom Clothing</h3>
+                    <p className="text-gray-300 mb-4">
+                      Want something unique? Upload your design and we'll create custom anime-themed clothing just for
+                      you!
+                    </p>
+                    <ul className="text-gray-400 text-sm space-y-1 mb-4">
+                      <li>✅ Upload your own designs or photos</li>
+                      <li>✅ Choose clothing type, size, and color</li>
+                      <li>✅ Get a quote within 24-48 hours</li>
+                      <li>✅ Professional quality printing</li>
+                    </ul>
+                    <button
+                      onClick={() => setIsCustomClothingModalOpen(true)}
+                      className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 px-8 py-4 rounded-lg text-lg shadow-lg shadow-pink-900/50 flex items-center gap-2"
+                    >
+                      <Palette className="w-5 h-5" />
+                      Start Custom Design
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Products Grid */}
+            {loading ? (
+              <div className="text-center py-20">
+                <div className="inline-block w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-gray-400 mt-4">Loading products...</p>
+              </div>
+            ) : error ? (
+              <div className="text-center py-20">
+                <div className="bg-red-900/20 border border-red-500/30 rounded-2xl p-12 max-w-md mx-auto">
+                  <Icon className="w-16 h-16 text-red-400 mx-auto mb-4" />
+                  <h3 className="text-white text-2xl mb-2">Error Loading Products</h3>
+                  <p className="text-gray-400 mb-6">{error}</p>
+                  <button
+                    onClick={() => fetchProducts()}
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-lg transition-all"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              </div>
+            ) : filteredProducts.length === 0 ? (
+              <div className="text-center py-20">
+                <div className="bg-purple-900/20 border border-purple-500/30 rounded-2xl p-12 max-w-md mx-auto">
+                  <Icon className="w-16 h-16 text-purple-400 mx-auto mb-4" />
+                  <h3 className="text-white text-2xl mb-2">No Products Found</h3>
+                  <p className="text-gray-400">
+                    {selectedSubcategory
+                      ? "No products available in this subcategory. Try selecting a different filter."
+                      : "No products available in this category yet. Check back soon!"}
+                  </p>
+                </div>
               </div>
             ) : (
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl mb-4">
-                <Icon className="w-10 h-10 text-white" />
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                {filteredProducts.map((product) => (
+                  <div key={product.id}>
+                    <ProductCard product={product} onAddToCart={handleAddToCart} />
+                  </div>
+                ))}
               </div>
             )}
 
-            <h1 className="mb-2 md:mb-4 text-2xl md:text-4xl bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
-              {info.title}
-            </h1>
-
-            <p className="text-gray-300 text-sm md:text-lg max-w-2xl mx-auto">{info.description}</p>
-
-            {/* Subcategory Filter Button */}
-            {hasSubcategories && (
-              <div className="mt-6">
-                <button
-                  onClick={() => setIsSubcategoryModalOpen(true)}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-lg transition-all shadow-lg shadow-purple-900/50"
-                >
-                  Browse by Subcategory
-                </button>
-                {selectedSubcategory && (
-                  <button
-                    onClick={() => setSelectedSubcategory(null)}
-                    className="ml-4 text-purple-400 hover:text-purple-300 underline transition-colors"
-                  >
-                    Clear filter
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Custom Clothing Banner (Only for clothing category) */}
-          {category === "clothing" && (
-            <div className="mb-12 bg-gradient-to-br from-purple-900/40 to-pink-900/40 border-2 border-purple-500/50 rounded-2xl p-8 shadow-2xl shadow-purple-900/50">
-              <div className="flex items-center gap-6">
-                <div className="flex-shrink-0 w-20 h-20 bg-gradient-to-br from-pink-600 to-purple-600 rounded-xl flex items-center justify-center">
-                  <Palette className="w-10 h-10 text-white" />
-                </div>
-
-                <div className="flex-1">
-                  <h3 className="text-white text-2xl mb-2">🎨 Design Your Own Custom Clothing</h3>
-                  <p className="text-gray-300 mb-4">
-                    Want something unique? Upload your design and we'll create custom anime-themed clothing just for
-                    you!
-                  </p>
-                  <ul className="text-gray-400 text-sm space-y-1 mb-4">
-                    <li>✅ Upload your own designs or photos</li>
-                    <li>✅ Choose clothing type, size, and color</li>
-                    <li>✅ Get a quote within 24-48 hours</li>
-                    <li>✅ Professional quality printing</li>
-                  </ul>
-                  <button
-                    onClick={() => setIsCustomClothingModalOpen(true)}
-                    className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 px-8 py-4 rounded-lg text-lg shadow-lg shadow-pink-900/50 flex items-center gap-2"
-                  >
-                    <Palette className="w-5 h-5" />
-                    Start Custom Design
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Products Grid */}
-          {loading ? (
-            <div className="text-center py-20">
-              <div className="inline-block w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-gray-400 mt-4">Loading products...</p>
-            </div>
-          ) : error ? (
-            <div className="text-center py-20">
-              <div className="bg-red-900/20 border border-red-500/30 rounded-2xl p-12 max-w-md mx-auto">
-                <Icon className="w-16 h-16 text-red-400 mx-auto mb-4" />
-                <h3 className="text-white text-2xl mb-2">Error Loading Products</h3>
-                <p className="text-gray-400 mb-6">{error}</p>
-                <button
-                  onClick={() => fetchProducts()}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-lg transition-all"
-                >
-                  Try Again
-                </button>
-              </div>
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="text-center py-20">
-              <div className="bg-purple-900/20 border border-purple-500/30 rounded-2xl p-12 max-w-md mx-auto">
-                <Icon className="w-16 h-16 text-purple-400 mx-auto mb-4" />
-                <h3 className="text-white text-2xl mb-2">No Products Found</h3>
+            {/* Product Count */}
+            {!loading && filteredProducts.length > 0 && (
+              <motion.div
+                className="text-center mt-12"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6, delay: 0.8 }}
+              >
                 <p className="text-gray-400">
-                  {selectedSubcategory
-                    ? "No products available in this subcategory. Try selecting a different filter."
-                    : "No products available in this category yet. Check back soon!"}
+                  Showing {filteredProducts.length} {filteredProducts.length === 1 ? "product" : "products"}
+                  {selectedSubcategory && " in selected subcategory"}
                 </p>
-              </div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-              {filteredProducts.map((product) => (
-                <div key={product.id}>
-                  <ProductCard product={product} onAddToCart={handleAddToCart} />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Product Count */}
-          {!loading && filteredProducts.length > 0 && (
-            <motion.div
-              className="text-center mt-12"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-            >
-              <p className="text-gray-400">
-                Showing {filteredProducts.length} {filteredProducts.length === 1 ? "product" : "products"}
-                {selectedSubcategory && " in selected subcategory"}
-              </p>
-            </motion.div>
-          )}
-        </section>
+              </motion.div>
+            )}
+          </section>
+        )}
       </main>
 
       <Cart

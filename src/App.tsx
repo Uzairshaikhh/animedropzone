@@ -33,6 +33,7 @@ export default function App() {
             <Route path="/my-profile" element={<MyProfilePage />} />
             <Route path="/product/:id" element={<ProductPage />} />
             <Route path="/category/:category" element={<CategoryPage />} />
+            <Route path="/categories/:category" element={<CategoryPage />} />
             <Route path="/approve-quote/:id" element={<ApproveQuote />} />
             <Route path="/test-quote-email" element={<TestQuoteEmail />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
