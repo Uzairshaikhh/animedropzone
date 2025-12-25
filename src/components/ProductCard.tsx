@@ -32,14 +32,19 @@ export const ProductCard = memo(function ProductCard({
   const navigate = useNavigate();
   const location = useLocation();
   const [imageLoaded, setImageLoaded] = useState(false);
+  const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : false;
 
   const imageUrl =
     product.images?.[0] ||
     product.image ||
     "https://images.unsplash.com/photo-1763771757355-4c0441df34ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhbmltZSUyMG1lcmNoYW5kaXNlfGVufDF8fHx8MTc2NTE4ODk3OXww&ixlib=rb-4.1.0&q=80&w=1080";
 
+  // Aggressive mobile optimization - reduce image quality/size on mobile
+  const imageQuality = isMobile ? "60" : "70"; // Lower quality for mobile
+  const imageWidth = isMobile ? "250" : "400"; // Smaller width for mobile
+
   // Only append query params to Unsplash URLs, don't modify Supabase or other URLs
-  const finalImageUrl = imageUrl.includes("unsplash.com") ? `${imageUrl}&w=400&q=70` : imageUrl;
+  const finalImageUrl = imageUrl.includes("unsplash.com") ? `${imageUrl}&w=${imageWidth}&q=${imageQuality}` : imageUrl;
 
   const handleViewDetails = () => {
     try {
@@ -65,7 +70,7 @@ export const ProductCard = memo(function ProductCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
-      whileHover={{ y: -5 }}
+      whileHover={isMobile ? {} : { y: -5 }}
       onClick={handleViewDetails}
     >
       {/* Wishlist Heart Button */}
@@ -156,8 +161,8 @@ export const ProductCard = memo(function ProductCard({
             }}
             disabled={product.stock === 0}
             className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed px-3 py-2 rounded-lg flex items-center justify-center gap-2 transition-all text-sm"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={isMobile ? {} : { scale: 1.05 }}
+            whileTap={isMobile ? {} : { scale: 0.95 }}
           >
             <ShoppingCart className="w-4 h-4" />
             Add
@@ -165,8 +170,8 @@ export const ProductCard = memo(function ProductCard({
           <motion.button
             onClick={handleViewDetails}
             className="bg-white/10 hover:bg-white/20 border border-purple-500/50 hover:border-purple-500 px-3 py-2 rounded-lg flex items-center justify-center gap-2 transition-all text-sm"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={isMobile ? {} : { scale: 1.05 }}
+            whileTap={isMobile ? {} : { scale: 0.95 }}
           >
             <Eye className="w-4 h-4" />
             Details

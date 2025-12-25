@@ -1,15 +1,22 @@
-import { motion } from 'motion/react';
+import { motion } from "motion/react";
+import { useMemo } from "react";
 
 export function FloatingParticles() {
-  // Generate random particles
-  const particles = Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    size: Math.random() * 6 + 2,
-    initialX: Math.random() * 100,
-    initialY: Math.random() * 100,
-    duration: Math.random() * 10 + 10,
-    delay: Math.random() * 5,
-  }));
+  // Memoize particles to prevent unnecessary regeneration
+  const particles = useMemo(() => {
+    // Use fewer particles on small screens
+    const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : false;
+    const particleCount = isMobile ? 5 : 20;
+
+    return Array.from({ length: particleCount }, (_, i) => ({
+      id: i,
+      size: Math.random() * 6 + 2,
+      initialX: Math.random() * 100,
+      initialY: Math.random() * 100,
+      duration: Math.random() * 10 + 10,
+      delay: Math.random() * 5,
+    }));
+  }, []);
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">

@@ -56,6 +56,17 @@ export function ProductPage() {
     fetchProduct();
     fetchReviews();
     checkUser();
+
+    // Cleanup function for memory management
+    return () => {
+      if (slideTimer.current) {
+        clearInterval(slideTimer.current);
+        slideTimer.current = null;
+      }
+      setProduct(null);
+      setReviews([]);
+      setError(null);
+    };
   }, [id]);
 
   useEffect(() => {
@@ -263,7 +274,10 @@ export function ProductPage() {
   const fallbackImage =
     "https://images.unsplash.com/photo-1763771757355-4c0441df34ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhbmltZSUyMG1lcmNoYW5kaXNlfGVufDF8fHx8MTc2NTE4ODk3OXww&ixlib=rb-4.1.0&q=80&w=1080";
   const gallery = (product.images && product.images.length ? product.images : [product.image]).filter(Boolean);
-  const safeGallery = gallery.length ? gallery : [fallbackImage];
+
+  // On mobile, limit gallery to first 5 images to prevent memory issues
+  const limitedGallery = isMobile ? gallery.slice(0, 5) : gallery;
+  const safeGallery = limitedGallery.length ? limitedGallery : [fallbackImage];
   const activeImage = safeGallery[Math.min(selectedImage, safeGallery.length - 1)];
 
   const goNext = () => {

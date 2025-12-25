@@ -140,6 +140,13 @@ export function CategoryPage() {
     fetchCategoryData();
     fetchProducts();
     checkUser();
+
+    // Cleanup function for memory management
+    return () => {
+      setProducts([]);
+      setFilteredProducts([]);
+      setError(null);
+    };
   }, [category]);
 
   // Validate category and redirect if invalid
