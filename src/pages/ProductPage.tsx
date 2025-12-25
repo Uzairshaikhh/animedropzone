@@ -312,17 +312,6 @@ export function ProductPage() {
               className="w-full"
             >
               <div className="relative z-10">
-                <motion.div
-                  className="absolute -inset-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur-xl opacity-50 -z-10 pointer-events-none"
-                  animate={{
-                    opacity: [0.5, 0.7, 0.5],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                  }}
-                />
                 <div className="relative rounded-2xl overflow-hidden border-2 border-purple-500/50 bg-black max-h-80 md:max-h-full">
                   <motion.img
                     src={activeImage}
