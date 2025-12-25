@@ -111,6 +111,15 @@ export function CategoryPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
+
+  // Get subcategory from URL on mount
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const subcatFromUrl = searchParams.get("subcat");
+    if (subcatFromUrl) {
+      setSelectedSubcategory(subcatFromUrl);
+    }
+  }, []);
   const { cartItems, addToCart, removeFromCart, updateQuantity, isCartOpen, setIsCartOpen } = useCart();
   const { showToast } = useToast();
   const [isUserAuthOpen, setIsUserAuthOpen] = useState(false);
@@ -287,6 +296,9 @@ export function CategoryPage() {
   const handleSubcategorySelect = (subcategory: string) => {
     setSelectedSubcategory(subcategory);
     setIsSubcategoryModalOpen(false);
+    // Add subcategory to URL for proper back navigation
+    const newUrl = `${window.location.pathname}?subcat=${encodeURIComponent(subcategory)}`;
+    window.history.replaceState({}, "", newUrl);
   };
 
   // Normalize category for lookups (handle spaces in URL)
@@ -384,7 +396,11 @@ export function CategoryPage() {
                   </button>
                   {selectedSubcategory && (
                     <button
-                      onClick={() => setSelectedSubcategory(null)}
+                      onClick={() => {
+                        setSelectedSubcategory(null);
+                        // Remove subcat from URL
+                        window.history.replaceState({}, "", window.location.pathname);
+                      }}
                       className="ml-4 text-purple-400 hover:text-purple-300 underline transition-colors"
                     >
                       Clear filter
