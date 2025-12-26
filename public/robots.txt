@@ -1,0 +1,33 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /api
+Disallow: /.env
+Disallow: /.git
+Disallow: /node_modules
+Disallow: /src
+Disallow: /supabase
+Disallow: /build
+Disallow: /temp-deploy
+Disallow: /*.tar.gz
+Disallow: /*.zip
+Disallow: /CRASH_FIX*
+Disallow: /DEPLOY*
+Disallow: /MOBILE*
+Disallow: /MANUAL*
+Disallow: /QUICK*
+Disallow: /PRE_*
+Disallow: /SSH_*
+Disallow: /COMPLETE*
+Disallow: /DELIVERABLES*
+
+# Allow search engines to access assets
+Allow: /assets/
+Allow: /index.html
+Allow: /
+
+# Crawl delay
+Crawl-delay: 1
+
+# Sitemaps
+Sitemap: https://animedropzone.com/sitemap.xml

@@ -80,6 +80,8 @@ export const ProductCard = memo(function ProductCard({
             e.stopPropagation();
             onToggleWishlist(product);
           }}
+          aria-label={isInWishlist ? `Remove ${product?.name} from wishlist` : `Add ${product?.name} to wishlist`}
+          title={isInWishlist ? "Remove from wishlist" : "Add to wishlist"}
           className="absolute top-3 right-3 z-10 w-10 h-10 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-full flex items-center justify-center border border-purple-500/30 hover:border-purple-500 transition-all"
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}

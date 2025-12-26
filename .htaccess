@@ -2,6 +2,11 @@
   RewriteEngine On
   RewriteBase /
   
+  # Allow robots.txt and sitemap.xml to be served as-is
+  RewriteRule ^robots\.txt$ - [L]
+  RewriteRule ^sitemap\.xml$ - [L]
+  RewriteRule ^\.well-known/ - [L]
+  
   # Protect assets folder from rewrite
   RewriteCond %{REQUEST_FILENAME} -f [OR]
   RewriteCond %{REQUEST_FILENAME} -d
