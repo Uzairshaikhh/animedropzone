@@ -4,6 +4,16 @@ import path from "path";
 
 export default defineConfig({
   plugins: [react()],
+  optimizeDeps: {
+    include: [
+      "react",
+      "react-dom",
+      "@radix-ui/react-dialog",
+      "@radix-ui/react-dropdown-menu",
+      "@radix-ui/react-toggle-group",
+      "@radix-ui/react-form-primitive",
+    ],
+  },
   resolve: {
     extensions: [".js", ".jsx", ".ts", ".tsx", ".json"],
     alias: {
@@ -65,26 +75,17 @@ export default defineConfig({
     },
     rollupOptions: {
       output: {
-        manualChunks: (id) => {
-          // Core vendor chunks
-          if (id.includes("node_modules/react") || id.includes("node_modules/react-dom")) {
-            return "vendor-react";
-          }
-          if (id.includes("node_modules/react-router")) {
-            return "vendor-router";
-          }
-          if (id.includes("node_modules/@supabase")) {
-            return "vendor-supabase";
-          }
-          if (id.includes("node_modules/motion")) {
-            return "vendor-motion";
-          }
-          if (id.includes("node_modules/@radix-ui")) {
-            return "vendor-radix";
-          }
-          if (id.includes("node_modules")) {
-            return "vendor-other";
-          }
+        manualChunks: {
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-radix": [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-toggle-group",
+            "@radix-ui/react-tabs",
+            "@radix-ui/react-select",
+          ],
+          "vendor-supabase": ["@supabase/supabase-js"],
+          "vendor-motion": ["motion", "framer-motion"],
         },
         chunkFileNames: "assets/[name]-[hash].js",
         entryFileNames: "assets/[name]-[hash].js",
