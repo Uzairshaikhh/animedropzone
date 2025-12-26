@@ -143,12 +143,21 @@ export function CategoryPage() {
       return;
     }
 
-    fetchCategoryData();
-    fetchProducts();
-    checkUser();
+    let isMounted = true;
+
+    const loadData = async () => {
+      if (isMounted) {
+        await fetchCategoryData();
+        await fetchProducts();
+        await checkUser();
+      }
+    };
+
+    loadData();
 
     // Cleanup function for memory management
     return () => {
+      isMounted = false;
       setProducts([]);
       setFilteredProducts([]);
       setError(null);
@@ -215,16 +224,20 @@ export function CategoryPage() {
   };
 
   useEffect(() => {
-    let filtered = products || [];
+    if (!products || products.length === 0) {
+      setFilteredProducts([]);
+      return;
+    }
 
-    if (selectedSubcategory && filtered.length > 0) {
-      filtered = filtered.filter((p) => {
-        try {
-          return (p as any).subcategory === selectedSubcategory;
-        } catch {
-          return false;
-        }
-      });
+    let filtered = products;
+
+    if (selectedSubcategory) {
+      try {
+        filtered = products.filter((p) => (p as any).subcategory === selectedSubcategory);
+      } catch (error) {
+        console.error("Error filtering products:", error);
+        filtered = products;
+      }
     }
 
     setFilteredProducts(filtered);
@@ -267,17 +280,15 @@ export function CategoryPage() {
       const data = await response.json();
       if (data.success && Array.isArray(data.products)) {
         setProducts(data.products);
-        setFilteredProducts(data.products);
+        // Don't set filteredProducts here - let the useEffect handle filtering
       } else if (!data.success) {
         setError("Failed to load products");
         setProducts([]);
-        setFilteredProducts([]);
       }
     } catch (error) {
       console.error("Error fetching products:", error);
       setError(error instanceof Error ? error.message : "Failed to load products");
       setProducts([]);
-      setFilteredProducts([]);
     } finally {
       setLoading(false);
     }
