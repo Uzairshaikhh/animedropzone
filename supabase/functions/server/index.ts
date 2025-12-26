@@ -5,7 +5,23 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const app = new Hono();
 
-app.use("*", cors());
+// Enable CORS with specific settings for multiple domains
+app.use(
+  "*",
+  cors({
+    origin: [
+      "https://animedropzone.com",
+      "https://www.animedropzone.com",
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:5173",
+    ],
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 app.use("*", logger(console.log));
 
 const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {

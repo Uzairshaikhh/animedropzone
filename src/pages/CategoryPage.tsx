@@ -187,8 +187,10 @@ export function CategoryPage() {
   const fetchCategoryData = async () => {
     try {
       const response = await fetch(`https://${projectId}.supabase.co/functions/v1/make-server-95a96d8e/categories`, {
+        method: "GET",
         headers: {
           Authorization: `Bearer ${publicAnonKey}`,
+          "Content-Type": "application/json",
         },
       });
 
@@ -269,8 +271,10 @@ export function CategoryPage() {
           normalizedCategory
         )}`,
         {
+          method: "GET",
           headers: {
             Authorization: `Bearer ${publicAnonKey}`,
+            "Content-Type": "application/json",
           },
         }
       );

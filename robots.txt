@@ -1,4 +1,4 @@
-User-agent: *
+aUser-agent: *
 Disallow: /admin
 Disallow: /api
 Disallow: /.env
