@@ -114,9 +114,9 @@ export const ProductCard = memo(function ProductCard({
         {/* Fallback content when image fails */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4 opacity-50">
           <div className="text-2xl mb-2">📦</div>
-          <p className="text-xs text-gray-300">{product.name}</p>
+          <p className="text-xs text-gray-300">{product?.name || "Product"}</p>
         </div>
-        {product.stock === 0 && (
+        {(product?.stock === 0 || !product?.stock) && (
           <motion.div
             className="absolute inset-0 bg-black/80 flex items-center justify-center"
             initial={{ opacity: 0 }}
@@ -141,8 +141,8 @@ export const ProductCard = memo(function ProductCard({
           ))}
           <span className="text-sm text-gray-400 ml-2">(4.8)</span>
         </div>
-        <h3 className="text-white mb-1 line-clamp-1">{product.name}</h3>
-        <p className="text-gray-400 text-sm mb-3 line-clamp-2">{product.description}</p>
+        <h3 className="text-white mb-1 line-clamp-1">{product?.name || "Product Name"}</h3>
+        <p className="text-gray-400 text-sm mb-3 line-clamp-2">{product?.description || "No description available"}</p>
         <motion.div
           className="mb-3"
           initial={{ opacity: 0, x: -20 }}
@@ -150,7 +150,7 @@ export const ProductCard = memo(function ProductCard({
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           <span className="text-2xl bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-            ₹{product.price.toLocaleString()}
+            ₹{(product?.price ?? 0).toLocaleString()}
           </span>
         </motion.div>
         <div className="grid grid-cols-2 gap-2">
@@ -159,7 +159,7 @@ export const ProductCard = memo(function ProductCard({
               e.stopPropagation();
               onAddToCart(product);
             }}
-            disabled={product.stock === 0}
+            disabled={product?.stock === 0 || !product?.stock}
             className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed px-3 py-2 rounded-lg flex items-center justify-center gap-2 transition-all text-sm"
             whileHover={isMobile ? {} : { scale: 1.05 }}
             whileTap={isMobile ? {} : { scale: 0.95 }}

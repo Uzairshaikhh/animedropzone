@@ -137,6 +137,12 @@ export function CategoryPage() {
   const [isValidCategory, setIsValidCategory] = useState(true);
 
   useEffect(() => {
+    // Only fetch if category is defined
+    if (!category) {
+      setLoading(false);
+      return;
+    }
+
     fetchCategoryData();
     fetchProducts();
     checkUser();
@@ -209,10 +215,16 @@ export function CategoryPage() {
   };
 
   useEffect(() => {
-    let filtered = products;
+    let filtered = products || [];
 
-    if (selectedSubcategory) {
-      filtered = filtered.filter((p) => (p as any).subcategory === selectedSubcategory);
+    if (selectedSubcategory && filtered.length > 0) {
+      filtered = filtered.filter((p) => {
+        try {
+          return (p as any).subcategory === selectedSubcategory;
+        } catch {
+          return false;
+        }
+      });
     }
 
     setFilteredProducts(filtered);
@@ -491,11 +503,23 @@ export function CategoryPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                {filteredProducts.map((product) => (
-                  <div key={product.id}>
-                    <ProductCard product={product} onAddToCart={handleAddToCart} />
-                  </div>
-                ))}
+                {filteredProducts && Array.isArray(filteredProducts)
+                  ? filteredProducts.map((product) => {
+                      try {
+                        if (!product || !product.id) {
+                          return null;
+                        }
+                        return (
+                          <div key={product.id}>
+                            <ProductCard product={product} onAddToCart={handleAddToCart} />
+                          </div>
+                        );
+                      } catch (error) {
+                        console.error("Error rendering product:", product, error);
+                        return null;
+                      }
+                    })
+                  : null}
               </div>
             )}
 
