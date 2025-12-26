@@ -219,9 +219,15 @@ export function CategoryPage() {
             }
           }
         }
+      } else {
+        console.error(`❌ API error: ${response.status} ${response.statusText}`);
+        console.error("Response:", await response.text());
       }
     } catch (error) {
       console.error("Error fetching category data:", error);
+      if (error instanceof Error && error.message.includes("CORS")) {
+        console.error("🚨 CORS Error detected - Check browser Network tab for details");
+      }
     }
   };
 
