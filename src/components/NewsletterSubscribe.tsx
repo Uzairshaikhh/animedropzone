@@ -188,8 +188,13 @@ export function NewsletterSubscribe() {
               >
                 <div className="flex flex-col sm:flex-row gap-4">
                   <div className="flex-1 relative group">
+                    <label htmlFor="newsletterEmail" className="sr-only">
+                      Email Address
+                    </label>
                     <motion.div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl opacity-0 group-focus-within:opacity-100 blur transition-opacity" />
                     <input
+                      id="newsletterEmail"
+                      name="email"
                       type="email"
                       value={email}
                       onChange={(e) => {

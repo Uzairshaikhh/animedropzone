@@ -188,8 +188,12 @@ export function ContactUs() {
             <h3 className="text-white mb-6">Customer Support</h3>
             <form onSubmit={handleSubmitSupport} className="space-y-4">
               <div>
-                <label className="block text-gray-300 mb-2">Your Name</label>
+                <label htmlFor="supportName" className="block text-gray-300 mb-2">
+                  Your Name
+                </label>
                 <input
+                  id="supportName"
+                  name="name"
                   type="text"
                   value={supportForm.name}
                   onChange={(e) => setSupportForm({ ...supportForm, name: e.target.value })}
@@ -200,8 +204,12 @@ export function ContactUs() {
               </div>
 
               <div>
-                <label className="block text-gray-300 mb-2">Email Address</label>
+                <label htmlFor="supportEmail" className="block text-gray-300 mb-2">
+                  Email Address
+                </label>
                 <input
+                  id="supportEmail"
+                  name="email"
                   type="email"
                   value={supportForm.email}
                   onChange={(e) => setSupportForm({ ...supportForm, email: e.target.value })}
@@ -212,8 +220,12 @@ export function ContactUs() {
               </div>
 
               <div>
-                <label className="block text-gray-300 mb-2">Subject</label>
+                <label htmlFor="supportSubject" className="block text-gray-300 mb-2">
+                  Subject
+                </label>
                 <input
+                  id="supportSubject"
+                  name="subject"
                   type="text"
                   value={supportForm.subject}
                   onChange={(e) => setSupportForm({ ...supportForm, subject: e.target.value })}
