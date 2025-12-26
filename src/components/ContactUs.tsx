@@ -195,6 +195,7 @@ export function ContactUs() {
                   id="supportName"
                   name="name"
                   type="text"
+                  autoComplete="name"
                   value={supportForm.name}
                   onChange={(e) => setSupportForm({ ...supportForm, name: e.target.value })}
                   required
@@ -211,6 +212,7 @@ export function ContactUs() {
                   id="supportEmail"
                   name="email"
                   type="email"
+                  autoComplete="email"
                   value={supportForm.email}
                   onChange={(e) => setSupportForm({ ...supportForm, email: e.target.value })}
                   required
@@ -227,6 +229,7 @@ export function ContactUs() {
                   id="supportSubject"
                   name="subject"
                   type="text"
+                  autoComplete="off"
                   value={supportForm.subject}
                   onChange={(e) => setSupportForm({ ...supportForm, subject: e.target.value })}
                   required

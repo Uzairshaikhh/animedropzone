@@ -196,6 +196,7 @@ export function NewsletterSubscribe() {
                       id="newsletterEmail"
                       name="email"
                       type="email"
+                      autoComplete="email"
                       value={email}
                       onChange={(e) => {
                         setEmail(e.target.value);
