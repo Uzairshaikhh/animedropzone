@@ -2,69 +2,36 @@
   RewriteEngine On
   RewriteBase /
   
-  # Allow robots.txt and sitemap.xml to be served as-is
-  RewriteRule ^robots\.txt$ - [L]
-  RewriteRule ^sitemap\.xml$ - [L]
-  RewriteRule ^\.well-known/ - [L]
+  # Exclude robots.txt and sitemap.xml from ALL rewrites
+  RewriteCond %{REQUEST_URI} !^/robots\.txt$
+  RewriteCond %{REQUEST_URI} !^/sitemap\.xml$
+  RewriteCond %{REQUEST_URI} !^/\.well-known/
+  # Allow all existing files and directories
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
   
-  # Protect assets folder from rewrite
-  RewriteCond %{REQUEST_FILENAME} -f [OR]
-  RewriteCond %{REQUEST_FILENAME} -d
-  RewriteRule ^ - [L]
-  
-  # Rewrite all other requests to index.html for client-side routing
+  # Only rewrite if none of the above conditions matched
   RewriteRule ^(.*)$ index.html [L]
 </IfModule>
 
-# MIME Types for assets
-
+# MIME Types
 <IfModule mod_mime.c>
   AddType application/javascript .js
   AddType text/css .css
+  AddType text/plain .txt
+  AddType application/xml .xml
   AddEncoding gzip .gz
 </IfModule>
 
-# Disable compression for versioned assets
-
-<FilesMatch "\.js$|\.css$">
-<IfModule mod_deflate.c>
-SetEnvIfNoCase Request_URI "\.js$" no-gzip=1
-    SetEnvIfNoCase Request_URI "\.css$" no-gzip=1
-</IfModule>
+# Cache control
+<FilesMatch "\.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2)$">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </IfModule>
 </FilesMatch>
 
-# Don't cache main JavaScript bundles (they have hashes for versioning)
-
-<FilesMatch "^/assets/index-.\*\.js$">
-Header set Cache-Control "max-age=0, public, must-revalidate"
-Header set Pragma "no-cache"
-Header set Expires "0"
-</FilesMatch>
-
-# Cache vendor and library chunks (they're stable)
-
-<FilesMatch "^/assets/(vendor|framer|supabase|radix|CherryBlossomTree)-.\*\.js$">
-Header set Cache-Control "max-age=31536000, public, immutable"
-</FilesMatch>
-
-# Don't cache CSS either
-
-<FilesMatch "^/assets/index-.\*\.css$">
-Header set Cache-Control "max-age=0, public, must-revalidate"
-Header set Pragma "no-cache"
-Header set Expires "0"
-</FilesMatch>
-
-# Cache static assets (images, fonts, etc)
-
-<FilesMatch "\.(jpg|jpeg|png|gif|ico|svg|webp|ttf|woff|woff2)$">
-Header set Cache-Control "max-age=31536000, public, immutable"
-</FilesMatch>
-
-# Never cache HTML
-
-<FilesMatch "\.html$">
-Header set Cache-Control "max-age=0, public, must-revalidate"
-Header set Pragma "no-cache"
-Header set Expires "0"
+<FilesMatch "\.(html|json|xml|txt)$">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "public, max-age=0, must-revalidate"
+  </IfModule>
 </FilesMatch>
