@@ -82,6 +82,42 @@ const categoryInfo: { [key: string]: { title: string; description: string } } = 
 };
 
 const subcategoryData: { [key: string]: Array<{ name: string; value: string; description: string }> } = {
+  "demon-slayer": [
+    { name: "Tanjiro", value: "tanjiro", description: "Tanjiro Kamado figures" },
+    { name: "Nezuko", value: "nezuko", description: "Nezuko Kamado figures" },
+    { name: "Hashiras", value: "hashiras", description: "Hashira warriors figures" },
+    { name: "Demons", value: "demons", description: "Demon characters figures" },
+  ],
+  naruto: [
+    { name: "Main Characters", value: "main-characters", description: "Naruto, Sasuke, Sakura figures" },
+    { name: "Hokages", value: "hokages", description: "Hokage leaders figures" },
+    { name: "Team 7", value: "team-7", description: "Team 7 members figures" },
+    { name: "Villains", value: "villains", description: "Villain characters figures" },
+  ],
+  "one-piece": [
+    { name: "Luffy & Crew", value: "luffy-crew", description: "Luffy and main crew figures" },
+    { name: "Straw Hat Pirates", value: "straw-hat-pirates", description: "Straw Hat crew figures" },
+    { name: "Antagonists", value: "antagonists", description: "Enemy characters figures" },
+    { name: "Side Characters", value: "side-characters", description: "Supporting characters figures" },
+  ],
+  "attack-on-titan": [
+    { name: "Eren & Friends", value: "eren-friends", description: "Eren and main cast figures" },
+    { name: "Survey Corps", value: "survey-corps", description: "Survey Corps members figures" },
+    { name: "Titans", value: "titans", description: "Titan characters figures" },
+    { name: "Antagonists", value: "antagonists", description: "Enemy figures" },
+  ],
+  "my-hero-academia": [
+    { name: "Deku & Class 1-A", value: "deku-class", description: "Deku and Class 1-A figures" },
+    { name: "All Might & Heroes", value: "all-might-heroes", description: "Hero characters figures" },
+    { name: "Villains", value: "villains", description: "Villain characters figures" },
+    { name: "Support Characters", value: "support-characters", description: "Side character figures" },
+  ],
+  "dragon-ball": [
+    { name: "Goku & Vegeta", value: "goku-vegeta", description: "Goku and Vegeta figures" },
+    { name: "Super Saiyans", value: "super-saiyans", description: "Super Saiyan forms figures" },
+    { name: "Fusion Forms", value: "fusion-forms", description: "Fusion transformation figures" },
+    { name: "Villains", value: "villains", description: "Villain characters figures" },
+  ],
   katana: [
     { name: "Demon Slayer Swords", value: "demon-slayer-katana", description: "Nichirin blades collection" },
     { name: "Samurai Katanas", value: "samurai-katana", description: "Traditional Japanese swords" },
