@@ -226,11 +226,22 @@ export function CategoryPage() {
 
             // Convert subcategories to the format needed
             if (currentCategory.subcategories && currentCategory.subcategories.length > 0) {
-              const formattedSubcategories = currentCategory.subcategories.map((sub: any) => ({
-                name: sub.name || sub,
-                value: sub.value || sub.toLowerCase().replace(/\s+/g, "-"),
-                description: sub.description || "",
-              }));
+              const formattedSubcategories = currentCategory.subcategories.map((sub: any) => {
+                // Handle both string and object formats
+                if (typeof sub === "string") {
+                  return {
+                    name: sub,
+                    value: sub.toLowerCase().replace(/\s+/g, "-"),
+                    description: "",
+                  };
+                } else {
+                  return {
+                    name: sub.name || sub,
+                    value: sub.value || sub.toLowerCase().replace(/\s+/g, "-"),
+                    description: sub.description || "",
+                  };
+                }
+              });
               setDynamicSubcategories(formattedSubcategories);
               console.log("✅ Dynamic subcategories loaded:", formattedSubcategories);
             }

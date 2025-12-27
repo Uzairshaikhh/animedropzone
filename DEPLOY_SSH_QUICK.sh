@@ -6,7 +6,7 @@
 set -e
 
 SSH_USER="u728583244"
-SSH_HOST="your.server.com"  # CHANGE THIS TO YOUR SERVER
+SSH_HOST="in-mum-web2124"
 SSH_PATH="/home/u728583244/animedropzone"
 
 echo "🚀 Quick SSH Deployment"
