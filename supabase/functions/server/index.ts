@@ -5,6 +5,18 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const app = new Hono();
 
+// Initialize Deno KV storage GLOBALLY so all endpoints can access it
+let kv: Deno.Kv | null = null;
+(async () => {
+  try {
+    kv = await Deno.openKv();
+    console.log("✅ Deno KV Storage initialized successfully");
+  } catch (error) {
+    console.error("❌ Failed to initialize Deno KV Storage:", error);
+    console.error("⚠️ This may cause crashes when accessing products, categories, etc.");
+  }
+})();
+
 // Enable CORS with specific settings for multiple domains
 app.use(
   "*",
@@ -423,10 +435,18 @@ app.post("/make-server-95a96d8e/test-email", async (c) => {
 // Get all products
 app.get("/make-server-95a96d8e/products", async (c) => {
   try {
-    const products = await kv.getByPrefix("product:");
+    if (!kv) {
+      console.error("❌ KV Storage not initialized!");
+      return c.json({ success: false, error: "Database not available. Please try again later." }, 503);
+    }
+
+    const allProducts = await kv.getByPrefix("product:");
+    const products = allProducts.map((item: any) => item.value).filter((p: any) => p !== null && p !== undefined);
+
+    console.log(`✅ Fetched ${products.length} products from database`);
     return c.json({ success: true, products });
   } catch (error) {
-    console.log("Error fetching products:", error);
+    console.error("Error fetching products:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -435,11 +455,45 @@ app.get("/make-server-95a96d8e/products", async (c) => {
 app.get("/make-server-95a96d8e/products/category/:category", async (c) => {
   try {
     const category = c.req.param("category");
+
+    // Validate category and kv
+    if (!category) {
+      return c.json({ success: false, error: "Category parameter is required" }, 400);
+    }
+
+    if (!kv) {
+      console.error("❌ KV Storage not initialized!");
+      return c.json({ success: false, error: "Database not available. Please try again later." }, 503);
+    }
+
+    // Normalize category for matching (handle spaces, hyphens, underscores)
+    const normalizeCategory = (str: string) => str.toLowerCase().replace(/\s+/g, "-").replace(/[-_]/g, "-");
+
+    const normalizedCategory = normalizeCategory(category);
+    console.log(`🔍 Fetching products for category: ${category} (normalized: ${normalizedCategory})`);
+
+    // Get all products from KV
     const allProducts = await kv.getByPrefix("product:");
-    const filteredProducts = allProducts.filter((p: any) => p.category === category);
-    return c.json({ success: true, products: filteredProducts });
+    const products = allProducts
+      .map((item: any) => item.value)
+      .filter((p: any) => {
+        if (!p) return false;
+
+        // Try both original category and normalized category
+        const productCategory = p.category || "";
+        const normalizedProductCategory = normalizeCategory(productCategory);
+
+        return (
+          normalizedProductCategory === normalizedCategory ||
+          productCategory === category ||
+          productCategory.toLowerCase() === category.toLowerCase()
+        );
+      });
+
+    console.log(`✅ Found ${products.length} products for category: ${category}`);
+    return c.json({ success: true, products: products || [] });
   } catch (error) {
-    console.log("Error fetching products by category:", error);
+    console.error("Error fetching products by category:", error);
     return c.json({ success: false, error: String(error) }, 500);
   }
 });
@@ -3274,10 +3328,19 @@ app.delete("/make-server-95a96d8e/support/:ticketId", async (c) => {
 // Get all categories
 app.get("/make-server-95a96d8e/categories", async (c) => {
   try {
-    const allCategories = await kv.getByPrefix("category:");
-    const sortedCategories = allCategories.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+    if (!kv) {
+      console.error("❌ KV Storage not initialized!");
+      return c.json({ success: false, error: "Database not available. Please try again later." }, 503);
+    }
 
-    return c.json({ success: true, categories: sortedCategories });
+    const allCategories = await kv.getByPrefix("category:");
+    const categories = allCategories
+      .map((item: any) => item.value)
+      .filter((cat: any) => cat !== null && cat !== undefined)
+      .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+
+    console.log(`✅ Fetched ${categories.length} categories from database`);
+    return c.json({ success: true, categories });
   } catch (error) {
     console.error("Error fetching categories:", error);
     return c.json({ success: false, error: String(error) }, 500);
@@ -3805,14 +3868,49 @@ WITH CHECK (bucket_id = 'product-images');
 // Seed default categories and wallpapers
 app.post("/make-server-95a96d8e/seed-defaults", async (c) => {
   try {
-    // Default categories with subcategories
+    // Default categories (flattened - no subcategories for figures)
     const defaultCategories = [
       {
-        name: "Figures",
-        slug: "figures",
-        description: "Premium anime action figures and statues",
+        name: "Demon Slayer Figures",
+        slug: "demon-slayer",
+        description: "Tanjiro, Nezuko, and premium figures from Demon Slayer",
         icon: "Package",
-        subcategories: ["Demon Slayer", "Naruto", "One Piece", "Attack on Titan", "My Hero Academia", "Dragon Ball"],
+        subcategories: [],
+      },
+      {
+        name: "Naruto Figures",
+        slug: "naruto",
+        description: "Iconic ninja figures from the legendary Naruto series",
+        icon: "Package",
+        subcategories: [],
+      },
+      {
+        name: "One Piece Figures",
+        slug: "one-piece",
+        description: "Luffy and crew collectibles from One Piece",
+        icon: "Package",
+        subcategories: [],
+      },
+      {
+        name: "Attack on Titan Figures",
+        slug: "attack-on-titan",
+        description: "Survey Corps figures from Attack on Titan",
+        icon: "Package",
+        subcategories: [],
+      },
+      {
+        name: "My Hero Academia Figures",
+        slug: "my-hero-academia",
+        description: "Heroes and villains figures from My Hero Academia",
+        icon: "Package",
+        subcategories: [],
+      },
+      {
+        name: "Dragon Ball Figures",
+        slug: "dragon-ball",
+        description: "Super Saiyan warriors from Dragon Ball",
+        icon: "Package",
+        subcategories: [],
       },
       {
         name: "Katana",

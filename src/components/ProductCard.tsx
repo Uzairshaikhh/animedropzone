@@ -34,14 +34,43 @@ export const ProductCard = memo(function ProductCard({
   const [imageLoaded, setImageLoaded] = useState(false);
   const isMobile = typeof window !== "undefined" ? window.innerWidth < 768 : false;
 
+  // Detect device capabilities for intelligent image optimization
+  const deviceMemory = typeof navigator !== "undefined" ? (navigator as any).deviceMemory || 4 : 4;
+  const networkType = typeof navigator !== "undefined" ? (navigator as any).connection?.effectiveType || "4g" : "4g";
+  const devicePixelRatio = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+
+  // Detect top-end device (8GB+ RAM) with fast network (4G/5G)
+  const isTopEndDevice = deviceMemory >= 8 && (networkType === "4g" || networkType === "5g");
+
+  // Detect low-end device (budget phone with slow connection)
+  const isLowEndDevice =
+    typeof window !== "undefined" &&
+    (deviceMemory < 4 || networkType === "slow-2g" || networkType === "2g" || networkType === "3g");
+
   const imageUrl =
     product.images?.[0] ||
     product.image ||
     "https://images.unsplash.com/photo-1763771757355-4c0441df34ab?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhbmltZSUyMG1lcmNoYW5kaXNlfGVufDF8fHx8MTc2NTE4ODk3OXww&ixlib=rb-4.1.0&q=80&w=1080";
 
-  // Aggressive mobile optimization - reduce image quality/size on mobile
-  const imageQuality = isMobile ? "60" : "70"; // Lower quality for mobile
-  const imageWidth = isMobile ? "250" : "400"; // Smaller width for mobile
+  // Intelligent image optimization based on device & network capabilities
+  let imageQuality = "75"; // Default: good quality for modern phones
+  let imageWidth = "600"; // Default: larger width for modern phones
+
+  if (isTopEndDevice) {
+    // TOP-END phones (iPhone 13+, Galaxy S20+) with 4G/5G: MAXIMUM quality
+    imageQuality = "90"; // Premium quality - almost lossless
+    imageWidth = "1000"; // Full high-resolution images
+  } else if (isMobile) {
+    // Regular modern phones on mobile: good quality
+    imageQuality = "70";
+    imageWidth = "400";
+  }
+
+  if (isLowEndDevice) {
+    // Only for truly low-end devices: aggressive compression
+    imageQuality = "50";
+    imageWidth = "250";
+  }
 
   // Only append query params to Unsplash URLs, don't modify Supabase or other URLs
   const finalImageUrl = imageUrl.includes("unsplash.com") ? `${imageUrl}&w=${imageWidth}&q=${imageQuality}` : imageUrl;

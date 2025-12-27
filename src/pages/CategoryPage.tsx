@@ -16,7 +16,12 @@ import { projectId, publicAnonKey } from "../utils/supabase/info";
 import { supabase } from "../utils/supabase/client";
 
 const categoryIcons: { [key: string]: any } = {
-  figures: Package,
+  "demon-slayer": Package,
+  naruto: Package,
+  "one-piece": Package,
+  "attack-on-titan": Package,
+  "my-hero-academia": Package,
+  "dragon-ball": Package,
   katana: Swords,
   accessories: Sparkles,
   posters: Image,
@@ -26,9 +31,29 @@ const categoryIcons: { [key: string]: any } = {
 };
 
 const categoryInfo: { [key: string]: { title: string; description: string } } = {
-  figures: {
-    title: "Anime Figures",
-    description: "Premium anime action figures and statues from your favorite series",
+  "demon-slayer": {
+    title: "Demon Slayer Figures",
+    description: "Tanjiro, Nezuko, and premium figures from Demon Slayer",
+  },
+  naruto: {
+    title: "Naruto Figures",
+    description: "Iconic ninja figures from the legendary Naruto series",
+  },
+  "one-piece": {
+    title: "One Piece Figures",
+    description: "Luffy and crew collectibles from One Piece",
+  },
+  "attack-on-titan": {
+    title: "Attack on Titan Figures",
+    description: "Survey Corps figures from Attack on Titan",
+  },
+  "my-hero-academia": {
+    title: "My Hero Academia Figures",
+    description: "Heroes and villains figures from My Hero Academia",
+  },
+  "dragon-ball": {
+    title: "Dragon Ball Figures",
+    description: "Super Saiyan warriors from Dragon Ball",
   },
   katana: {
     title: "Katana Collection",
@@ -57,14 +82,6 @@ const categoryInfo: { [key: string]: { title: string; description: string } } = 
 };
 
 const subcategoryData: { [key: string]: Array<{ name: string; value: string; description: string }> } = {
-  figures: [
-    { name: "Demon Slayer", value: "demon-slayer", description: "Tanjiro, Nezuko, and more" },
-    { name: "Naruto", value: "naruto", description: "Iconic ninja figures" },
-    { name: "One Piece", value: "one-piece", description: "Luffy and crew collectibles" },
-    { name: "Attack on Titan", value: "attack-on-titan", description: "Survey Corps figures" },
-    { name: "My Hero Academia", value: "my-hero-academia", description: "Heroes and villains" },
-    { name: "Dragon Ball", value: "dragon-ball", description: "Super Saiyan warriors" },
-  ],
   katana: [
     { name: "Demon Slayer Swords", value: "demon-slayer-katana", description: "Nichirin blades collection" },
     { name: "Samurai Katanas", value: "samurai-katana", description: "Traditional Japanese swords" },
