@@ -26,12 +26,22 @@ echo "4️⃣  Pulling latest code..."
 git pull origin main
 
 echo ""
-echo "5️⃣  Listing build directory..."
+echo ""
+
+echo "5️⃣  Installing dependencies..."
+npm install
+
+echo ""
+echo "6️⃣  Building project..."
+npm run build
+
+echo ""
+echo "7️⃣  Listing build directory..."
 ls -lh build/ | head -10
 
 echo ""
-echo "6️⃣  Copying build files to public directory..."
-cp -r build/* .
+echo "8️⃣  Copying build files to public directory..."
+cp -r build/* /home/u728583244/domains/animedropzone.com/public_html/
 
 echo ""
 echo "✅ Deployment complete!"
