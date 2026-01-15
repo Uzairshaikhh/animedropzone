@@ -112,6 +112,7 @@ export function StorePage() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
+  const [showAllProducts, setShowAllProducts] = useState(false);
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [productsPerPage] = useState(12);
   const [currentPage, setCurrentPage] = useState(1);
@@ -301,15 +302,18 @@ export function StorePage() {
 
     let filtered = [...products];
 
-    if (selectedCategory) {
-      filtered = filtered.filter((p) => p.category && p.category.toLowerCase() === selectedCategory.toLowerCase());
-    }
+    // If showAllProducts is true we intentionally do not apply category/subcategory filters
+    if (!showAllProducts) {
+      if (selectedCategory) {
+        filtered = filtered.filter((p) => p.category && p.category.toLowerCase() === selectedCategory.toLowerCase());
+      }
 
-    if (selectedSubcategory) {
-      filtered = filtered.filter((p) => {
-        const subcat = (p as any).subcategory;
-        return subcat && subcat.toLowerCase() === selectedSubcategory.toLowerCase();
-      });
+      if (selectedSubcategory) {
+        filtered = filtered.filter((p) => {
+          const subcat = (p as any).subcategory;
+          return subcat && subcat.toLowerCase() === selectedSubcategory.toLowerCase();
+        });
+      }
     }
 
     setFilteredProducts(filtered);
@@ -319,7 +323,7 @@ export function StorePage() {
     const startIdx = (1 - 1) * productsPerPage;
     const endIdx = startIdx + productsPerPage;
     setDisplayedProducts(filtered.slice(startIdx, endIdx));
-  }, [selectedCategory, selectedSubcategory, products, productsPerPage]);
+  }, [selectedCategory, selectedSubcategory, products, productsPerPage, showAllProducts]);
 
   // Handle page changes
   useEffect(() => {
@@ -400,11 +404,13 @@ export function StorePage() {
   };
 
   const handleCategoryClick = (category: string) => {
+    setShowAllProducts(false);
     // Navigate to category page
     navigate(`/category/${category}`);
   };
 
   const handleSubcategorySelect = (subcategory: string) => {
+    setShowAllProducts(false);
     setSelectedCategory(pendingCategory);
     setSelectedSubcategory(subcategory);
     document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" });
@@ -429,17 +435,16 @@ export function StorePage() {
 
       <main id="home">
         <Hero
-          onShopNow={() => {
-            // Show all products by selecting the first category (or show all)
-            if (categories.length > 0) {
-              setSelectedCategory(categories[0].value);
-              setSelectedSubcategory("");
-            }
-            // Scroll to shop section after state updates
-            setTimeout(() => {
-              document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" });
-            }, 150);
-          }}
+            onShopNow={() => {
+              // Show all products: clear any category/subcategory filters and set the flag
+              setShowAllProducts(true);
+              setSelectedCategory(null);
+              setSelectedSubcategory(null);
+              // Scroll to shop section after state updates
+              setTimeout(() => {
+                document.getElementById("shop")?.scrollIntoView({ behavior: "smooth" });
+              }, 150);
+            }}
         />
 
         {/* Categories Section */}
@@ -489,6 +494,7 @@ export function StorePage() {
                     onClick={() => {
                       setSelectedCategory(null);
                       setSelectedSubcategory(null);
+                      setShowAllProducts(false);
                     }}
                     className="text-purple-400 hover:text-purple-300 underline transition-colors"
                   >
@@ -500,8 +506,8 @@ export function StorePage() {
           </div>
         </section>
 
-        {/* Featured Products Section - Only show when no category selected */}
-        {!selectedCategory && !selectedSubcategory && (
+        {/* Featured Products Section - Only show when no category selected and not showing all products */}
+        {!selectedCategory && !selectedSubcategory && !showAllProducts && (
           <section id="featured" className="py-20 px-4">
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-12">
@@ -564,8 +570,8 @@ export function StorePage() {
           </section>
         )}
 
-        {/* Products Section - Only show when category/subcategory selected */}
-        {(selectedCategory || selectedSubcategory) && (
+        {/* Products Section - Show when category/subcategory selected or when explicitly showing all products */}
+        {(selectedCategory || selectedSubcategory || showAllProducts) && (
           <section id="shop" className="py-20 px-4 bg-gradient-to-b from-transparent to-purple-900/10">
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-12">
