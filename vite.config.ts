@@ -1,9 +1,58 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
+import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.svg', 'favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
+      manifest: {
+        name: 'AnimeDropZone',
+        short_name: 'AnimeDropZone',
+        description: 'Premium Anime Merchandise Store',
+        theme_color: '#9333ea',
+        background_color: '#000000',
+        display: 'standalone',
+        start_url: '/',
+        icons: [
+          {
+            src: '/android-chrome-192x192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: '/android-chrome-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+        ],
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/.*\.(?:png|jpg|jpeg|svg|webp|gif|ico|woff2)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images',
+              expiration: { maxEntries: 100, maxAgeSeconds: 60 * 60 * 24 * 30 },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/.*supabase\.co\/functions\/v1\/make-server-95a96d8e\/(products|categories)/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api',
+              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 10 },
+            },
+          },
+        ],
+      },
+    })
+  ],
   optimizeDeps: {
     include: [
       "react",

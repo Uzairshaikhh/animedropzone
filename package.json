@@ -48,11 +48,13 @@
     "react-hook-form": "^7.55.0",
     "react-resizable-panels": "^2.1.7",
     "react-router-dom": "*",
+    "react-window": "^2.2.5",
     "recharts": "^2.15.2",
     "sonner": "^2.0.3",
     "tailwind-merge": "*",
     "tailwindcss": "*",
-    "vaul": "^1.1.2"
+    "vaul": "^1.1.2",
+    "vite-plugin-pwa": "^1.2.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",

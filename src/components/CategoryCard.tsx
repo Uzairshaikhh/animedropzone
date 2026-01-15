@@ -1,4 +1,5 @@
 import { LucideIcon } from "lucide-react";
+import { memo } from "react";
 
 interface CategoryCardProps {
   icon: LucideIcon;
@@ -7,7 +8,7 @@ interface CategoryCardProps {
   onClick: () => void;
 }
 
-export function CategoryCard({ icon: Icon, title, description, onClick }: CategoryCardProps) {
+export const CategoryCard = memo(function CategoryCard({ icon: Icon, title, description, onClick }: CategoryCardProps) {
   return (
     <button
       onClick={onClick}
@@ -20,4 +21,4 @@ export function CategoryCard({ icon: Icon, title, description, onClick }: Catego
       <p className="text-gray-400 text-xs md:text-sm line-clamp-2">{description}</p>
     </button>
   );
-}
+});

@@ -137,9 +137,7 @@ export function ContactUs() {
                 <div>
                   <h4 className="text-white mb-1">Address</h4>
                   <p className="text-gray-400">
-                    Jogeshwari West
-                    <br />
-                    Mumbai, Maharashtra 400102
+                    Delhi
                     <br />
                     India
                   </p>

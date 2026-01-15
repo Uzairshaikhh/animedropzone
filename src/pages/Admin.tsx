@@ -98,6 +98,8 @@ interface Coupon {
 }
 
 export function AdminPage() {
+    // Search state for products
+    const [productSearch, setProductSearch] = useState("");
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userId, setUserId] = useState("");
@@ -804,33 +806,42 @@ export function AdminPage() {
 
                 {activeTab === "products" ? (
                   <>
-                    <div className="flex items-center justify-between mb-8">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
                       <div>
                         <h1 className="text-white mb-2">Product Management</h1>
                         <p className="text-gray-400">Manage your store inventory and products</p>
                       </div>
-                      {!showForm && (
-                        <button
-                          onClick={() => {
-                            setShowForm(true);
-                            setEditingProduct(null);
-                            setFormData({
-                              name: "",
-                              description: "",
-                              price: "",
-                              category: "figures",
-                              subcategory: "",
-                              image: "",
-                              images: [],
-                              stock: "",
-                            });
-                          }}
-                          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-lg flex items-center gap-2 transition-all"
-                        >
-                          <Plus className="w-5 h-5" />
-                          Add New Product
-                        </button>
-                      )}
+                      <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-center w-full md:w-auto">
+                        <input
+                          type="text"
+                          placeholder="Search products..."
+                          className="px-4 py-2 rounded-lg border border-purple-700 bg-black text-white focus:outline-none focus:ring-2 focus:ring-purple-500 w-full sm:w-64"
+                          value={productSearch}
+                          onChange={e => setProductSearch(e.target.value)}
+                        />
+                        {!showForm && (
+                          <button
+                            onClick={() => {
+                              setShowForm(true);
+                              setEditingProduct(null);
+                              setFormData({
+                                name: "",
+                                description: "",
+                                price: "",
+                                category: "figures",
+                                subcategory: "",
+                                image: "",
+                                images: [],
+                                stock: "",
+                              });
+                            }}
+                            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-lg flex items-center gap-2 transition-all"
+                          >
+                            <Plus className="w-5 h-5" />
+                            Add New Product
+                          </button>
+                        )}
+                      </div>
                     </div>
 
                     {showForm ? (
@@ -1084,12 +1095,28 @@ export function AdminPage() {
                     ) : (
                       // Products List
                       <div className="space-y-4">
-                        {products.length === 0 ? (
+                        {products.filter(product => {
+                          if (!productSearch) return true;
+                          const search = productSearch.toLowerCase();
+                          return (
+                            (product.name && product.name.toLowerCase().includes(search)) ||
+                            (product.description && product.description.toLowerCase().includes(search)) ||
+                            (product.category && product.category.toLowerCase().includes(search))
+                          );
+                        }).length === 0 ? (
                           <div className="bg-gradient-to-br from-black to-purple-900/20 border border-purple-500/30 rounded-2xl p-12 text-center">
-                            <p className="text-gray-400 text-lg">No products yet. Add your first product!</p>
+                            <p className="text-gray-400 text-lg">No products found. Try a different search.</p>
                           </div>
                         ) : (
-                          products.map((product) => (
+                          products.filter(product => {
+                            if (!productSearch) return true;
+                            const search = productSearch.toLowerCase();
+                            return (
+                              (product.name && product.name.toLowerCase().includes(search)) ||
+                              (product.description && product.description.toLowerCase().includes(search)) ||
+                              (product.category && product.category.toLowerCase().includes(search))
+                            );
+                          }).map((product) => (
                             <div
                               key={product.id}
                               className="flex flex-col sm:flex-row gap-4 bg-gradient-to-br from-black to-purple-900/20 border border-purple-500/30 rounded-xl p-4 sm:p-6"

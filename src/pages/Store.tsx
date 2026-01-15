@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from "react";
+// import { FixedSizeList as List } from "react-window";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "../contexts/ToastContext";
 import { useCart } from "../contexts/CartContext";
@@ -112,7 +113,7 @@ export function StorePage() {
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
-  const [showAllProducts, setShowAllProducts] = useState(false);
+  const [showAllProducts, setShowAllProducts] = useState(true);
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
   const [productsPerPage] = useState(12);
   const [currentPage, setCurrentPage] = useState(1);
@@ -189,24 +190,23 @@ export function StorePage() {
   };
 
   const fetchCategories = async () => {
-    try {
-      // Check localStorage cache first
-      const cachedCategories = localStorage.getItem("animedropzone_categories");
-      const cacheTimestamp = localStorage.getItem("animedropzone_categories_time");
-      const now = Date.now();
-
-      // Use cache if it's less than 5 minutes old
-      if (cachedCategories && cacheTimestamp && now - parseInt(cacheTimestamp) < 5 * 60 * 1000) {
+    // Show cached categories immediately (even if expired)
+    const cachedCategories = localStorage.getItem("animedropzone_categories");
+    if (cachedCategories) {
+      try {
         const cached = JSON.parse(cachedCategories);
-        // Rebuild icon objects from stored names
         const withIcons = cached.map((cat: any) => ({
           ...cat,
           icon: iconMap[cat.iconName] || Package,
         }));
         setCategories(withIcons);
-        return;
+      } catch (e) {
+        // ignore parse error, fallback below
       }
+    }
 
+    // Always update in background
+    try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
 
@@ -222,7 +222,6 @@ export function StorePage() {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.categories && data.categories.length > 0) {
-          // Convert database categories to display format
           const formattedCategories = data.categories
             .sort((a: Category, b: Category) => a.order - b.order)
             .map((cat: Category) => ({
@@ -252,7 +251,6 @@ export function StorePage() {
           });
           setSubcategoryData(subData);
         } else {
-          // Use default categories if none in database
           setCategories(
             defaultCategories.map((cat) => ({
               icon: iconMap[cat.icon] || Package,
@@ -263,7 +261,6 @@ export function StorePage() {
           );
         }
       } else {
-        // Fallback to default categories
         setCategories(
           defaultCategories.map((cat) => ({
             icon: iconMap[cat.icon] || Package,
@@ -274,22 +271,8 @@ export function StorePage() {
         );
       }
     } catch (error) {
+      // Only log error, don't block UI
       console.error("Error fetching categories:", error);
-      // Check if we have cached categories to fall back to
-      const cachedCategories = localStorage.getItem("animedropzone_categories");
-      if (cachedCategories) {
-        setCategories(JSON.parse(cachedCategories));
-      } else {
-        // Fallback to default categories
-        setCategories(
-          defaultCategories.map((cat) => ({
-            icon: iconMap[cat.icon] || Package,
-            title: cat.title,
-            description: cat.description,
-            value: cat.value,
-          }))
-        );
-      }
     }
   };
 
@@ -345,6 +328,18 @@ export function StorePage() {
   };
 
   const fetchProducts = async () => {
+    // Show cached products immediately (even if expired)
+    const cachedProducts = localStorage.getItem("animedropzone_products");
+    if (cachedProducts) {
+      try {
+        const parsed = JSON.parse(cachedProducts);
+        setProducts(parsed);
+      } catch (e) {
+        // ignore parse error, fallback below
+      }
+    }
+
+    // Always update in background
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
@@ -363,12 +358,13 @@ export function StorePage() {
         // Validate products have required fields
         const validProducts = data.products.filter((p: any) => p && p.id && p.name);
         setProducts(validProducts);
+        localStorage.setItem("animedropzone_products", JSON.stringify(validProducts));
       } else {
         setProducts([]);
       }
     } catch (error) {
       console.log("Error fetching products:", error);
-      setProducts([]);
+      // Don't clear products if fetch fails
     }
   };
 
@@ -506,73 +502,11 @@ export function StorePage() {
           </div>
         </section>
 
-        {/* Featured Products Section - Only show when no category selected and not showing all products */}
-        {!selectedCategory && !selectedSubcategory && !showAllProducts && (
-          <section id="featured" className="py-20 px-4">
-            <div className="max-w-7xl mx-auto">
-              <div className="text-center mb-12">
-                <h2 className="mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
-                  Latest Products
-                </h2>
-                <p className="text-gray-400 max-w-2xl mx-auto">
-                  Discover our handpicked selection of premium anime merchandise
-                </p>
-              </div>
-
-              {products.length >= 4 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {/* Show last 4 products (most recent) */}
-                  {products
-                    .sort((a, b) => {
-                      // Sort by createdAt if available, otherwise by id (assuming newer ids are higher)
-                      const aTime = (a as any).createdAt
-                        ? new Date((a as any).createdAt).getTime()
-                        : parseInt(a.id) || 0;
-                      const bTime = (b as any).createdAt
-                        ? new Date((b as any).createdAt).getTime()
-                        : parseInt(b.id) || 0;
-                      return bTime - aTime; // Most recent first
-                    })
-                    .slice(0, 4)
-                    .map((product) => (
-                      <ProductCard
-                        key={product.id}
-                        product={product}
-                        onAddToCart={handleAddToCart}
-                        onViewDetails={() => {
-                          setSelectedProduct(product);
-                          setIsProductDetailModalOpen(true);
-                        }}
-                        onToggleWishlist={handleToggleWishlist}
-                        isInWishlist={isInWishlist(product.id)}
-                      />
-                    ))}
-                </div>
-              ) : (
-                // Fallback for when there are fewer than 4 products
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  {displayedProducts.map((product) => (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      onAddToCart={handleAddToCart}
-                      onViewDetails={() => {
-                        setSelectedProduct(product);
-                        setIsProductDetailModalOpen(true);
-                      }}
-                      onToggleWishlist={handleToggleWishlist}
-                      isInWishlist={isInWishlist(product.id)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
-        )}
+        {/* All Products Section - Only show once by default */}
 
         {/* Products Section - Show when category/subcategory selected or when explicitly showing all products */}
         {(selectedCategory || selectedSubcategory || showAllProducts) && (
-          <section id="shop" className="py-20 px-4 bg-gradient-to-b from-transparent to-purple-900/10">
+          <section id="shop" className="py-10 sm:py-14 md:py-20 px-2 sm:px-4 bg-gradient-to-b from-transparent to-purple-900/10">
             <div className="max-w-7xl mx-auto">
               <div className="text-center mb-12">
                 <h2 className="mb-4 bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent">
@@ -622,13 +556,21 @@ export function StorePage() {
 
               {/* Pagination */}
               {filteredProducts.length > productsPerPage && (
-                <div className="mt-12 flex justify-center gap-2">
+                <div
+                  className="mt-12 mb-8 flex justify-center gap-2 overflow-x-auto scrollbar-hide w-full max-w-full px-1 snap-x snap-mandatory bg-black/10 rounded-lg"
+                  style={{ WebkitOverflowScrolling: 'touch', scrollSnapType: 'x mandatory', minHeight: 56, minWidth: 0 }}
+                  ref={el => {
+                    if (el && window.innerWidth < 640) {
+                      el.scrollTo({ left: 0 });
+                    }
+                  }}
+                >
                   {Array.from({ length: Math.ceil(filteredProducts.length / productsPerPage) }, (_, i) => i + 1).map(
                     (page) => (
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`px-4 py-2 rounded-lg transition-all ${
+                        className={`px-4 py-2 rounded-lg transition-all snap-center min-w-[40px] ${
                           currentPage === page
                             ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
                             : "bg-white/10 text-gray-300 hover:bg-white/20"
@@ -655,9 +597,9 @@ export function StorePage() {
         </Suspense>
 
         {/* Footer */}
-        <footer className="border-t border-purple-900/30 py-12 px-4">
+        <footer className="border-t border-purple-900/30 py-8 sm:py-12 px-2 sm:px-4">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
               <div>
                 <div className="flex items-center gap-2 mb-4">
                   <Logo size="md" />
@@ -672,9 +614,6 @@ export function StorePage() {
               <div>
                 <h4 className="text-white mb-4">Shop</h4>
                 <div className="space-y-2">
-                  <a href="#shop" className="block text-gray-400 hover:text-purple-400 transition-colors">
-                    All Products
-                  </a>
                   <a href="#categories" className="block text-gray-400 hover:text-purple-400 transition-colors">
                     Categories
                   </a>
